@@ -147,10 +147,14 @@ findings appended to `docs/upstream-issues.md` (self-unmounting-control task
 hazard; headless-engine ReqwestHttp stall; both reproduced, not just
 suspected).
 
-**Honest residuals:** Windows/Linux keyring arms and iOS guided-access
-rejection are compile/typecheck-verified, not exercised on those platforms
-(no Windows/Linux machine; guided access cannot be programmatically toggled
-in the sandbox). The Linux Secret Service path needs a running daemon — the
+**Honest residuals:** the Windows keyring arm is compile-verified by CI
+(windows-latest) and the Linux arm compile- and test-verified by CI (ubuntu,
+green since the Secret Service feature fix); neither was ever verified on
+this Mac (the Linux cross-compile is blocked by ring's C toolchain), and
+correcting an earlier STATUS entry that called the Linux arm
+"compile-verified" here was wrong — that claim came from source-reading the
+dependency, not a compile. iOS guided-access rejection is typecheck-verified
+only (guided access cannot be programmatically toggled in the sandbox). The Linux Secret Service path needs a running daemon — the
 fallback is visible, never silent. `nsh-secure-storage` (sibling project,
 under construction) may supersede keyring internals behind the same trait.
 

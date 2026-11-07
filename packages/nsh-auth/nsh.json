@@ -1,6 +1,6 @@
 {
   "name": "nsh-auth tests",
-  "id": "dev.nshauth.nsh-auth",
+  "id": "dev.nshauth.nshauth",
   "version": "0.1.0",
   "build": 1,
   "capabilities": {
