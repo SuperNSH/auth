@@ -1,7 +1,9 @@
-// The user profile, loaded from the mock's userinfo endpoint through nsh-query.
-// Call createProfileQuery inside a component; ProfileView draws the result.
+// The user profile, loaded from the mock's userinfo endpoint through nsh-query
+// (TanStack Query on NSH). Call createProfileQuery inside a component;
+// ProfileView draws the result.
 import { Text, View } from "nsh";
-import { createQuery, noRetries, type Query } from "nsh-query";
+import { type QueryObserverResult, createQuery } from "nsh-query";
+import { QueryClient } from "@tanstack/query-core";
 
 export interface Profile {
   sub: string;
@@ -12,22 +14,24 @@ export interface Profile {
 
 const TTL_MS = 30_000;
 
+// One client for every profile query, passed explicitly — no provider subtree
+// to mount. Retry off: a stale-token userinfo does not heal by retrying; the
+// refresh button is the recovery path.
+const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 export function createProfileQuery(props: {
   baseUrl: string;
   /** The realm segment (mock, oidc, ...); the query key follows it, so a
    * provider switch cannot serve the previous realm's cached profile. */
   provider: () => string | undefined;
   token: () => string | undefined;
-}): Query<Profile> {
-  return createQuery<Profile>({
-    key: () => ["userinfo", props.provider() ?? "none"],
-    cache: { ttlMs: TTL_MS },
-    // A failed userinfo (a stale token) does not heal by retrying; the
-    // refresh button is the recovery path.
-    retry: noRetries,
-    // No session, no userinfo call: the enabled getter follows the token.
-    enabled: () => props.token() !== undefined,
-    fetch: async ({ signal }) => {
+}): QueryObserverResult<Profile, Error> {
+  // The accessor form keeps the key, the token gate and the realm in step with
+  // the session: changing any of them moves the query instead of serving a
+  // stale cache entry.
+  return createQuery<Profile>(() => ({
+    queryKey: ["userinfo", props.provider() ?? "none"],
+    queryFn: async ({ signal }) => {
       const response = await fetch(`${props.baseUrl}/${props.provider()}/userinfo`, {
         headers: { Authorization: `Bearer ${props.token()}` },
         signal,
@@ -35,10 +39,12 @@ export function createProfileQuery(props: {
       if (!response.ok) throw new Error(`userinfo failed: HTTP ${response.status}`);
       return (await response.json()) as Profile;
     },
-  });
+    enabled: props.token() !== undefined,
+    staleTime: TTL_MS,
+  }), client);
 }
 
-export function ProfileView(props: { query: Query<Profile> }) {
+export function ProfileView(props: { query: QueryObserverResult<Profile, Error> }) {
   const profile = () => props.query;
   return (
     <View class="gap-2 rounded-(--radius) border border-border bg-card p-4" testID="profile-card">

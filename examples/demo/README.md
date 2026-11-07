@@ -16,7 +16,11 @@ correctly and stops there.
 - The `nsh` CLI, 0.4.0 (never upgrade it).
 - This repository cloned locally (the demo lives in `examples/demo`).
 - The two sibling libraries the demo imports, cloned alongside it — `nsh-form`
-  and `nsh-query` (the paths below assume `~/fo/nsh-form` and `~/fo/nsh-query`;
+  and `nsh-query` (the paths below assume `~/fo/nsh-form` and `~/fo/nsh-query`),
+  **at their default branches**: master carries the TanStack-based API this demo
+  uses (`@tanstack/form-core` / `@tanstack/query-core`, installed with
+  `bun install` inside each sibling — the demo does not declare those packages
+  itself). Older siblings will not compile here.
   adjust if your checkouts live elsewhere). They are external dependencies,
   not part of this repository.
 - `bun`, only if you want to run the sibling libraries' own test suites; the

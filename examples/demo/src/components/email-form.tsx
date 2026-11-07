@@ -2,39 +2,60 @@
 // account screen's contact field — nothing more (the package's signIn has no
 // loginHint parameter yet; see the README).
 import { Text, View } from "nsh";
-import { createForm, email, required } from "nsh-form";
+import { createForm, inputProps } from "nsh-form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { contact, setContact } from "../store";
 
+// Mirrors the old required()+email() rule pair: empty is refused on submit,
+// a malformed address is refused on change.
+function emailError(value: string): string | undefined {
+  if (!value) return "Enter your email";
+  if (!value.includes("@")) return "That is not an email";
+  return undefined;
+}
+
 export function EmailForm() {
   const form = createForm({
-    initial: { email: contact() ?? "" },
-    onSubmit: async (values) => {
-      setContact(values.email.trim());
+    defaultValues: { email: contact() ?? "" },
+    onSubmit: async ({ value }) => {
+      setContact(value.email.trim());
     },
-  });
-  const address = form.field("email", {
-    rules: [required("Enter your email"), email("That is not an email")],
   });
   return (
     <View class="gap-2" testID="email-form">
       <Text class="text-sm font-medium text-foreground">Contact email</Text>
-      <Input
-        placeholder="you@example.com"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        returnKeyType="done"
-        submitBehavior="submit"
-        testID="contact-email"
-        invalid={Boolean(address.error())}
-        {...address.inputProps()}
-      />
-      <If when={address.error()}>
-        {(message) => <Text role="alert" class="text-sm text-destructive">{message()}</Text>}
-      </If>
+      <form.Field
+        name="email"
+        validators={{
+          onChange: ({ value }) => (value.includes("@") ? undefined : "That is not an email"),
+          onSubmit: ({ value }) => emailError(value),
+        }}
+      >
+        {(field) => (
+          <View class="gap-2">
+            <Input
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              returnKeyType="done"
+              submitBehavior="submit"
+              testID="contact-email"
+              invalid={field().state.meta.errors.length > 0}
+              {...inputProps(field)}
+            />
+            <If when={field().state.meta.errors.length > 0}>
+              {() => (
+                <Text role="alert" class="text-sm text-destructive">
+                  {String(field().state.meta.errors[0])}
+                </Text>
+              )}
+            </If>
+          </View>
+        )}
+      </form.Field>
       <Button label="Save email" variant="outline" onPress={() => void form.submit()} testID="save-email" />
       <If when={contact()}>
         {(saved) => <Text class="text-sm text-muted-foreground">{`Saved: ${saved()}`}</Text>}

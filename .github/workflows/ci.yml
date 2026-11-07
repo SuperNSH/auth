@@ -140,6 +140,9 @@ jobs:
           curl -fsSL https://nsh.dev/install.sh | sh
           echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
       - name: Place the sibling libraries the demo imports
         # The demo's README links these into node_modules; CI copies them so the same path works on Windows.
         shell: bash
@@ -207,6 +210,36 @@ jobs:
       - name: Run the whole-tree smoke gate
         run: bash tools/smoke.sh
 
+  host-desktop:
+    name: desktop host (macOS keyring + platform transport)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: host-desktop
+          cache-key-prefix: kache-host-desktop
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          pr-comment: false
+      - name: Place the nsh-http sibling the desktop transport wraps
+        # examples/host-desktop path-depends on nsh-http one level above the checkout;
+        # the sibling is a separate repository (github.com/SuperNSH/http).
+        run: git clone --quiet https://github.com/SuperNSH/http.git "$GITHUB_WORKSPACE/../nsh-http"
+      - name: Format, lint, build and test the desktop host
+        working-directory: examples/host-desktop
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo build
+          cargo test
+
   demo:
     name: demo (${{ matrix.target }})
     if: github.event_name == 'push'
@@ -258,6 +291,9 @@ jobs:
         run: |
           irm https://nsh.dev/install.ps1 | iex
           "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
       - name: Place the sibling libraries the demo imports
         shell: bash
         run: ./tools/ci/place-demo-deps.sh
