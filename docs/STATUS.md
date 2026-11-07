@@ -1,5 +1,32 @@
 # STATUS
 
+## Phase 2.5 — desktop transport on the platform fetch (complete, verified)
+
+Adopted the sibling `nsh-http` (Rust crate wrapping `nsh_core::prelude::fetch`)
+as the desktop host's default transport: `NshHttpTransport` bridges the crate's
+`Http` trait to the single-threaded engine executor (spawn + oneshot receipt;
+the `!Send` value never crosses a thread), `--transport reqwest` remains the
+documented bypass escape hatch with a standing deadline probe. Verified: the
+full mock flow (authorize → exchange → JWKS → session) now completes through
+the platform transport inside the headless engine (~0.1s), gates 22/22, red
+proofs per mapping and flag parse. Rationale is measured, not stylistic:
+`~/fo/nsh-http/docs/decision.md` proves reqwest bypasses the NSH platform
+(ignores the stub network, ignores capability refusal) — so token exchanges
+now run capability-gated and observable. Honest corrections recorded in
+`docs/upstream-issues.md`: the phase-2 reqwest stall did not reproduce under
+the phase-2.5 harness (environment-dependent; probe test shipped), and the
+`Http` trait's `Send` bound requires a bridge for any platform-transport impl
+(structural finding for the crate's design).
+
+**TS side evaluated, not adopted:** the TS core's raw `fetch` runs on the
+engine's global fetch (native, no stall — the stall was Rust-side tokio), and
+its retryability/error taxonomy is core-owned and audit-confirmed; nsh-http's
+TS client overlaps it (including its own single-flight refresh). Recorded as a
+deliberate decision; revisit if the core grows transport needs fetch cannot
+express.
+
+
+
 Final status of the nsh-auth build. Every claim lists how it was verified;
 anything not verified is stated as such. The brief is `docs/PROMPT.md`.
 
