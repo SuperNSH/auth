@@ -1,0 +1,326 @@
+name: CI
+
+# Every compile and test runs here, on GitHub's runners, never on a developer's machine.
+# kache caches compiler outputs in GitHub's Actions cache; only master (the default branch) saves to it.
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  NSH_VERSION: v0.4.0
+  LINUX_PACKAGES: dbus dbus-user-session gnome-keyring libgtk-4-dev libwebkitgtk-6.0-dev clang llvm
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  rust:
+    name: rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: rust-${{ matrix.os }}
+          cache-key-prefix: kache-rust-${{ matrix.os }}
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          pr-comment: false
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace --no-fail-fast
+
+  cross-check:
+    name: check (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # nsh-auth-keyring is desktop-only (macOS, Windows and Linux credential stores),
+        # so the mobile and web checks cover the core crate, nsh-auth.
+        include:
+          - { os: macos-latest, target: aarch64-apple-ios }
+          - { os: macos-latest, target: aarch64-apple-ios-sim }
+          - { os: ubuntu-latest, target: aarch64-linux-android }
+          - { os: ubuntu-latest, target: wasm32-unknown-unknown }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy
+          targets: ${{ matrix.target }}
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: check-${{ matrix.target }}
+          cache-key-prefix: kache-check-${{ matrix.target }}
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          pr-comment: false
+      - name: Point cc at the NDK
+        if: matrix.target == 'aarch64-linux-android'
+        run: |
+          bin="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "CC_aarch64_linux_android=$bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$bin/llvm-ar" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+      - run: cargo clippy -p nsh-auth --target ${{ matrix.target }} --all-features -- -D warnings
+
+  typescript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install NSH
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
+      - name: Check, build and test the TypeScript core
+        working-directory: packages/nsh-auth
+        run: |
+          nsh check
+          nsh build 2>&1 | tee build.log
+          ! grep -i warn build.log
+          nsh test
+          bun test
+      - name: Mock provider suite
+        working-directory: tools/mock-oauth
+        run: bun test
+      - name: Broker suite
+        working-directory: tools/broker
+        run: bun test
+      - name: Tools suite, including the no-secrets scanner tests
+        working-directory: tools
+        run: bun test
+      - name: No-secrets scan
+        run: node tools/check-no-secrets.mjs
+
+  demo-check:
+    name: demo gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install NSH
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Place the sibling libraries the demo imports
+        # The demo's README links these into node_modules; CI copies them so the same path works on Windows.
+        shell: bash
+        run: ./tools/ci/place-demo-deps.sh
+      - name: Check, build and test the demo
+        working-directory: examples/demo
+        run: |
+          nsh check
+          nsh build 2>&1 | tee build.log
+          ! grep -i warn build.log
+          nsh test
+
+  smoke:
+    name: whole-tree smoke gate
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Point the smoke gate's fixed Mac paths at this runner
+        # tools/smoke.sh and examples/host-android/build-gate.sh expect Android Studio's JBR and the SDK under $HOME.
+        run: |
+          sudo mkdir -p "/Applications/Android Studio.app/Contents/jbr/Contents"
+          sudo ln -sfn "$JAVA_HOME" "/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+          mkdir -p "$HOME/Library/Android"
+          ln -sfn "$ANDROID_HOME" "$HOME/Library/Android/sdk"
+      - name: Install the NSH 0.4.0 embedding frameworks
+        # The Xcode project and the Android build read them from the Homebrew prefix.
+        run: |
+          brew install longbridge/tap/nsh
+          brew --prefix nsh
+      - name: Install NSH
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: smoke
+          cache-key-prefix: kache-smoke
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          pr-comment: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
+      - name: Create the simulator the iOS gate builds against
+        # The gate pins one simulator UDID that a hosted runner does not have; this creates a fresh iPhone and
+        # points the runner's copy of the gate at it. The committed script is unchanged.
+        run: |
+          udid="$(python3 tools/ci/create-simulator.py)"
+          echo "simulator $udid"
+          sed -i '' "s/^SIM_UDID=\"[^\"]*\"/SIM_UDID=\"$udid\"/" examples/host-ios/build-gate.sh
+          grep -n '^SIM_UDID=' examples/host-ios/build-gate.sh
+      - name: Run the whole-tree smoke gate
+        run: bash tools/smoke.sh
+
+  demo:
+    name: demo (${{ matrix.target }})
+    if: github.event_name == 'push'
+    needs: [format, rust, cross-check, typescript, demo-check, smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, target: macos, entry: App.tsx }
+          - { os: macos-latest, target: ios-simulator, entry: App.tsx }
+          - { os: ubuntu-latest, target: linux, entry: App.tsx }
+          - { os: ubuntu-latest, target: android, entry: App.tsx }
+          # nsh-query cannot load in the web runtime, so the web surface uses the query-free entry.
+          - { os: ubuntu-latest, target: web, entry: App.web.tsx }
+          - { os: windows-latest, target: windows, entry: App.tsx }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target == 'android' && 'aarch64-linux-android' || matrix.target == 'web' && 'wasm32-unknown-unknown' || matrix.target == 'ios-simulator' && 'aarch64-apple-ios-sim' || '' }}
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: demo-${{ matrix.target }}
+          cache-key-prefix: kache-demo-${{ matrix.target }}
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          pr-comment: false
+      - name: Install the wasm-bindgen CLI that NSH's web runtime needs
+        if: matrix.target == 'web'
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Install NSH
+        if: runner.os != 'Windows'
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install NSH
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          irm https://nsh.dev/install.ps1 | iex
+          "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Place the sibling libraries the demo imports
+        shell: bash
+        run: ./tools/ci/place-demo-deps.sh
+      - name: Work around NSH 0.4.0's crates.io packaging of nsh-platform-ios
+        if: matrix.target == 'ios-simulator'
+        # The published crate includes a file it does not ship, so build NSH's crates from its v0.4.0 source.
+        shell: bash
+        run: |
+          git clone --quiet --depth 1 --branch v0.4.0 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
+          mkdir -p examples/demo/.cargo
+          {
+            echo "[patch.crates-io]"
+            for crate in "$RUNNER_TEMP"/nsh-src/crates/nsh-*; do
+              echo "$(basename "$crate") = { path = \"$crate\" }"
+            done
+          } > examples/demo/.cargo/config.toml
+      - name: Package
+        shell: bash
+        working-directory: examples/demo
+        run: |
+          abi=""
+          [ "${{ matrix.target }}" = android ] && abi="--abi arm64-v8a"
+          nsh package ${{ matrix.entry }} --target ${{ matrix.target }} $abi --app-version 0.1.0 --build ${{ github.run_number }} --out "$RUNNER_TEMP/out"
+      - name: Name the build
+        shell: bash
+        run: |
+          mkdir -p dist
+          cd "$RUNNER_TEMP/out"
+          name="nsh-auth-demo-${{ matrix.target }}"
+          case "${{ matrix.target }}" in
+            android) cp ./*.apk "$GITHUB_WORKSPACE/dist/$name.apk" ;;
+            linux) cp ./*.tar.gz "$GITHUB_WORKSPACE/dist/$name.tar.gz" ;;
+            macos|ios-simulator) ditto -c -k --keepParent ./*.app "$GITHUB_WORKSPACE/dist/$name.zip" ;;
+            windows) 7z a "$GITHUB_WORKSPACE/dist/$name.zip" ./* > /dev/null ;;
+            web) tar -czf "$GITHUB_WORKSPACE/dist/$name.tar.gz" * ;;
+          esac
+          ls -la "$GITHUB_WORKSPACE/dist"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: demo-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: publish the latest build
+    needs: demo
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-latest
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Replace the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
+          gh release create latest dist/* --repo "$REPO" --target "$GITHUB_SHA" --latest \
+            --title "Latest build" \
+            --notes "Demo builds from master at $GITHUB_SHA, replaced on every push to master. Unsigned: macOS and Windows will warn before opening them, and the iOS build runs only in the simulator."
