@@ -7,8 +7,9 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { contact, setContact } from "../store";
 
-// Mirrors the old required()+email() rule pair: empty is refused on submit,
-// a malformed address is refused on change.
+// Mirrors the old required()+email() rule pair: a malformed address is
+// refused on change (empty is not — clearing clears the error), and on
+// submit empty means required, malformed means invalid.
 function emailError(value: string): string | undefined {
   if (!value) return "Enter your email";
   if (!value.includes("@")) return "That is not an email";
@@ -28,7 +29,7 @@ export function EmailForm() {
       <form.Field
         name="email"
         validators={{
-          onChange: ({ value }) => (value.includes("@") ? undefined : "That is not an email"),
+          onChange: ({ value }) => (value && !value.includes("@") ? "That is not an email" : undefined),
           onSubmit: ({ value }) => emailError(value),
         }}
       >
