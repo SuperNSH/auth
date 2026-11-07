@@ -44,17 +44,19 @@ export function createProfileQuery(props: {
 }
 
 export function ProfileView(props: { query: QueryObserverResult<Profile, Error> }) {
-  const profile = () => props.query;
+  // The result is a reactiveResult: its fields are getters, read as plain
+  // properties; only refetch is a method.
+  const query = props.query;
   return (
     <View class="gap-2 rounded-(--radius) border border-border bg-card p-4" testID="profile-card">
       <Text class="text-sm font-medium text-card-foreground">Profile</Text>
-      <If when={profile().isPending()}>
+      <If when={query.isPending}>
         <Text class="text-sm text-muted-foreground">Loading profile…</Text>
       </If>
-      <If when={profile().error()}>
+      <If when={query.error}>
         {(error) => <Text class="text-sm text-destructive">Profile failed: {String(error())}</Text>}
       </If>
-      <If when={profile().data()}>
+      <If when={query.data}>
         {(data) => (
           <View class="gap-1">
             <Text class="text-base font-semibold text-card-foreground">{data().name ?? data().sub}</Text>
