@@ -1,5 +1,6 @@
-//! Refresh: session update, single-flight under parallel callers, and the
-//! revoked-grant sign-out.
+//! Refresh: session update, rotation semantics, single-flight under
+//! parallel callers, the revoked-grant sign-out, and which failures are
+//! transient enough to retry.
 
 mod common;
 
@@ -107,6 +108,42 @@ async fn revoked_refresh_token_signs_out() {
         None,
         "the dead session is dropped"
     );
+}
+
+/// RFC 6749 §5.1/§6: rotation is optional, so a refresh response may omit
+/// `refresh_token`. Dropping the previous token there strands the session
+/// (AppAuth-iOS keeps it, OIDAuthState.m:400-402).
+#[tokio::test]
+async fn refresh_omitting_refresh_token_keeps_the_previous_one() {
+    let setup = setup(mock_config);
+    sign_in(&setup).await; // rt-1
+    setup.mock.set(
+        "/token",
+        200,
+        json!({"access_token": "at-2", "expires_in": 3600}).to_string(),
+    );
+
+    let session = setup.auth.refresh().await.expect("refresh");
+
+    assert_eq!(session.access_token, "at-2");
+    assert_eq!(session.refresh_token.as_deref(), Some("rt-1"));
+    let stored = setup.store.load("mock").unwrap().expect("stored session");
+    assert_eq!(stored.refresh_token.as_deref(), Some("rt-1"));
+
+    // The kept token still refreshes: the session is not stranded.
+    setup.mock.set(
+        "/token",
+        200,
+        json!({"access_token": "at-3", "refresh_token": "rt-3", "expires_in": 3600}).to_string(),
+    );
+    let session = setup
+        .auth
+        .refresh()
+        .await
+        .expect("refresh with the kept token");
+    assert_eq!(session.refresh_token.as_deref(), Some("rt-3"));
+    let body = setup.mock.requests("/token")[2].body.clone();
+    assert!(body.contains("refresh_token=rt-1"), "{body}");
 }
 
 #[tokio::test]
@@ -237,4 +274,95 @@ async fn a_stale_refresh_answer_is_not_applied_over_a_newer_session() {
     );
     assert_eq!(setup.auth.session.get_untracked().as_ref(), Some(&fresh));
     assert_eq!(setup.store.load("mock").unwrap().as_ref(), Some(&fresh));
+}
+
+/// Transient and fatal failures answer differently (AppAuth-iOS
+/// OIDAuthStateErrorDelegate): a 5xx is worth retrying with the session
+/// intact, a revoked grant is not.
+#[test]
+fn retryability_classifies_transient_and_fatal_errors() {
+    for transient in [
+        AuthError::Network("connection reset".to_owned()),
+        AuthError::ServerError("503".to_owned()),
+    ] {
+        assert!(transient.is_retryable(), "{transient:?}");
+    }
+    for fatal in [
+        AuthError::AccessDenied,
+        AuthError::StateMismatch,
+        AuthError::NonceMismatch,
+        AuthError::ExpiredCode,
+        AuthError::InvalidGrant,
+        // A broker's 4xx refusal is fatal; its 5xx arrives as ServerError.
+        AuthError::BrokerError("broker returned status 401".to_owned()),
+        AuthError::StoreError("disk full".to_owned()),
+        AuthError::NoLauncher,
+        AuthError::Unknown("odd shape".to_owned()),
+    ] {
+        assert!(!fatal.is_retryable(), "{fatal:?}");
+    }
+}
+
+#[tokio::test]
+async fn a_server_error_during_refresh_is_transient_and_keeps_the_session() {
+    let setup = setup(mock_config);
+    sign_in(&setup).await;
+    // A plain-text 503: the status, not a JSON error code, is what makes
+    // this transient.
+    setup.mock.set("/token", 503, "backend on fire".to_owned());
+
+    let error = setup
+        .auth
+        .refresh()
+        .await
+        .expect_err("5xx fails the refresh");
+
+    assert!(matches!(error, AuthError::ServerError(_)), "{error:?}");
+    assert!(error.is_retryable());
+    // Status only, never the server-controlled body: it flows into the
+    // error signal and host logs (the TS core reports status only).
+    let message = format!("{error}");
+    assert!(message.contains("503"), "{message}");
+    assert!(!message.contains("backend on fire"), "{message}");
+    // Transient: the session, the store and the status stay as they were.
+    let session = setup.auth.session.get_untracked().expect("session intact");
+    assert_eq!(session.access_token, "at-1");
+    assert_eq!(
+        setup.store.load("mock").unwrap().unwrap().access_token,
+        "at-1"
+    );
+    assert_eq!(setup.auth.status.get_untracked(), AuthStatus::SignedIn);
+
+    // The retry after the server recovers still works.
+    setup.mock.set(
+        "/token",
+        200,
+        json!({"access_token": "at-2", "refresh_token": "rt-2", "expires_in": 3600}).to_string(),
+    );
+    let session = setup.auth.refresh().await.expect("retry refreshes");
+    assert_eq!(session.access_token, "at-2");
+}
+
+#[tokio::test]
+async fn a_network_failure_during_refresh_is_transient() {
+    let setup = setup(mock_config);
+    sign_in(&setup).await;
+    // A port with nothing listening: the connection itself fails.
+    let dead = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+    let port = dead.local_addr().unwrap().port();
+    drop(dead);
+    let mut config = mock_config(&setup.mock);
+    config.token_url = format!("http://127.0.0.1:{port}/token");
+    setup.auth.register(config);
+
+    let error = setup.auth.refresh().await.expect_err("dead endpoint");
+
+    assert!(matches!(error, AuthError::Network(_)), "{error:?}");
+    assert!(error.is_retryable());
+    assert!(setup.auth.session.get_untracked().is_some());
+    assert_eq!(
+        setup.store.load("mock").unwrap().unwrap().access_token,
+        "at-1"
+    );
+    assert_eq!(setup.auth.status.get_untracked(), AuthStatus::SignedIn);
 }

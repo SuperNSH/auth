@@ -9,10 +9,17 @@ publish = false
 # root workspace (crates/nsh-auth) must not pull the example into its lockfile.
 [workspace]
 
+[features]
+default = ["keyring"]
+# The OS credential store behind --store keyring, the default on macOS and
+# Windows; `--no-default-features` builds the JSON-store-only binary.
+keyring = ["dep:nsh-auth-keyring"]
+
 [dependencies]
 env_logger = "0.11"
 log = "0.4"
 nsh-auth = { path = "../../crates/nsh-auth" }
+nsh-auth-keyring = { path = "../../crates/nsh-auth-keyring", optional = true }
 nsh-base = "0.4.0"
 nsh-core = "0.4.0"
 

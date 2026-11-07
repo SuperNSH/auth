@@ -23,6 +23,10 @@ final class AuthHostModule: NSObject, ASWebAuthenticationPresentationContextProv
     private let launchProvider: String?
     private let registeredSchemes: Set<String>
     private weak var anchorView: UIView?
+    // Invariant (Apple FB12132525; AppAuth-iOS OIDExternalUserAgentIOS.m:46-69): a
+    // presented session must outlive its dismiss transition — the completion handler
+    // below never nils this (the next authorize replaces it; only a failed start()
+    // may nil, since nothing was presented; any future cleanup must delay release).
     private var session: ASWebAuthenticationSession?
 
     /// Launch arguments come from the process: `simctl launch <udid>
@@ -61,7 +65,9 @@ final class AuthHostModule: NSObject, ASWebAuthenticationPresentationContextProv
             guard let args = data as? [String: Any], let key = args["key"] as? String, !key.isEmpty else {
                 throw AuthHostError("auth.store.load expects {key}")
             }
-            let stored: Any = self.keychain.load(key: key) ?? NSNull()
+            // Absence is {value: null}; a keychain failure now rejects so the
+            // TS core sees store_error instead of a session that was never stored.
+            let stored: Any = try self.keychain.load(key: key) ?? NSNull()
             return ["value": stored]
         }
 
@@ -105,6 +111,13 @@ final class AuthHostModule: NSObject, ASWebAuthenticationPresentationContextProv
         // cannot capture redirects meant for foreign schemes.
         guard registeredSchemes.contains(scheme) else {
             reply.reject("auth.authorize: the callback scheme is not registered by this app")
+            return
+        }
+        // Guided access blocks the session from ever returning its callback
+        // (rdar://40809553); AppAuth refuses to start one for the same reason
+        // (OIDExternalUserAgentIOS.m:150-152).
+        guard !UIAccessibility.isGuidedAccessEnabled else {
+            reply.reject("auth.authorize: guided access is enabled, so the system sign-in window cannot open or return from it. Turn guided access off and try again.")
             return
         }
         session?.cancel()

@@ -7,9 +7,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-/// Where sessions persist. Keys are provider slugs (`"google"`). Secure
-/// stores (Keychain, Keystore, DPAPI, Secret Service) live in the embedding
-/// hosts; this trait is the seam they implement.
+/// Where sessions persist. Keys are provider slugs (`"google"`). The
+/// embedding hosts bring the mobile secure stores (Keychain, Keystore);
+/// `nsh-auth-keyring` is the desktop one (macOS Keychain, Windows
+/// Credential Manager, Linux Secret Service), and this trait is the seam
+/// they all implement.
 pub trait SessionStore: Send + Sync + 'static {
     fn save(&self, key: &str, session: &Session) -> Result<(), AuthError>;
     fn load(&self, key: &str) -> Result<Option<Session>, AuthError>;

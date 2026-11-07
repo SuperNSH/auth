@@ -16,9 +16,9 @@ The app must declare the names in its `nsh.json`: `"capabilities": { "host":
 
 | Method | Request | Reply | Errors |
 |---|---|---|---|
-| `auth.authorize` | `{url, scheme}` | `{callbackUrl}` | rejected with `"cancelled"` when the user dismisses the session, otherwise the failure message |
+| `auth.authorize` | `{url, scheme}` | `{callbackUrl}` | rejected with `"cancelled"` when the user dismisses the session, otherwise the failure message; rejected up front when guided access is on (the session cannot return from it) |
 | `auth.store.save` | `{key, value}` | `{ok: true}` | non-empty-key validation, keychain OSStatus failures |
-| `auth.store.load` | `{key}` | `{value: string \| null}` | — |
+| `auth.store.load` | `{key}` | `{value: string \| null}` | keychain failures reject with the OSStatus text; only `errSecItemNotFound` yields `{value: null}` |
 | `auth.store.clear` | `{key}` or `{}` | `{ok: true}` | missing `key` clears the whole service |
 | `auth.config` | `{mockBaseUrl?, autoStart?}` | `{mockBaseUrl, autoStart, provider}` | — |
 
@@ -46,6 +46,14 @@ Generic-password items, service `nsh-auth.sandbox`, one item per key
 unlock, but never migrated to another device through backups. The simulator
 needs no entitlement. A test can prove tokens never reach plain `Storage` by
 searching for the service name and checking the app's storage directory.
+
+Reads propagate keychain failures instead of reporting them as absence: only
+`errSecItemNotFound` yields `null` (the TS core's "no session"); any other
+OSStatus rejects `auth.store.load` with a human-readable message, so
+`errSecAuthFailed` or `errSecInteractionNotAllowed` surface as a `store_error`
+rather than silently forcing re-auth. The OSStatus-to-text mapping is adapted
+from expo-secure-store's `SecureStoreExceptions.swift` (MIT, © 650 Industries)
+with a `SecCopyErrorMessageString` fallback for unknown codes.
 
 ## Launch arguments
 

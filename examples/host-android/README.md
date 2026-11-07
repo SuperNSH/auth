@@ -4,12 +4,19 @@ An Android embedding host (`applicationId dev.nshauth.sandbox`) that runs the
 nsh-auth demo app (`examples/demo`) inside a `com.longbridge.nsh.NshView` and
 answers its `host` channel:
 
-- `auth.authorize` opens Custom Tabs (`androidx.browser`) and completes with the
-  custom-scheme redirect, which returns through the
-  `nsh.auth.sandbox://callback` intent filter in
-  `app/src/main/AndroidManifest.xml`.
+- `auth.authorize` picks a browser (AppAuth-style enumeration behind the
+  manifest's `<queries>` block), opens it as a Custom Tab with warm-up and
+  `mayLaunchUrl` prefetch (`androidx.browser`), parks the flow in the sealed
+  store so it survives a process kill, and completes with the custom-scheme
+  redirect, which returns through the `nsh.auth.sandbox://callback` intent
+  filter in `app/src/main/AndroidManifest.xml`. With no browser installed it
+  rejects up front instead of launching into nothing.
+- `auth.pendingAuthorize` reports (or with `{clear: true}` consumes) an
+  authorize flow parked by a process death, including the callback when its
+  redirect arrived after a cold start.
 - `auth.store.save|load|clear` seal tokens with an AndroidKeyStore AES-256/GCM
-  key; ciphertext lands in the app-private file `nsh-auth-store.json`.
+  key (StrongBox where the hardware offers it, unusable while the device is
+  locked); ciphertext lands in the app-private file `nsh-auth-store.json`.
 - `auth.config` reports the launch configuration: `mockBaseUrl` and `autoStart`
   (the `provider` launch intent extra).
 
@@ -137,11 +144,11 @@ with `ERR_ACCESS_DENIED`:
 
 The host grants a ceiling of its own (`setGrantedCapabilities` in
 `MainActivity.kt`): a call must be both declared by the bundle and allowed by
-the host, so the host grant mirrors the demo's names and adds the mock network
-hosts its token exchange fetches need:
+the host, so the host grant mirrors the demo's names (`auth.*` covers all of
+the below) and adds the mock network hosts its token exchange fetches need:
 
 ```json
-{ "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }
+{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }
 ```
 
 Keep the two lists in sync; a host that grants less than the bundle declares
@@ -149,7 +156,8 @@ denies the call with `not granted` even though the app declared it.
 
 | Channel call | Args | Reply | Failure |
 |---|---|---|---|
-| `auth.authorize` | `{url, scheme}` - `scheme` must be `nsh.auth.sandbox`, the scheme the host manifest routes | `{callbackUrl}` | reject `cancelled` (user backed out), `cancelled: superseded by a new authorize call`, a not-registered-scheme error, or an argument error |
+| `auth.authorize` | `{url, scheme, verifier?, state?, provider?}` - `scheme` must be `nsh.auth.sandbox`, the scheme the host manifest routes; the optional fields are parked in the process-death record | `{callbackUrl}` | reject `cancelled` (user backed out), `cancelled: superseded by a new authorize call`, `cancelled: host destroyed`, `auth.authorize: no browser is installed on this device; the authorize URL cannot be opened`, a not-registered-scheme error, or an argument error |
+| `auth.pendingAuthorize` | `{}` to report, `{clear: true}` to consume | `{scheme, url, state?, provider?, verifier?, callbackUrl?}` - `{}` when nothing is parked | - |
 | `auth.store.save` | `{key, value}` (strings) | `{}` | reject with the storage error |
 | `auth.store.load` | `{key}` | `{value: string \| null}` | reject with the storage error |
 | `auth.store.clear` | `{key?}` - no key wipes everything | `{}` | reject with the storage error |
@@ -169,6 +177,15 @@ be `nsh.auth.sandbox`. A redirect completes the pending authorize only when its
 scheme matches and its host and path are exactly the registered `callback` -
 other URIs on that scheme reach the filter but are ignored, so a forged intent
 cannot finish the call; `state` and `code` are the demo core's job to check.
+If the process died mid-flow, a matching cold-start redirect is parked in the
+sealed store with the record and surfaces through `auth.pendingAuthorize`
+instead of being dropped.
+
+The manifest's `<queries>` block (VIEW + BROWSABLE with https and http data
+schemes, plus the `android.support.customtabs.action.CustomTabsService`
+action) exists for Android 11+ package visibility: without it, browser
+enumeration returns nothing and the Custom Tabs service cannot be resolved or
+bound.
 
 ## Files
 

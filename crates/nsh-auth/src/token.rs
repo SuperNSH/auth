@@ -86,10 +86,7 @@ impl Transport {
         }
         let reply = self.http.post_json(url, &body, None).await?;
         if !reply.ok() {
-            return Err(AuthError::BrokerError(format!(
-                "status {}: {}",
-                reply.status, reply.body
-            )));
+            return Err(broker_status_error(reply.status));
         }
         Ok(reply)
     }
@@ -129,10 +126,7 @@ impl Transport {
             });
             let reply = self.http.post_json(broker, &body, None).await?;
             if !reply.ok() {
-                return Err(AuthError::BrokerError(format!(
-                    "status {}: {}",
-                    reply.status, reply.body
-                )));
+                return Err(broker_status_error(reply.status));
             }
             return Ok(());
         }
@@ -151,10 +145,7 @@ impl Transport {
             }
         };
         if !reply.ok() {
-            return Err(AuthError::Unknown(format!(
-                "revoke returned {}: {}",
-                reply.status, reply.body
-            )));
+            return Err(status_error("revoke", reply.status));
         }
         Ok(())
     }
@@ -164,14 +155,46 @@ fn check_status(reply: &HttpReply, what: &str) -> Result<(), AuthError> {
     if reply.ok() {
         Ok(())
     } else {
-        Err(AuthError::Unknown(format!(
-            "{what} returned {}: {}",
-            reply.status, reply.body
-        )))
+        Err(status_error(what, reply.status))
+    }
+}
+
+/// Every non-ok reply follows one rule, shared with the token endpoint
+/// and the broker: the status only is reported — the body is
+/// server-controlled text that would flow into the error signal and host
+/// logs — and a 5xx is the endpoint's own transient failure (`ServerError`,
+/// retryable), anything less is a refusal retrying cannot change.
+fn status_error(what: &str, status: u16) -> AuthError {
+    if status >= 500 {
+        AuthError::ServerError(format!("{what} returned {status}"))
+    } else {
+        AuthError::Unknown(format!("{what} returned {status}"))
+    }
+}
+
+/// The broker's failures split like a provider's (the rule shared with the
+/// TS core): a 5xx is a transient server error worth retrying, a 4xx is
+/// the broker refusing the request for good. Status only — the body is
+/// the broker's text, not ours to flow into error signals and logs.
+fn broker_status_error(status: u16) -> AuthError {
+    if status >= 500 {
+        AuthError::ServerError(format!("broker returned status {status}"))
+    } else {
+        AuthError::BrokerError(format!("broker returned status {status}"))
     }
 }
 
 fn parse_token_response(reply: &HttpReply, grant: Grant) -> Result<TokenResponse, AuthError> {
+    // A 5xx is transient whatever its body says (RFC 6749 §5.2 maps
+    // `server_error` to 500): classified so callers may retry it. The
+    // status only is reported — the body is server-controlled text that
+    // would flow into the error signal and host logs.
+    if reply.status >= 500 {
+        return Err(AuthError::ServerError(format!(
+            "token endpoint returned {}",
+            reply.status
+        )));
+    }
     let body: serde_json::Value = serde_json::from_str(&reply.body).map_err(|_| {
         AuthError::Unknown(format!(
             "token endpoint returned {} and no JSON",

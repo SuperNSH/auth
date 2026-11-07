@@ -6,9 +6,11 @@ export type AuthErrorCode =
   | "expired_code"
   | "invalid_grant"
   | "network"
+  | "server_error"
   | "broker_error"
   | "store_error"
   | "no_launcher"
+  | "interrupted"
   | "unknown";
 
 export class AuthError extends Error {
@@ -18,5 +20,15 @@ export class AuthError extends Error {
     super(message);
     this.name = "AuthError";
     this.code = code;
+  }
+
+  /**
+   * Aligned with the Rust core: transport errors and any 5xx are transient;
+   * every OAuth protocol failure is final. The broker follows the same status
+   * split — its 5xx reports as `server_error` (retryable), its 4xx as
+   * `broker_error` (final).
+   */
+  isRetryable(): boolean {
+    return this.code === "network" || this.code === "server_error";
   }
 }

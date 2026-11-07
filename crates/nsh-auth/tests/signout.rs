@@ -5,7 +5,7 @@
 mod common;
 
 use common::{mock_config, setup, setup_with, sign_in};
-use nsh_auth::{AuthStatus, ProviderId, SessionStore};
+use nsh_auth::{AuthError, AuthStatus, ProviderId, SessionStore};
 use std::sync::Arc;
 
 #[tokio::test]
@@ -26,6 +26,26 @@ async fn sign_out_revokes_clears_and_resets_the_signals() {
     assert_eq!(setup.auth.user.get_untracked(), None);
     assert_eq!(setup.auth.status.get_untracked(), AuthStatus::SignedOut);
     assert_eq!(setup.auth.error.get_untracked(), None);
+    assert_eq!(setup.store.load("mock").unwrap(), None);
+}
+
+/// A 5xx revoke is a transient failure of the provider's side (retryable,
+/// status only), and the local sign-out stands regardless: tokens are
+/// cleared first, revocation reports separately.
+#[tokio::test]
+async fn a_5xx_revoke_failure_is_transient_and_the_local_sign_out_stands() {
+    let setup = setup(mock_config);
+    sign_in(&setup).await;
+    setup.mock.set("/revoke", 503, "revoke on fire".to_owned());
+
+    let error = setup.auth.sign_out().await.expect_err("a 5xx revoke fails");
+
+    assert!(matches!(error, AuthError::ServerError(_)), "{error:?}");
+    assert!(error.is_retryable());
+    let message = format!("{error}");
+    assert!(message.contains("503"), "{message}");
+    assert!(!message.contains("revoke on fire"), "{message}");
+    assert_eq!(setup.auth.status.get_untracked(), AuthStatus::SignedOut);
     assert_eq!(setup.store.load("mock").unwrap(), None);
 }
 

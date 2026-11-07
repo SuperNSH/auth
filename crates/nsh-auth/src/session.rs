@@ -32,11 +32,18 @@ impl std::fmt::Debug for Session {
     }
 }
 
+/// How far ahead of expiry a session counts as expired: a refresh sent
+/// inside this window could carry a token that dies mid-request, so callers
+/// refresh proactively instead. AppAuth's state objects use the same 60 s
+/// tolerance (OIDAuthState.m).
+pub const EXPIRY_TOLERANCE_MS: i64 = 60_000;
+
 impl Session {
-    /// Whether the access token is expired at `now_ms` (never when the
-    /// provider set no expiry).
+    /// Whether the access token is expired at `now_ms`: true at expiry and
+    /// already true [`EXPIRY_TOLERANCE_MS`] before it. Never when the
+    /// provider set no expiry (GitHub tokens do not expire).
     pub fn expired(&self, now_ms: i64) -> bool {
-        self.expires_at != 0 && now_ms >= self.expires_at
+        self.expires_at != 0 && now_ms.saturating_add(EXPIRY_TOLERANCE_MS) >= self.expires_at
     }
 }
 

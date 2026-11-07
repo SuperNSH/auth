@@ -1,8 +1,10 @@
-//! The loopback callback server: binds 127.0.0.1 on an OS-assigned port and
-//! hands the first valid `/callback` request of a sign-in to that flow.
+//! The loopback callback server: binds 127.0.0.1 (OS-assigned port unless
+//! pinned) and hands the first valid `/callback` request of a sign-in to
+//! that flow.
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 
@@ -17,24 +19,35 @@ pub(crate) struct CallbackServer {
     /// connection then gets a "nothing is pending" page. `take`d on use, so
     /// one registration serves exactly one callback.
     registration: Mutex<Option<mpsc::Sender<String>>>,
+    /// Set by `cancel()`; the accept loop checks it after each connection.
+    cancelled: AtomicBool,
+    /// Signalled when the accept loop has exited and the listener is closed.
+    closed_receiver: Mutex<mpsc::Receiver<()>>,
 }
 
 impl CallbackServer {
-    /// Binds and starts the accept thread, which lives for the app run; the
-    /// process owns the listener, so nothing needs to stop it by hand.
-    pub(crate) fn bind() -> std::io::Result<Arc<Self>> {
-        // Port 0: the OS assigns a free port, and the redirect URI must
-        // carry the one actually bound.
-        let listener = TcpListener::bind(("127.0.0.1", 0))?;
+    /// Binds 127.0.0.1. `None` lets the OS assign a free port, which every
+    /// loopback provider in `docs/providers.md` accepts; `Some(port)` pins an
+    /// exact port for providers that require a pre-registered one (the
+    /// fixed-port option of tauri-plugin-oauth 2.1.0, MIT OR Apache-2.0).
+    /// Path, method, Host, byte cap and timeout checks apply either way.
+    pub(crate) fn bind(fixed_port: Option<u16>) -> std::io::Result<Arc<Self>> {
+        let listener = TcpListener::bind(("127.0.0.1", fixed_port.unwrap_or(0)))?;
         let port = listener.local_addr()?.port();
+        let (closed_sender, closed_receiver) = mpsc::channel();
         let server = Arc::new(Self {
             port,
             registration: Mutex::new(None),
+            cancelled: AtomicBool::new(false),
+            closed_receiver: Mutex::new(closed_receiver),
         });
         let loop_server = Arc::clone(&server);
         std::thread::Builder::new()
             .name("nsh-auth-callback".to_owned())
-            .spawn(move || accept_loop(listener, loop_server))?;
+            .spawn(move || {
+                accept_loop(listener, loop_server);
+                let _ = closed_sender.send(());
+            })?;
         Ok(server)
     }
 
@@ -56,6 +69,34 @@ impl CallbackServer {
         *self.lock() = None;
     }
 
+    /// Stops the accept loop: the flag goes up first, then a connection to
+    /// our own listener unblocks the pending `accept` (tauri-plugin-oauth
+    /// 2.1.0's `cancel(port)` shutdown, MIT OR Apache-2.0). The loop exits
+    /// once the connection being handled returns; the port closes with the
+    /// listener. Callbacks arriving after this are refused.
+    pub(crate) fn cancel(&self) {
+        if self.cancelled.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        // A failed connect means the listener is already gone; the loop sees
+        // the flag on its next iteration either way.
+        let _ = TcpStream::connect(("127.0.0.1", self.port));
+    }
+
+    /// Blocks until the accept loop has exited and the port is closed, or
+    /// `timeout` elapses. Hosts and tests await this instead of guessing.
+    pub(crate) fn wait_closed(&self, timeout: Duration) -> bool {
+        let receiver = self
+            .closed_receiver
+            .lock()
+            .expect("accept-loop signal mutex is not poisoned");
+        match receiver.recv_timeout(timeout) {
+            Ok(()) => true,
+            Err(mpsc::RecvTimeoutError::Disconnected) => true,
+            Err(mpsc::RecvTimeoutError::Timeout) => false,
+        }
+    }
+
     fn lock(&self) -> std::sync::MutexGuard<'_, Option<mpsc::Sender<String>>> {
         self.registration
             .lock()
@@ -63,8 +104,24 @@ impl CallbackServer {
     }
 }
 
+/// The human-facing reason a bind failed, distinguishing a pinned
+/// `--redirect-port` from the usual OS-assigned bind.
+pub(crate) fn bind_error(fixed_port: Option<u16>, error: &std::io::Error) -> String {
+    match fixed_port {
+        Some(port) => format!(
+            "could not bind the callback listener on 127.0.0.1:{port} (--redirect-port): {error}; close whatever holds the port or pick another",
+        ),
+        None => format!("could not bind a loopback port for the callback listener: {error}"),
+    }
+}
+
 fn accept_loop(listener: TcpListener, server: Arc<CallbackServer>) {
     for stream in listener.incoming() {
+        // The cancel connection is dropped unread; its only job is waking
+        // accept so the listener can close.
+        if server.cancelled.load(Ordering::SeqCst) {
+            break;
+        }
         match stream {
             Ok(stream) => handle_connection(stream, &server),
             Err(error) => log::debug!("callback accept failed: {error}"),
@@ -158,6 +215,7 @@ mod tests {
 
     use std::io::BufRead;
     use std::io::BufReader;
+    use std::net::SocketAddr;
 
     /// One HTTP exchange against the bound server; returns status, body and
     /// a reader over the rest.
@@ -199,7 +257,7 @@ mod tests {
 
     #[test]
     fn the_registered_flow_receives_one_callback_url() {
-        let server = CallbackServer::bind().expect("bind");
+        let server = CallbackServer::bind(None).expect("bind");
         let receiver = server.register();
         let port = server.port;
         let query = "code=sandbox-code&state=sandbox-state";
@@ -225,7 +283,7 @@ mod tests {
 
     #[test]
     fn a_wrong_path_or_host_or_method_is_refused() {
-        let server = CallbackServer::bind().expect("bind");
+        let server = CallbackServer::bind(None).expect("bind");
         let _receiver = server.register();
         let port = server.port;
         let host = format!("127.0.0.1:{port}");
@@ -241,5 +299,74 @@ mod tests {
             ),
         );
         assert_eq!(status, 405);
+    }
+
+    #[test]
+    fn cancel_unblocks_the_accept_loop_and_closes_the_port() {
+        let server = CallbackServer::bind(None).expect("bind");
+        let port = server.port;
+        let receiver = server.register();
+        // One handled exchange puts the loop back into a blocking accept;
+        // that pending accept is what cancel() must wake. No probe
+        // connections follow: cancel() itself has to do the unblocking.
+        let host = format!("127.0.0.1:{port}");
+        let _ = exchange(&server, &request(&host, "/nothing"));
+        std::thread::sleep(Duration::from_millis(50));
+        server.cancel();
+        assert!(
+            server.wait_closed(Duration::from_secs(2)),
+            "accept loop did not end after cancel()"
+        );
+        // With the loop gone the listener is dropped: connects are refused.
+        let address: SocketAddr = format!("127.0.0.1:{port}").parse().expect("address");
+        assert!(
+            TcpStream::connect_timeout(&address, Duration::from_millis(500)).is_err(),
+            "the port stayed open after cancel()"
+        );
+        // A cancelled server delivers nothing, not even to a live registration.
+        assert!(receiver.recv_timeout(Duration::from_millis(100)).is_err());
+    }
+
+    #[test]
+    fn a_pinned_port_binds_and_serves_the_callback_on_it() {
+        // A port that is free right now, released for the pinned bind.
+        let probe = TcpListener::bind(("127.0.0.1", 0)).expect("probe bind");
+        let port = probe.local_addr().expect("probe addr").port();
+        drop(probe);
+        let server = CallbackServer::bind(Some(port)).expect("pinned bind");
+        assert_eq!(server.port, port);
+        assert!(
+            server
+                .redirect_uri()
+                .ends_with(&format!(":{port}{CALLBACK_PATH}")),
+            "{}",
+            server.redirect_uri()
+        );
+        let receiver = server.register();
+        let host = format!("127.0.0.1:{port}");
+        let (status, body) = exchange(&server, &request(&host, "/callback?code=x&state=y"));
+        assert_eq!(status, 200);
+        assert!(body.contains("Sign-in received"), "{body}");
+        assert_eq!(
+            receiver.recv_timeout(Duration::from_secs(2)).expect("url"),
+            format!("http://127.0.0.1:{port}/callback?code=x&state=y")
+        );
+        server.cancel();
+    }
+
+    #[test]
+    fn a_taken_pinned_port_is_a_clear_error() {
+        let holder = TcpListener::bind(("127.0.0.1", 0)).expect("holder bind");
+        let port = holder.local_addr().expect("holder addr").port();
+        let error = match CallbackServer::bind(Some(port)) {
+            Ok(_) => panic!("binding a held port must fail"),
+            Err(error) => error,
+        };
+        let message = bind_error(Some(port), &error);
+        assert!(message.contains(&format!("127.0.0.1:{port}")), "{message}");
+        assert!(message.contains("--redirect-port"), "{message}");
+        assert!(message.contains("already in use"), "{message}");
+        // Held only by the test's own listener; released at scope end.
+        drop(holder);
     }
 }

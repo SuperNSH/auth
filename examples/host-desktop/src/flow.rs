@@ -5,8 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use nsh_auth::{
-    Auth, AuthConfig, JsonFileStore, MemoryStore, ProviderId, ReqwestHttp, SessionStore,
-    SystemClock,
+    Auth, AuthConfig, Http, MemoryStore, ProviderId, ReqwestHttp, SessionStore, SystemClock,
 };
 use nsh_core::prelude::*;
 
@@ -83,23 +82,29 @@ pub(crate) struct Launcher {
     pub(crate) redirect_origin: SharedString,
     pub(crate) startup_provider: Option<ProviderId>,
     generation: Stored<u64>,
-    /// A `Task` cancels when its handle drops, so both handles of the flow —
-    /// the work and its watchdog — are held here, not left on the floor.
+    /// The flow's handles: the watchdog cancels the work through them and a
+    /// new flow cancels the abandoned one. (A dropped `Spawned` does not
+    /// cancel: `spawn` detaches its tasks.)
     pending: Stored<Option<Spawned<()>>>,
     watchdog: Stored<Option<Spawned<()>>>,
+    /// The in-flight sign-out, kept alongside them. Its task is rooted on
+    /// `owner`, not on the button's run, so it survives the button going.
+    sign_out_task: Stored<Option<Spawned<()>>>,
+    /// The launcher's own root owner (`create_root`): fire-and-forget work
+    /// is rooted here so it outlives the run that made the control.
+    owner: Owner,
 }
 
 impl Launcher {
-    /// The launcher the app runs with: sessions persisted in the 0600 JSON
-    /// file under the user's home.
+    /// The launcher the app runs with: sessions persisted in the store the
+    /// command line chose — OS credential store by default on macOS and
+    /// Windows, 0600 JSON files otherwise. The active store is logged here,
+    /// so a fallback is visible in the proof log.
     pub(crate) fn connect() -> Result<Self, String> {
-        Self::connect_with(
-            Arc::new(
-                JsonFileStore::new(crate::session_store::sessions_dir())
-                    .map_err(|error| error.to_string())?,
-            ),
-            &Options::from_env(),
-        )
+        let options = Options::from_env();
+        let (store, store_note) = crate::session_store::select(&options)?;
+        log::info!("{store_note}");
+        Self::connect_with(store, &options)
     }
 
     /// `store` and `options` are injected so tests run on `MemoryStore` with
@@ -108,7 +113,18 @@ impl Launcher {
         store: Arc<dyn SessionStore>,
         options: &Options,
     ) -> Result<Self, String> {
-        let (server, redirect, bind_error) = match CallbackServer::bind() {
+        let http = Arc::new(ReqwestHttp::new().map_err(|error| error.to_string())?);
+        Self::connect_with_http(store, http, options)
+    }
+
+    /// `http` is injected too so tests run on an in-process transport; the
+    /// app itself always runs on reqwest.
+    pub(crate) fn connect_with_http(
+        store: Arc<dyn SessionStore>,
+        http: Arc<dyn Http>,
+        options: &Options,
+    ) -> Result<Self, String> {
+        let (server, redirect, bind_error) = match CallbackServer::bind(options.redirect_port) {
             Ok(server) => {
                 let redirect = server.redirect_uri();
                 (Some(server), redirect, None)
@@ -116,17 +132,17 @@ impl Launcher {
             Err(error) => (
                 None,
                 "http://127.0.0.1:0/callback".to_owned(),
-                Some(SharedString::from(format!(
-                    "Could not bind a loopback port: {error}"
+                Some(SharedString::from(crate::loopback::bind_error(
+                    options.redirect_port,
+                    &error,
                 ))),
             ),
         };
-        let http = Arc::new(ReqwestHttp::new().map_err(|error| error.to_string())?);
         // Runs where a reactive runtime is entered: the caller is a component
         // body (or a test's headless component). Dropping the owner handle
         // does not dispose the root — only `Owner::dispose` would — so the
         // signals live past this function, which is what the app wants.
-        let (_owner, auth) = nsh_core::element::create_root(|| {
+        let (owner, auth) = nsh_core::element::create_root(|| {
             let first = build_config(PROVIDERS[0].id, &redirect, options);
             let auth = Auth::new(first, store, Arc::new(SystemClock), http);
             for row in PROVIDERS.iter().skip(1) {
@@ -169,6 +185,8 @@ impl Launcher {
             generation: stored(0_u64),
             pending: stored(None),
             watchdog: stored(None),
+            sign_out_task: stored(None),
+            owner,
         };
         let initial_error = unknown.or(bind_error);
         if let Some(message) = initial_error {
@@ -330,12 +348,17 @@ pub(crate) fn sign_in(launcher: &Launcher, provider: ProviderId) {
 
 pub(crate) fn sign_out(launcher: &Launcher) {
     let auth = Arc::clone(&launcher.auth);
-    spawn(async move {
-        match auth.sign_out().await {
-            Ok(()) => log::info!("signed out"),
-            Err(error) => log::info!("sign-out failed: {error}"),
-        }
+    // Rooted on the launcher's owner: the press unmounts the button, whose
+    // run owns the task — rooted there it dies before the revoke's last poll.
+    let task = launcher.owner.run(|| {
+        spawn(async move {
+            match auth.sign_out().await {
+                Ok(()) => log::info!("signed out"),
+                Err(error) => log::info!("sign-out failed: {error}"),
+            }
+        })
     });
+    launcher.sign_out_task.replace(Some(task));
 }
 
 /// `--print-urls`: build the flow's authorize URL and print exactly it on
@@ -350,10 +373,13 @@ pub fn print_authorize_url(options: &Options) -> std::process::ExitCode {
     };
     // `MemoryStore`: the URL is printed, never completed, so nothing lands
     // on disk from a proof run.
-    let server = match CallbackServer::bind() {
+    let server = match CallbackServer::bind(options.redirect_port) {
         Ok(server) => server,
         Err(error) => {
-            eprintln!("could not bind a loopback port: {error}");
+            eprintln!(
+                "{}",
+                crate::loopback::bind_error(options.redirect_port, &error)
+            );
             return std::process::ExitCode::FAILURE;
         }
     };
@@ -375,6 +401,12 @@ pub fn print_authorize_url(options: &Options) -> std::process::ExitCode {
         );
         auth.authorize_request(provider)
     });
+    // The redirect URI was all the listener was needed for; stop its accept
+    // thread instead of leaving it until process exit, and let a pinned
+    // `--redirect-port` become reusable at once. Best effort only: a client
+    // mid-read can hold the loop for its remaining read timeout.
+    server.cancel();
+    let _ = server.wait_closed(Duration::from_secs(1));
     match request {
         Ok(request) => {
             println!("{}", request.url);

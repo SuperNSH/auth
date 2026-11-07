@@ -8,6 +8,7 @@ import { AuthError } from "../src/errors";
 import { decodeJwt, verifyIdToken } from "../src/jwks";
 import { codeChallengeS256, createCodeVerifier, createNonce, createState } from "../src/pkce";
 import { providerConfig } from "../src/providers";
+import { sessionExpired, type Session } from "../src/types";
 import { exchangeCode, refreshTokens, revokeToken } from "../src/tokens";
 import { mapUserInfo } from "../src/userinfo";
 
@@ -16,6 +17,7 @@ interface Hit {
   path: string;
   query: string;
   body: string | null;
+  headers: Record<string, string>;
 }
 
 const hits: Hit[] = [];
@@ -48,7 +50,13 @@ beforeAll(async () => {
     port: 0,
     async fetch(request) {
       const url = new URL(request.url);
-      hits.push({ method: request.method, path: url.pathname, query: url.search, body: await request.text() });
+      hits.push({
+        method: request.method,
+        path: url.pathname,
+        query: url.search,
+        body: await request.text(),
+        headers: Object.fromEntries(request.headers.entries()),
+      });
       if (url.pathname === "/mock/token" || url.pathname === "/broker/token") {
         if (url.pathname === "/mock/token" && behavior.tokenError) {
           return Response.json({ error: behavior.tokenError.error, error_description: behavior.tokenError.description }, { status: behavior.tokenError.status });
@@ -295,6 +303,76 @@ describe("token exchange", () => {
     }).catch((error: AuthError) => error);
     expect(failure.code).toBe("network");
   });
+
+  test("token requests announce Accept: application/json", async () => {
+    hits.length = 0;
+    behavior = {};
+    await exchangeCode({
+      config: providerConfig("mock", base),
+      clientId: "sandbox-client",
+      redirectUri: "r",
+      code: "loop-code",
+      codeVerifier: "v".repeat(43),
+      nowMs: ZERO_CLOCK.nowMs,
+      fallbackScope: "s",
+    });
+    await refreshTokens({
+      config: providerConfig("mock", base),
+      clientId: "sandbox-client",
+      refreshToken: "old-refresh",
+      nowMs: ZERO_CLOCK.nowMs,
+      fallbackScope: "s",
+    });
+    const posted = hits.filter((entry) => entry.path === "/mock/token" && entry.method === "POST");
+    expect(posted).toHaveLength(2);
+    for (const hit of posted) expect(hit.headers["accept"]).toBe("application/json");
+  });
+});
+
+describe("retryability", () => {
+  test("transport and 5xx failures are transient; OAuth protocol failures are final", () => {
+    expect(new AuthError("network", "x").isRetryable()).toBe(true);
+    expect(new AuthError("server_error", "x").isRetryable()).toBe(true);
+    const fatal = [
+      "access_denied",
+      "state_mismatch",
+      "nonce_mismatch",
+      "expired_code",
+      "invalid_grant",
+      "broker_error",
+      "store_error",
+      "no_launcher",
+      "unknown",
+    ] as const;
+    for (const code of fatal) expect(new AuthError(code, "x").isRetryable()).toBe(false);
+  });
+
+  test("a 5xx token answer is server_error; a 400 keeps its OAuth error", async () => {
+    behavior = { tokenError: { status: 502, error: "server_error", description: "upstream down" } };
+    const crashed = await exchangeCode({
+      config: providerConfig("mock", base),
+      clientId: "c",
+      redirectUri: "r",
+      code: "x",
+      codeVerifier: "v".repeat(43),
+      nowMs: ZERO_CLOCK.nowMs,
+      fallbackScope: "s",
+    }).catch((error: AuthError) => error);
+    expect(crashed.code).toBe("server_error");
+    expect(crashed.isRetryable()).toBe(true);
+    behavior = { tokenError: { status: 400, error: "invalid_grant", description: "bad verification code" } };
+    const rejected = await exchangeCode({
+      config: providerConfig("mock", base),
+      clientId: "c",
+      redirectUri: "r",
+      code: "x",
+      codeVerifier: "v".repeat(43),
+      nowMs: ZERO_CLOCK.nowMs,
+      fallbackScope: "s",
+    }).catch((error: AuthError) => error);
+    expect(rejected.code).toBe("invalid_grant");
+    expect(rejected.isRetryable()).toBe(false);
+  });
 });
 
 describe("the broker", () => {
@@ -315,6 +393,8 @@ describe("the broker", () => {
     const hit = hits.find((entry) => entry.path === "/broker/token");
     const payload = JSON.parse(hit?.body ?? "{}") as Record<string, unknown>;
     expect(payload).toEqual({ provider: "github", code: "gh-code", codeVerifier: "v".repeat(43), redirectUri: "nsh-auth-demo://callback" });
+    // AppAuth-Android sends this for GitHub, which answers form-encoded without it.
+    expect(hit?.headers["accept"]).toBe("application/json");
     const refused = await exchangeCode({
       config: github,
       clientId: "c",
@@ -383,6 +463,21 @@ describe("direct refresh and revoke", () => {
     await revokeToken({ config: mock, token: "dead-token" });
     const revokeForm = new URLSearchParams(hits.find((entry) => entry.path === "/mock/revoke")?.body ?? "");
     expect(revokeForm.get("token")).toBe("dead-token");
+  });
+});
+
+describe("expiry tolerance", () => {
+  const session = (expiresAt: number): Session => ({ provider: "mock", accessToken: "a", expiresAt, scope: "s" });
+
+  test("a session expiring within the 60-second margin counts as expired", () => {
+    expect(sessionExpired(session(30_000), 0)).toBe(true);
+    expect(sessionExpired(session(60_000), 0)).toBe(true);
+    expect(sessionExpired(session(60_001), 0)).toBe(false);
+    expect(sessionExpired(session(120_000), 29_000)).toBe(false);
+  });
+
+  test("an expiry of 0 means no expiry, as GitHub tokens do not expire", () => {
+    expect(sessionExpired(session(0), Number.MAX_SAFE_INTEGER)).toBe(false);
   });
 });
 

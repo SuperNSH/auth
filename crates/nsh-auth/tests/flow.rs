@@ -221,6 +221,89 @@ async fn github_exchange_goes_through_the_broker_with_no_secret() {
     );
 }
 
+/// A 5xx from any non-token endpoint is the same transient server failure
+/// a token-endpoint 5xx is: retryable, reported as a status only, never
+/// the server's body text.
+#[tokio::test]
+async fn a_5xx_userinfo_failure_is_transient_and_carries_no_body() {
+    let setup = setup(mock_config);
+    let (nonce, state) = authorize_mock(&setup.auth);
+    arm_success(&setup.mock, &nonce);
+    setup
+        .mock
+        .set("/userinfo", 503, "userinfo on fire".to_owned());
+
+    let error = setup
+        .auth
+        .complete(ProviderId::Mock, &callback("code-1", &state))
+        .await
+        .expect_err("a 5xx userinfo fails the sign-in");
+
+    assert!(matches!(error, AuthError::ServerError(_)), "{error:?}");
+    assert!(error.is_retryable());
+    let message = format!("{error}");
+    assert!(message.contains("503"), "{message}");
+    assert!(!message.contains("userinfo on fire"), "{message}");
+    // A failed sign-in publishes no session.
+    assert_eq!(setup.auth.session.get_untracked(), None);
+}
+
+/// The broker's failures split like a provider's (the rule shared with the
+/// TS core): a 5xx is a transient server error worth retrying, a 4xx is
+/// the broker refusing the request for good. Status only either way — the
+/// body is the broker's text, not ours to log.
+#[tokio::test]
+async fn broker_failures_split_by_status() {
+    let setup = setup(|mock| {
+        let mut config = AuthConfig::for_provider(ProviderId::Github)
+            .client_id(CLIENT_ID)
+            .redirect_uri(REDIRECT_URI);
+        config.token_url = mock.url("/token");
+        config.userinfo_url = Some(mock.url("/userinfo"));
+        config.broker_url = Some(mock.url("/broker"));
+        config
+    });
+
+    let request = setup
+        .auth
+        .authorize_request(ProviderId::Github)
+        .expect("authorize");
+    let state = query_pair(&request.url, "state");
+    setup.mock.set("/broker", 503, "broker on fire".to_owned());
+    let error = setup
+        .auth
+        .complete(ProviderId::Github, &callback("gh-code", &state))
+        .await
+        .expect_err("a 5xx broker fails the exchange");
+    assert!(matches!(error, AuthError::ServerError(_)), "{error:?}");
+    assert!(error.is_retryable());
+    let message = format!("{error}");
+    assert!(message.contains("503"), "{message}");
+    assert!(!message.contains("broker on fire"), "{message}");
+
+    // `state` is single-use: a fresh authorize for the second leg.
+    let request = setup
+        .auth
+        .authorize_request(ProviderId::Github)
+        .expect("authorize again");
+    let state = query_pair(&request.url, "state");
+    setup.mock.set(
+        "/broker",
+        401,
+        json!({"error": "unknown client"}).to_string(),
+    );
+    let error = setup
+        .auth
+        .complete(ProviderId::Github, &callback("gh-code-2", &state))
+        .await
+        .expect_err("a 4xx broker fails the exchange");
+    assert!(matches!(error, AuthError::BrokerError(_)), "{error:?}");
+    assert!(!error.is_retryable());
+    let message = format!("{error}");
+    assert!(message.contains("401"), "{message}");
+    assert!(!message.contains("unknown client"), "{message}");
+}
+
 #[tokio::test]
 async fn an_unconfigured_provider_is_refused() {
     let setup: Setup = setup(|_| {

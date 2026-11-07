@@ -149,6 +149,19 @@ handing the session's ID token to the Firebase credential API. Nothing to config
   Keystore. See [docs/threats.md](docs/threats.md) for the full picture, including what the
   mitigations do not claim.
 
+## Third-party code
+
+Parts of the native layers build on proven library work: browser-selection and
+custom-tab code translated from AppAuth-Android into this repository's Kotlin,
+small behaviors adapted from AppAuth-iOS, flutter_secure_storage and
+expo-secure-store into our own Swift/Kotlin, and the keyring crate family plus
+androidx.browser consumed as dependencies. What was taken from each, with
+copyright lines and license texts, is recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Provider logos and sign-in
+button artwork are deliberately not stored here; the demo renders
+brand-compliant buttons with assets the app owner supplies (see
+[docs/providers.md](docs/providers.md)).
+
 ## Where to look
 
 | Path | Contents |

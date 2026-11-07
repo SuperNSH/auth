@@ -2,7 +2,9 @@
 
 mod common;
 
-use nsh_auth::{JsonFileStore, MemoryStore, ProviderId, Session, SessionStore};
+use nsh_auth::{
+    EXPIRY_TOLERANCE_MS, JsonFileStore, MemoryStore, ProviderId, Session, SessionStore,
+};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 fn session(access_token: &str) -> Session {
@@ -62,9 +64,21 @@ fn json_file_store_round_trips_owner_only() {
 #[test]
 fn session_expiry_follows_the_clock() {
     let mut session = session("at-1");
-    assert!(!session.expired(1_767_258_000_000 - 1));
+    // Valid while more than the tolerance remains, expired from 60 s out.
+    assert!(!session.expired(1_767_258_000_000 - EXPIRY_TOLERANCE_MS - 1));
     assert!(session.expired(1_767_258_000_000));
     // 0 means the provider set no expiry (GitHub): never expired.
     session.expires_at = 0;
     assert!(!session.expired(i64::MAX));
+}
+
+/// A session with half the tolerance left counts as expired: a refresh
+/// sent then could carry a token that dies mid-request (AppAuth refreshes
+/// with the same 60 s margin, OIDAuthState.m).
+#[test]
+fn a_session_expiring_in_30s_counts_as_expired() {
+    let session = session("at-1"); // expires at 1_767_258_000_000
+    assert!(session.expired(1_767_258_000_000 - 30_000));
+    // One past the tolerance it is still good.
+    assert!(!session.expired(1_767_258_000_000 - EXPIRY_TOLERANCE_MS - 1));
 }

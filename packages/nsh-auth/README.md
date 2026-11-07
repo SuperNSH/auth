@@ -60,17 +60,53 @@ no secret ever travels in a request from the app.
 check `state`, exchange the code, verify the id token's signature and `nonce`,
 load the user, store the session.
 
+## Surviving process death (hosts)
+
+`signIn`'s host call carries `verifier`, `state` and `provider` next to
+`url` and `scheme`, so the host can seal a parked record (no tokens in it) and
+the sign-in can outlive the process that started it. At boot, on a host, the
+core asks `auth.pendingAuthorize`:
+
+- With a `callbackUrl` (the redirect arrived while the app was dead), the core
+  rebuilds the flow from the record — `state` and `nonce` from it and the
+  authorize URL, PKCE verifier included — completes the exchange, saves the
+  session, and sends `{ clear: true }` to consume the record.
+- Without one, the browser was opened but never returned. The core reports
+  `interrupted` on `error` and does **not** re-launch anything: a browser only
+  ever opens on a user action. The record stays parked — its redirect may
+  still arrive on a later boot, and a new `signIn` supersedes it host-side.
+- A record that cannot answer a callback is cleared and reported as
+  `interrupted` — fail closed: missing `url`, `state` or `provider`; a sealed
+  URL whose `state` disagrees with the record's; a wants-nonce provider whose
+  sealed URL carries no `nonce` (never exchange without nonce binding); a PKCE
+  provider with no `verifier` (never burn a single-use code on a doomed
+  exchange).
+
+Hostless and web builds never call the channel; a host that predates it just
+fails the call, which the core reads as "nothing parked".
+
 ## Errors
 
 `auth.error()` holds an `AuthError` with a `code`: `access_denied`,
 `state_mismatch`, `nonce_mismatch`, `expired_code`, `invalid_grant`, `network`,
-`broker_error`, `store_error`, `no_launcher`, `unknown`. The rejected `signIn`,
-`handleRedirect`, `refresh` or `signOut` promise carries the same error. A
-refresh the server rejects as `invalid_grant` (revoked, expired) drops the
-local session.
+`server_error`, `broker_error`, `store_error`, `no_launcher`, `interrupted`,
+`unknown`. The rejected `signIn`, `handleRedirect`, `refresh` or `signOut`
+promise carries the same error. A refresh the server rejects as `invalid_grant`
+(revoked, expired) drops the local session.
 
-A restored session comes back only while unexpired; an expired one is cleared
-at startup. `user` is filled by the sign-in flow, not by restore.
+`error.isRetryable()` says whether the same request can succeed later: the
+transient failures are `network` and `server_error` (any 5xx from a token
+endpoint or the broker); everything else — the OAuth protocol errors, state and
+nonce mismatches, store and broker failures — is final. A transient refresh
+failure reports on `error` and leaves the session in place for a retry.
+
+A refresh response that omits `refresh_token` keeps the session's previous one
+(RFC 6749 §6: the server may rotate the token or leave it unchanged).
+
+A restored session comes back only while it outlives a 60-second proactive
+margin (`EXPIRY_TOLERANCE_MS`): one expiring sooner counts as expired and is
+cleared at startup, so no request goes out on a token that dies mid-flight.
+`user` is filled by the sign-in flow, not by restore.
 
 ## The mock and the broker
 
@@ -87,7 +123,9 @@ The broker contract (`brokerUrl`): `POST {brokerUrl}/token` with JSON
 `{ provider, code, codeVerifier, redirectUri }` or
 `{ provider, refreshToken }`, answering `{ accessToken, refreshToken?,
 idToken?, expiresIn?, scope? }`; `POST {brokerUrl}/revoke` with
-`{ provider, token }`. A reference broker lives in `tools/`.
+`{ provider, token }`. A reference broker lives in `tools/`. Every token
+request sends `Accept: application/json` — AppAuth-Android added the same
+header because GitHub answers form-encoded without it.
 
 ## Tests
 
@@ -101,12 +139,18 @@ nsh check && nsh build && nsh test && bun test
   UI of the harness `App.tsx`, headless, on a manual clock with a fake
   transport: authorize URLs asserted exactly for every provider, success,
   denial, wrong state, a callback with no state, wrong nonce, expired code,
-  single-flight refresh under 8 parallel calls, revoked refresh, sign-out, the
-  host launcher with its secure store, the GitHub broker path, and restore.
+  single-flight refresh under 8 parallel calls, revoked refresh, a refresh
+  response without rotation keeping the previous token, transient (network,
+  5xx) refresh failures leaving the session for retry, sign-out, the host
+  launcher with its secure store, the GitHub broker path with its Accept
+  header, restore including the 60-second expiry margin, and the parked-flow
+  boot resume (completes with its callback, reports `interrupted` without one,
+  and works unchanged on a host that lacks the channel).
 - `bun test` (plain) — the pure protocol units in `tests/protocol.spec.ts`
   against a loopback `Bun.serve` mock on 127.0.0.1 with a fake clock: base64url
   and PKCE vectors, byte-exact authorize URLs, callback parsing, token exchange
-  and error mapping, the broker, JWKS RS256 verification, user mapping.
+  and error mapping, retryability classification, expiry tolerance, the broker,
+  JWKS RS256 verification, user mapping.
   `bunfig.toml` scopes bun to that file with
   `pathIgnorePatterns = ["tests/auth.test.tsx"]`, because `tests/auth.test.tsx`
   imports `nsh/test`, which only `nsh test` provides. `bun test

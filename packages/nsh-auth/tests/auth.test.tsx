@@ -1,5 +1,6 @@
 import { base64urlEncode } from "../src/base64";
 import type { Jwk } from "../src/jwks";
+import type { PendingAuthorize } from "../src/host";
 import { expect, open, test } from "nsh/test";
 import type { App, StubRequest, StubResponse } from "nsh/test";
 
@@ -70,6 +71,9 @@ const scenario = {
   code: "sandbox-code",
   expiredCode: false,
   refreshRevoked: false,
+  refreshRotates: true,
+  refreshNetworkError: false,
+  refreshServerError: false,
   refreshDelay: 0,
   exchangeDelay: 0,
   reset(): void {
@@ -77,6 +81,9 @@ const scenario = {
     this.code = "sandbox-code";
     this.expiredCode = false;
     this.refreshRevoked = false;
+    this.refreshRotates = true;
+    this.refreshNetworkError = false;
+    this.refreshServerError = false;
     this.refreshDelay = 0;
     this.exchangeDelay = 0;
   },
@@ -96,8 +103,20 @@ function tokenAnswer(keys: Keys, request: StubRequest): StubResponse | Promise<S
     if (scenario.refreshRevoked) {
       return { status: 400, body: { error: "invalid_grant", error_description: "the refresh token was revoked" } };
     }
+    if (scenario.refreshNetworkError) {
+      return { error: "connection reset by the stub network" };
+    }
+    if (scenario.refreshServerError) {
+      return { status: 502, body: { error: "server_error", error_description: "token endpoint upstream down" } };
+    }
     return {
-      body: { access_token: "refreshed-token", refresh_token: "rotated-refresh", expires_in: 3600, scope: "openid profile email offline_access" },
+      body: {
+        access_token: "refreshed-token",
+        // RFC 6749 §6: a provider may rotate refresh tokens or leave them out.
+        ...(scenario.refreshRotates ? { refresh_token: "rotated-refresh" } : {}),
+        expires_in: 3600,
+        scope: "openid profile email offline_access",
+      },
       delay: scenario.refreshDelay,
     };
   }
@@ -141,6 +160,8 @@ function mockRoutes(keys: Keys): Record<string, StubResponse | ((request: StubRe
 interface HostHandlers {
   onAuthorize: (url: string) => string;
   store: Map<string, unknown>;
+  /** The host's parked authorize record, exactly as the Android host seals it; {} is its nothing-parked answer. */
+  pending?: PendingAuthorize | Record<string, never> | null;
 }
 
 function hostOptions(handlers: HostHandlers) {
@@ -158,6 +179,14 @@ function hostOptions(handlers: HostHandlers) {
       "auth.store.clear": async ({ key }: { key: string }) => {
         handlers.store.delete(key);
         return null;
+      },
+      // The parked-flow channel: a read reports the record, {clear} consumes it.
+      "auth.pendingAuthorize": async ({ clear }: { clear?: boolean }) => {
+        if (clear) {
+          handlers.pending = null;
+          return null;
+        }
+        return handlers.pending ?? null;
       },
     },
   };
@@ -402,6 +431,38 @@ test("a revoked refresh token drops the session", async () => {
   await shot(app, "09-revoked-refresh");
 });
 
+test("a rotation response without a refresh token keeps the previous one", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => {
+        scenario.nonce = authorizeParts(url).nonce ?? "";
+        return `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}`;
+      },
+    }),
+  });
+  await app.waitFor("id:sign-in-mock");
+  await app.press("id:sign-in-mock");
+  await app.waitFor("text:status authenticated");
+  // RFC 6749 §6: the server may change the refresh token or leave it out;
+  // a response without one must not erase the token we still hold.
+  scenario.refreshRotates = false;
+  await app.clock!.runFor(60_000);
+  await app.press("id:refresh");
+  await app.waitFor("text:status authenticated");
+  const refreshes = app
+    .requests()
+    .filter((request) => request.method === "POST" && request.url === `${MOCK}/mock/token` && (request.body ?? "").includes("grant_type=refresh_token"));
+  expect(refreshes).toHaveLength(1);
+  const stored = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { refreshToken?: string };
+  expect(stored.refreshToken).toBe("mock-refresh");
+});
+
 test("sign-out revokes the token and clears the session", async () => {
   const keys = await rsaKeys();
   const app = await signedInWithMock(keys);
@@ -411,6 +472,36 @@ test("sign-out revokes the token and clears the session", async () => {
   const revoke = app.requests().find((request) => request.method === "POST" && request.url === `${MOCK}/mock/revoke`);
   expect(new URLSearchParams(revoke?.body ?? "").get("token")).toBe("mock-refresh");
   await shot(app, "10-signed-out");
+});
+
+test("a transient refresh failure leaves the session for retry", async () => {
+  const keys = await rsaKeys();
+  const app = await signedInWithMock(keys);
+  scenario.refreshNetworkError = true;
+  await app.press("id:refresh");
+  await app.waitFor("text:error network");
+  expect(app.shows("text:status error")).toBe(true);
+  // The network died, not the grant: the session survives untouched.
+  expect(app.shows("text:provider mock")).toBe(true);
+  expect(app.shows("id:refresh")).toBe(true);
+  expect(app.shows("id:sign-in-mock")).toBe(false);
+  // The same grant succeeds once the transport is back.
+  scenario.refreshNetworkError = false;
+  await app.press("id:refresh");
+  await app.waitFor("text:status authenticated");
+});
+
+test("a 5xx from the token endpoint is a retryable server_error and keeps the session", async () => {
+  const keys = await rsaKeys();
+  const app = await signedInWithMock(keys);
+  scenario.refreshServerError = true;
+  await app.press("id:refresh");
+  await app.waitFor("text:error server_error");
+  expect(app.shows("text:provider mock")).toBe(true);
+  expect(app.shows("id:sign-in-mock")).toBe(false);
+  scenario.refreshServerError = false;
+  await app.press("id:refresh");
+  await app.waitFor("text:status authenticated");
 });
 
 test("a sign-out during an in-flight refresh does not resurrect the session", async () => {
@@ -494,9 +585,14 @@ test("a host drives the authorize surface and keeps the session in its secure st
   await app.press("id:sign-in-mock");
   await app.waitFor("text:status authenticated");
   const call = app.host.calls().find((entry) => entry.name === "auth.authorize");
-  const data = (call?.data ?? {}) as { url?: string; scheme?: string };
+  const data = (call?.data ?? {}) as { url?: string; scheme?: string; verifier?: string; state?: string; provider?: string };
   expect(data.scheme).toBe("nsh.auth.sandbox");
   expect(data.url ?? "").toMatch(authorizePattern("mock"));
+  // The host seals these into its parked record, so a process death can
+  // finish the flow: the callback's state and the exchange's verifier.
+  expect(data.provider).toBe("mock");
+  expect(data.state).toBe(authorizeParts(data.url ?? "").state);
+  expect(data.verifier).toHaveLength(43);
   // The Android host requires the stored value to be a JSON string (requireString).
   expect(typeof hostStore.get(SESSION_KEY)).toBe("string");
   const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "null") as { accessToken?: string };
@@ -576,6 +672,7 @@ test("github's exchange goes through the broker and never carries a secret", asy
   expect(payload.provider).toBe("github");
   expect(payload.redirectUri).toBe(REDIRECT);
   expect(payload.codeVerifier).toHaveLength(43);
+  expect(exchange.headers["accept"]).toBe("application/json");
   expect(exchange.body ?? "").not.toContain("client_secret");
   // The userinfo call is fine; the secret-bearing token endpoint must never be hit from the app.
   expect(app.requests().some((request) => request.url === "https://github.com/login/oauth/access_token")).toBe(false);
@@ -597,4 +694,211 @@ test("a session in the host's store restores on the next start", async () => {
   expect(app.shows("text:expires 3600000")).toBe(true);
   expect(app.shows("id:sign-out")).toBe(true);
   await shot(app, "13-restored");
+});
+
+test("a session expiring within the tolerance margin counts as expired at restore", async () => {
+  // 30 seconds left on the token: inside the 60-second proactive margin, so
+  // the core refuses to pass it off as a live session and clears the store.
+  const hostStore = new Map<string, unknown>([
+    [
+      SESSION_KEY,
+      JSON.stringify({ provider: "mock", accessToken: "dying-access", refreshToken: "dying-refresh", expiresAt: 30_000, scope: "openid profile email offline_access" }),
+    ],
+  ]);
+  const app = await open("../App.tsx", { clock: { time: 0 }, host: hostOptions({ store: hostStore, onAuthorize: (url) => url }) });
+  await app.waitFor("id:sign-in-mock");
+  expect(app.shows("text:status authenticated")).toBe(false);
+  expect(app.shows("id:sign-in-mock")).toBe(true);
+  await app.waitUntil(() => !hostStore.has(SESSION_KEY));
+});
+
+// The parked record mirrors what the Android host seals: the authorize URL it
+// sent, the state and verifier that bind the callback, no tokens.
+function parkedRecord(overrides: Partial<PendingAuthorize>): PendingAuthorize {
+  const state = "s".repeat(22);
+  return {
+    scheme: "nsh.auth.sandbox",
+    url: expectedAuthorizeUrl("mock", { state, nonce: "n".repeat(22), challenge: "c".repeat(43) }),
+    state,
+    provider: "mock",
+    verifier: "v".repeat(43),
+    ...overrides,
+  };
+}
+
+test("a parked authorize whose redirect already arrived completes the loop at boot", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const record = parkedRecord({});
+  scenario.nonce = "n".repeat(22);
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      pending: { ...record, callbackUrl: `nsh.auth.sandbox://callback?code=parked-code&state=${record.state}` },
+    }),
+  });
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider mock")).toBe(true);
+  expect(app.shows("text:user Sandbox User")).toBe(true);
+  const exchange = app.requests().find((request) => request.method === "POST" && request.url === `${MOCK}/mock/token`);
+  const form = new URLSearchParams(exchange?.body ?? "");
+  expect(form.get("grant_type")).toBe("authorization_code");
+  expect(form.get("code")).toBe("parked-code");
+  expect(form.get("code_verifier")).toBe("v".repeat(43));
+  expect(form.get("redirect_uri")).toBe(REDIRECT);
+  expect(form.get("client_id")).toBe(CLIENT_ID);
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { accessToken?: string };
+  expect(saved.accessToken).toBe("mock-access");
+  // The consumed record is cleared so a later boot cannot re-run the flow.
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(1);
+});
+
+test("a parked authorize with no redirect yet surfaces the interruption honestly", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({ store: new Map(), onAuthorize: (url) => url, pending: parkedRecord({}) }),
+  });
+  await app.waitFor("text:error interrupted");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(app.shows("id:sign-in-mock")).toBe(true);
+  // No browser re-launches without a user action, and no grant is spent.
+  expect(app.openedUrls()).toHaveLength(0);
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+  // The record stays parked: its redirect may still arrive on a later boot,
+  // and a new sign-in supersedes it host-side.
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(0);
+});
+
+// A sealed record that cannot answer for its flow fails closed: it must never
+// reach the exchange. Each variant is cleared and reported as interrupted.
+test("a wantsNonce record whose url carries no nonce is refused, not exchanged", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const state = "s".repeat(22);
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({
+      store: new Map(),
+      onAuthorize: (url) => url,
+      pending: {
+        ...parkedRecord({}),
+        url: expectedAuthorizeUrl("mock", { state, challenge: "c".repeat(43) }),
+        callbackUrl: `nsh.auth.sandbox://callback?code=parked-code&state=${state}`,
+      },
+    }),
+  });
+  await app.waitFor("text:error interrupted");
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(1);
+});
+
+test("a pkce record without its verifier is refused before the code is spent", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const record = parkedRecord({});
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({
+      store: new Map(),
+      onAuthorize: (url) => url,
+      pending: { ...record, verifier: undefined, callbackUrl: `nsh.auth.sandbox://callback?code=parked-code&state=${record.state}` },
+    }),
+  });
+  await app.waitFor("text:error interrupted");
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(1);
+});
+
+test("a record whose sealed url disagrees with its state is refused as unusable", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const record = parkedRecord({});
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({
+      store: new Map(),
+      onAuthorize: (url) => url,
+      pending: {
+        ...record,
+        url: expectedAuthorizeUrl("mock", { state: "t".repeat(22), nonce: "n".repeat(22), challenge: "c".repeat(43) }),
+        callbackUrl: `nsh.auth.sandbox://callback?code=parked-code&state=${record.state}`,
+      },
+    }),
+  });
+  await app.waitFor("text:error interrupted");
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(1);
+});
+
+test("a host that replies an empty record boots without the interrupted banner", async () => {
+  // Android's auth.pendingAuthorize answers emptyMap() when nothing is
+  // parked. The device re-proof caught the core reading that as an unusable
+  // record and showing `interrupted` on every boot, over a restored session.
+  const keys = await rsaKeys();
+  scenario.reset();
+  const hostStore = new Map<string, unknown>([
+    [
+      SESSION_KEY,
+      JSON.stringify({ provider: "mock", accessToken: "restored-access", refreshToken: "restored-refresh", expiresAt: 3_600_000, scope: "openid profile email offline_access" }),
+    ],
+  ]);
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: hostOptions({ store: hostStore, onAuthorize: (url) => url, pending: {} }),
+  });
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:error interrupted")).toBe(false);
+  expect(app.shows("text:status error")).toBe(false);
+  expect(app.shows("text:provider mock")).toBe(true);
+  // Nothing parked, so nothing is consumed either.
+  const clears = app.host.calls().filter((entry) => entry.name === "auth.pendingAuthorize" && (entry.data as { clear?: boolean }).clear === true);
+  expect(clears).toHaveLength(0);
+});
+
+test("a host without the pending channel boots and signs in exactly as before", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: mockRoutes(keys),
+    host: {
+      handlers: {
+        "auth.authorize": async ({ url }: { url: string }) => {
+          scenario.nonce = authorizeParts(url).nonce ?? "";
+          return { callbackUrl: `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}` };
+        },
+        "auth.store.save": async ({ key, value }: { key: string; value: unknown }) => {
+          hostStore.set(key, value);
+          return null;
+        },
+        "auth.store.load": async ({ key }: { key: string }) => ({ value: hostStore.get(key) ?? null }),
+        "auth.store.clear": async ({ key }: { key: string }) => {
+          hostStore.delete(key);
+          return null;
+        },
+      },
+    },
+  });
+  await app.waitFor("id:sign-in-mock");
+  await app.press("id:sign-in-mock");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider mock")).toBe(true);
+  expect(typeof hostStore.get(SESSION_KEY)).toBe("string");
 });

@@ -30,7 +30,7 @@ pub use error::AuthError;
 pub use http::{BoxFuture, Http, HttpReply, ReqwestHttp};
 pub use jwt::{IdTokenChecks, claims};
 pub use provider::{AuthConfig, AuthorizeRequest, ProviderId, RedirectKind};
-pub use session::{AuthStatus, Session, UserInfo};
+pub use session::{AuthStatus, EXPIRY_TOLERANCE_MS, Session, UserInfo};
 pub use store::{JsonFileStore, MemoryStore, SessionStore};
 
 use flight::{RefreshFlight, RefreshFut};

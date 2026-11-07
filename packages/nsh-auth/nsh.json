@@ -25,6 +25,6 @@
       ]
     },
     "openUrl": { "schemes": ["https", "http"] },
-    "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear"]
+    "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear"]
   }
 }

@@ -18,6 +18,17 @@ export interface Session {
   scope: string;
 }
 
+/**
+ * Sessions expiring within this margin count as expired, so no token is spent
+ * on a request it cannot outlive (AppAuth's OIDAuthState uses the same 60 s).
+ */
+export const EXPIRY_TOLERANCE_MS = 60_000;
+
+/** True when the session is dead or dies within `EXPIRY_TOLERANCE_MS` of `nowMs`; `expiresAt` 0 never expires. */
+export function sessionExpired(session: Session, nowMs: number): boolean {
+  return session.expiresAt !== 0 && nowMs + EXPIRY_TOLERANCE_MS >= session.expiresAt;
+}
+
 export interface UserInfo {
   id: string;
   name?: string;

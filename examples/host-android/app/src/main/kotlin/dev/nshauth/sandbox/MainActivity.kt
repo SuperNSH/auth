@@ -59,11 +59,24 @@ class MainActivity : Activity() {
         nsh.handle("auth.authorize") { data, reply ->
             val url = requireString(data, "url", "auth.authorize")
             val scheme = requireString(data, "scheme", "auth.authorize")
-            auth.authorize(url, scheme) { result ->
+            // Optional resumption metadata for the process-death record; the core
+            // owns PKCE and passes what it wants parked in the secure store.
+            val verifier = optionalString(data, "verifier")
+            val state = optionalString(data, "state")
+            val provider = optionalString(data, "provider")
+            auth.authorize(url, scheme, verifier, state, provider) { result ->
                 result.fold(
                     onSuccess = { reply.resolve(mapOf("callbackUrl" to it)) },
                     onFailure = { reply.reject(it.message ?: "error") },
                 )
+            }
+        }
+        nsh.handle("auth.pendingAuthorize") { data, reply ->
+            // Without args: report (and keep) any flow parked by a process death.
+            // {clear: true}: the app consumed it, drop the record.
+            val clear = (data as? Map<*, *>)?.get("clear") as? Boolean == true
+            auth.pendingAuthorize(clear) { record ->
+                reply.resolve(record)
             }
         }
         nsh.handle("auth.store.save") { data, reply ->
@@ -103,12 +116,15 @@ class MainActivity : Activity() {
         return value
     }
 
+    private fun optionalString(data: Any?, name: String): String? =
+        (data as? Map<*, *>)?.get(name) as? String
+
     private companion object {
         const val TAG = "host-android"
         // The grant is a ceiling: a call must be both declared by the bundle and
         // allowed here (nsh-core 0.4.0 access.rs), so name the mock hosts the
         // demo declares too; 10.0.2.2 is the emulator's alias for this Mac's loopback.
         const val HOST_GRANT =
-            """{ "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }"""
+            """{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }"""
     }
 }

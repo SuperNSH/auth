@@ -2,12 +2,12 @@ import { openUrl, signal } from "nsh";
 import { buildAuthorizeUrl } from "./authorize";
 import { parseCallback } from "./callback";
 import { AuthError } from "./errors";
-import { hostAuthorize, hostAvailable, HostStore } from "./host";
+import { clearPendingAuthorize, hostAuthorize, hostAvailable, HostStore, loadPendingAuthorize, type PendingAuthorize } from "./host";
 import { verifyIdToken } from "./jwks";
 import { codeChallengeS256, createCodeVerifier, createNonce, createState } from "./pkce";
-import { DEFAULT_MOCK_BASE_URL, providerConfig, type ProviderId } from "./providers";
+import { DEFAULT_MOCK_BASE_URL, providerConfig, type ProviderConfig, type ProviderId } from "./providers";
 import { MemoryStore } from "./store";
-import type { Auth, AuthConfig, AuthStatus, Session, SessionStore, UserInfo } from "./types";
+import { sessionExpired, type Auth, type AuthConfig, type AuthStatus, type Session, type SessionStore, type UserInfo } from "./types";
 import { exchangeCode, refreshTokens, revokeToken } from "./tokens";
 import { fetchUserInfo, mapUserInfo } from "./userinfo";
 
@@ -16,8 +16,10 @@ const SESSION_KEY = "nsh-auth:session";
 interface Pending {
   provider: ProviderId;
   state: string;
-  nonce: string;
-  verifier: string;
+  /** Absent on a resumed flow whose authorize URL carried none. */
+  nonce?: string;
+  /** Absent when the provider has no PKCE (Apple), live or resumed. */
+  verifier?: string;
   scopes: string;
   resolve: () => void;
   reject: (error: AuthError) => void;
@@ -51,7 +53,7 @@ export function createAuth(config: AuthConfig): Auth {
   void (async () => {
     try {
       const stored = await store.load();
-      if (stored && stored.expiresAt > clock.nowMs()) {
+      if (stored && !sessionExpired(stored, clock.nowMs())) {
         session.set(stored);
         status.set("authenticated");
       } else if (stored) {
@@ -60,6 +62,7 @@ export function createAuth(config: AuthConfig): Auth {
     } catch {
       // reported by the next sign-in, refresh or sign-out instead
     }
+    await resumeParkedAuthorize();
   })();
 
   function redirectScheme(): string {
@@ -99,7 +102,11 @@ export function createAuth(config: AuthConfig): Auth {
     if (!waiting) return;
     try {
       if (hostAvailable()) {
-        const callbackUrl = await hostAuthorize(url, redirectScheme());
+        const callbackUrl = await hostAuthorize(url, redirectScheme(), {
+          verifier: waiting.verifier,
+          state: waiting.state,
+          provider: waiting.provider,
+        });
         // The callback answers the flow that launched it; if a newer sign-in
         // has taken `pending`, this one's late answer is dropped, not judged.
         if (pending !== waiting) return;
@@ -206,6 +213,64 @@ export function createAuth(config: AuthConfig): Auth {
       if (waiting) waiting.reject(authError);
       else throw authError;
     }
+  }
+
+  // Process death between authorize and redirect leaves the host holding a
+  // parked record. At boot: a record with a callback finishes that flow; one
+  // without is reported, never re-launched, and left parked — its redirect
+  // may still arrive, and a new sign-in supersedes it host-side.
+  async function resumeParkedAuthorize(): Promise<void> {
+    const record = await loadPendingAuthorize();
+    // A sign-in started while the record was read owns the channel: the
+    // record is that flow's, not a dead one's.
+    if (!record || pending) return;
+    const waiting = pendingFromRecord(record);
+    if (record.callbackUrl && waiting) {
+      pending = waiting;
+      const epoch = generation;
+      try {
+        await deliverRedirect(record.callbackUrl);
+      } catch {
+        // deliverRedirect reported the failure on the signals; either way the
+        // parked record is consumed now.
+      }
+      // A sign-in launched while the resume ran sealed its own record; only
+      // clear when that flow is not the one now parked.
+      if (generation === epoch || !pending) await clearPendingAuthorize();
+      return;
+    }
+    if (!waiting) await clearPendingAuthorize();
+    error.set(new AuthError("interrupted", "a previous sign-in did not finish; start it again"));
+    if (!session()) status.set("error");
+  }
+
+  function pendingFromRecord(record: PendingAuthorize): Pending | null {
+    if (!record.url || !record.state || !record.provider) return null;
+    let url: URL;
+    try {
+      url = new URL(record.url);
+    } catch {
+      return null;
+    }
+    const provider = record.provider as ProviderId;
+    const providerInfo: ProviderConfig | undefined = providerConfig(provider, mockBaseUrl);
+    // An unknown provider id falls through the config switch to undefined.
+    if (!providerInfo || providerInfo.id !== provider) return null;
+    // Fail closed: a record that cannot answer for its state, that would skip
+    // nonce binding, or that can never pass the exchange is unusable.
+    if (url.searchParams.get("state") !== record.state) return null;
+    if (providerInfo.wantsNonce && !url.searchParams.get("nonce")) return null;
+    if (providerInfo.usePkce && !record.verifier) return null;
+    const scope = url.searchParams.get("scope");
+    return {
+      provider,
+      state: record.state,
+      nonce: url.searchParams.get("nonce") ?? undefined,
+      verifier: record.verifier,
+      scopes: scope && scope.trim() ? scope : providerInfo.defaultScopes.join(" "),
+      resolve: () => {},
+      reject: () => {},
+    };
   }
 
   async function doRefresh(): Promise<void> {

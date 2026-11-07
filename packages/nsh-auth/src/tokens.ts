@@ -14,7 +14,8 @@ export interface ExchangeOptions {
   clientId: string;
   redirectUri: string;
   code: string;
-  codeVerifier: string;
+  /** Only sent when the provider uses PKCE; absent on no-PKCE flows (Apple). */
+  codeVerifier?: string;
   brokerUrl?: string;
   nowMs: () => number;
   fallbackScope: string;
@@ -56,7 +57,7 @@ export async function exchangeCode(options: ExchangeOptions): Promise<TokenRespo
     url.searchParams.set("client_id", options.clientId);
     url.searchParams.set("redirect_uri", options.redirectUri);
     url.searchParams.set("code", options.code);
-    if (provider.usePkce) url.searchParams.set("code_verifier", options.codeVerifier);
+    if (provider.usePkce && options.codeVerifier) url.searchParams.set("code_verifier", options.codeVerifier);
     return fromDirect(await getJson(url.toString()), options.nowMs, options.fallbackScope);
   }
   const form = new URLSearchParams();
@@ -64,7 +65,7 @@ export async function exchangeCode(options: ExchangeOptions): Promise<TokenRespo
   form.set("code", options.code);
   form.set("redirect_uri", options.redirectUri);
   form.set("client_id", options.clientId);
-  if (provider.usePkce) form.set("code_verifier", options.codeVerifier);
+  if (provider.usePkce && options.codeVerifier) form.set("code_verifier", options.codeVerifier);
   return fromDirect(await postForm(provider.tokenUrl, form), options.nowMs, options.fallbackScope);
 }
 
@@ -111,7 +112,7 @@ export async function revokeToken(options: RevokeOptions): Promise<void> {
     response = await fetch(provider.revokeUrl, {
       method: provider.revokeMethod ?? "POST",
       body: form.toString(),
-      headers: { "content-type": "application/x-www-form-urlencoded" },
+      headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
     });
   } catch (error) {
     throw new AuthError("network", `revoke request failed: ${String(error)}`);
@@ -160,8 +161,9 @@ async function postForm(url: string, form: URLSearchParams): Promise<Record<stri
   const response = await send(url, {
     method: "POST",
     body: form.toString(),
-    headers: { "content-type": "application/x-www-form-urlencoded" },
+    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
   });
+  rejectServerError(response);
   return readJson(response);
 }
 
@@ -169,16 +171,25 @@ async function postJson(url: string, payload: Record<string, unknown>): Promise<
   const response = await send(url, {
     method: "POST",
     body: JSON.stringify(payload),
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", accept: "application/json" },
   });
+  rejectServerError(response);
   const body = await readBody(response, "broker_error");
   if (!response.ok) throw new AuthError("broker_error", `broker returned status ${response.status}`);
   return body;
 }
 
 async function getJson(url: string): Promise<Record<string, unknown>> {
-  const response = await send(url, { method: "GET" });
+  const response = await send(url, { method: "GET", headers: { accept: "application/json" } });
+  rejectServerError(response);
   return readJson(response);
+}
+
+// 5xx is the endpoint's failure, not the grant's: it retries, unlike a 400 OAuth error.
+function rejectServerError(response: Response): void {
+  if (response.status >= 500) {
+    throw new AuthError("server_error", `${response.url} returned ${response.status}`);
+  }
 }
 
 async function send(url: string, init: RequestInit): Promise<Response> {

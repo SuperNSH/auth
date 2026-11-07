@@ -31,4 +31,24 @@
             </intent-filter>
         </activity>
     </application>
+
+    <!-- Android 11+ package visibility: without these queries BrowserSelector's
+         enumeration (queryIntentActivities/resolveActivity) sees no browsers and
+         resolveService/bindCustomTabsService cannot reach the warm-up service,
+         so browser selection always reports "no browser". -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
 </manifest>

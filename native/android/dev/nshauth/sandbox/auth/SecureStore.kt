@@ -1,9 +1,12 @@
 package dev.nshauth.sandbox.auth
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
@@ -17,9 +20,11 @@ import javax.crypto.spec.GCMParameterSpec
  * AES/GCM over AndroidKeyStore: one hardware-backed key seals every entry with
  * its own random IV, and only `{key -> iv, ciphertext}` reaches the app-private
  * JSON file. EncryptedSharedPreferences is deprecated; no plaintext token ever
- * touches disk here.
+ * touches disk here. StrongBox-with-fallback and the unlocked-device requirement
+ * are ported from flutter_secure_storage's KeyCipherImplementationAES23.java
+ * (BSD-3-Clause, Copyright 2017 German Saprykin); the rest is original.
  */
-internal class SecureStore(private val file: File) {
+internal class SecureStore(private val context: Context, private val file: File) {
 
     private class Sealed(val iv: ByteArray, val ciphertext: ByteArray)
 
@@ -115,20 +120,42 @@ internal class SecureStore(private val file: File) {
         } catch (e: Exception) {
             // the entry is already absent
         }
+        // A key already on the device keeps its original settings; regenerating it
+        // would orphan every sealed entry, so the flags below apply to fresh keys.
+        val strongBox = isStrongBoxAvailable()
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-        generator.init(
-            KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setKeySize(256)
-                .build(),
-        )
-        return generator.generateKey()
+        return try {
+            generator.init(spec(strongBox))
+            generator.generateKey()
+        } catch (e: Exception) {
+            if (!strongBox) throw e
+            // Some devices advertise StrongBox yet fail generation: fall back to the TEE.
+            Log.w(TAG, "StrongBox key generation failed; retrying without StrongBox", e)
+            generator.init(spec(false))
+            generator.generateKey()
+        }
     }
+
+    /**
+     * The key is unusable while the device is locked; a use attempt while locked
+     * fails transiently, which [load] propagates instead of wiping the store.
+     */
+    private fun spec(useStrongBox: Boolean): KeyGenParameterSpec =
+        KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .setUnlockedDeviceRequired(true)
+            .apply { if (useStrongBox) setIsStrongBoxBacked(true) }
+            .build()
+
+    private fun isStrongBoxAvailable(): Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
 
     private fun b64(bytes: ByteArray) = Base64.encodeToString(bytes, Base64.NO_WRAP)
 
     private companion object {
+        const val TAG = "SecureStore"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val KEY_ALIAS = "nsh-auth-session"
         const val TRANSFORMATION = "AES/GCM/NoPadding"

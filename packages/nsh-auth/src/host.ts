@@ -50,14 +50,54 @@ export class HostStore implements SessionStore {
 }
 
 /** Asks the host to open the authorize surface (ASWebAuthenticationSession, Custom Tabs) and return the callback it caught. */
-export async function hostAuthorize(url: string, scheme: string): Promise<string> {
+export async function hostAuthorize(url: string, scheme: string, provenance?: AuthorizeProvenance): Promise<string> {
   try {
-    const answer = await host.call<{ callbackUrl: string }>("auth.authorize", { url, scheme });
+    const answer = await host.call<{ callbackUrl: string }>("auth.authorize", { url, scheme, ...provenance });
     if (typeof answer.callbackUrl !== "string" || !answer.callbackUrl) {
       throw new Error("the host returned no callbackUrl");
     }
     return answer.callbackUrl;
   } catch (error) {
     throw new AuthError("no_launcher", `auth.authorize failed: ${String(error)}`);
+  }
+}
+
+/** The flow facts the host seals next to its parked record, so process death can still finish the exchange. */
+export interface AuthorizeProvenance {
+  verifier?: string;
+  state?: string;
+  provider?: string;
+}
+
+/** The host's parked authorize record (`auth.pendingAuthorize`); it holds no tokens. */
+export interface PendingAuthorize extends AuthorizeProvenance {
+  scheme: string;
+  url?: string;
+  /** Set once the redirect for the parked flow has arrived. */
+  callbackUrl?: string;
+}
+
+/** Reads the parked record of a sign-in killed by process death: null when nothing is parked, or when the host predates the channel. */
+export async function loadPendingAuthorize(): Promise<PendingAuthorize | null> {
+  if (!hostAvailable()) return null;
+  try {
+    const answer = await host.call<PendingAuthorize | null>("auth.pendingAuthorize", {});
+    // Android answers emptyMap() when nothing is parked: an empty or non-object
+    // reply is "nothing". A reply with keys stays a record and fails closed on
+    // resume if its fields do not hold.
+    if (!answer || typeof answer !== "object" || Object.keys(answer).length === 0) return null;
+    return answer;
+  } catch {
+    return null;
+  }
+}
+
+/** Consumes the parked record once its flow is finished or unusable. */
+export async function clearPendingAuthorize(): Promise<void> {
+  if (!hostAvailable()) return;
+  try {
+    await host.call("auth.pendingAuthorize", { clear: true });
+  } catch {
+    // A record left behind costs one spurious resume, which then clears it.
   }
 }
