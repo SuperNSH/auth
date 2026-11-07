@@ -14,6 +14,10 @@ node tools/mock-oauth/main.mjs            # default port 8755
 bun tools/mock-oauth/main.mjs --port 8755 # bun works too
 ```
 
+From inside `tools/mock-oauth`, the package scripts work too: `bun run dev` or
+`bun run start` (aliases of `node main.mjs`; `--port` goes after `--`, e.g.
+`bun run dev -- --port 0`).
+
 On boot it prints the address to use:
 
 ```

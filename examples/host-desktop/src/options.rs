@@ -10,7 +10,7 @@ Usage: cargo run -p host-desktop -- [options]
   --mock-url <url>    Base URL of the local mock provider
                       (default http://127.0.0.1:8755).
   --broker-url <url>  Base URL of the token broker for confidential clients
-                      (default http://127.0.0.1:8760).
+                      (default http://127.0.0.1:8756).
   -h, --help          Show this help.";
 
 #[derive(Clone)]
@@ -36,7 +36,7 @@ impl Default for Options {
         Self {
             provider: None,
             mock_url: None,
-            broker_url: "http://127.0.0.1:8760".to_owned(),
+            broker_url: "http://127.0.0.1:8756".to_owned(),
             print_urls: false,
             help: false,
             invalid: false,

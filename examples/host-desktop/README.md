@@ -34,7 +34,7 @@ Flags:
 | `--provider <id>` | `google`, `facebook`, `discord`, `github` or `mock`; starts the flow as the window opens | none |
 | `--print-urls` | Print the authorize URL for the provider on stdout, one line, and exit | off |
 | `--mock-url <url>` | Base URL of the local mock provider | `http://127.0.0.1:8755` |
-| `--broker-url <url>` | Token broker for confidential clients (GitHub) | `http://127.0.0.1:8760` |
+| `--broker-url <url>` | Token broker for confidential clients (GitHub) | `http://127.0.0.1:8756` |
 
 The mock provider talks to the server from `tools/mock-oauth` (see its
 README for how to start it). GitHub exchanges tokens only through the broker

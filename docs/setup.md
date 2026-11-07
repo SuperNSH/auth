@@ -18,21 +18,20 @@ Two rules that hold everywhere:
 
 ## Sandbox values this repository uses
 
-These are the values the demo and hosts are configured with in sandbox mode. Where the value
-depends on a file still being built by a parallel area, it is marked TO-VERIFY — confirm against
-the named file before relying on it.
+These are the values the demo and hosts are configured with in sandbox mode.
 
 | Surface | Redirect URI (sandbox) | Mechanism |
 |---|---|---|
-| iOS (`examples/host-ios`) | `nsh-auth.demo://callback` | `ASWebAuthenticationSession` callback, scheme registered by the embedding host (`native/ios`) — TO-VERIFY: scheme string against the host manifest |
-| macOS (`examples/host-ios`) | `nsh-auth.demo://callback` | Same as iOS — TO-VERIFY: the desktop area may instead use the loopback listener |
-| Android (`examples/host-android`) | `nsh-auth.demo://callback` | Intent filter on the embedding host (`native/android`) — TO-VERIFY: scheme string against the host manifest |
-| Windows / Linux desktop | `http://127.0.0.1:<port>/callback` | Loopback listener on a random port (`crates` core + desktop launcher). Register the bare `http://127.0.0.1/callback` form where the console allows a variable port; otherwise use the fixed port the demo prints at startup — TO-VERIFY |
-| Web demo | `http://localhost:<port>/auth/callback` | Web redirect; `<port>` is whatever `nsh run --target web` prints — TO-VERIFY: callback path against `examples/demo` |
+| Demo on iOS / Android / macOS via embedding hosts | `nsh.auth.sandbox://callback` | `ASWebAuthenticationSession` (`native/ios`) and the Android intent filter (`native/android`) — both hosts register scheme `nsh.auth.sandbox`, path `callback` |
+| Desktop (`examples/host-desktop`) | `http://127.0.0.1:<port>/callback` | Loopback listener, port OS-assigned per flow (`127.0.0.1:0`, RFC 8252). Enter the bare `http://127.0.0.1/callback` form where the console allows a variable port (Google, GitHub and Microsoft do); providers demanding an exact registered string cannot complete a real loop from this launcher — the button still proves the flow is triggered on the provider's own page, and a full loop needs a relay through the broker or a build of your own with a pinned port |
+| Hostless demo (any surface, web included) | `nsh.auth.sandbox://callback` | The demo sends this scheme everywhere; with no embedding host nothing catches the redirect — the sign-in screen's paste-back box ("Finish a sign-in by hand") takes the callback URL by hand (see `examples/demo/README.md`) |
 
-Mock endpoints, for the sandbox loop only: the base URL `tools/mock-oauth` prints on start
-(expected `http://127.0.0.1:<port>`, command TO-VERIFY against `tools/mock-oauth/README.md`); on
-the Android emulator that host is `http://10.0.2.2:<port>`.
+Mock endpoints, for the sandbox loop only: `node tools/mock-oauth/main.mjs` — default port 8755,
+`--port 0` for an ephemeral one; the server prints `MOCK_URL` on boot (see
+`tools/mock-oauth/README.md`). On the Android emulator that host is `http://10.0.2.2:<port>`.
+The demo's default mock address is `http://127.0.0.1:8755`, so keep that port free — or pass the
+new base through the demo's override channels (`host.params.auth` / `auth.config`, per
+`examples/demo/README.md`) or host-desktop's `--mock-url`.
 
 ---
 
@@ -54,14 +53,14 @@ as disposable.
 | Desktop app client | `http://127.0.0.1/callback` (Google accepts any port at runtime on loopback) |
 | iOS client | Google requires the reversed client-id scheme it generates, e.g. `com.googleusercontent.apps.<id>:/oauthredirect` — enter that, and register the resulting scheme in the iOS host. The demo's sandbox scheme does not apply to Google iOS. |
 | Android client | No redirect URI: Google uses the package name plus SHA-1 fingerprint of the signing key |
-| Web client | `http://localhost:<port>/auth/callback` (exact port of the demo's web target) |
+| Web client | Nothing for the sandbox demo — it sends the custom scheme and completes by paste-back. For a hosted web app of your own, register your HTTPS callback, e.g. `https://your.app/auth/callback` |
 
 Google blocks embedded web views (`disallowed_useragent`); this library always uses the system
 browser, so this only bites if you bypass the launcher.
 
 **Where the client id goes:** the provider definition in your app's provider list (in this repo,
-the demo's provider config — TO-VERIFY: file name against `examples/demo`, which is being built).
-Quirks and endpoint table: [docs/providers.md](docs/providers.md) (providers area).
+`examples/demo/src/dev/fixtures.ts` holds `CLIENT_ID`). Quirks and endpoint table:
+[docs/providers.md](docs/providers.md).
 
 ## Facebook
 
@@ -103,9 +102,9 @@ integration of your own.
 
 | Surface | Enter |
 |---|---|
-| iOS / Android / macOS | `nsh-auth.demo://callback` |
-| Windows / Linux | `http://127.0.0.1/callback` — Discord requires the exact registered string, so if the demo binds a random port, register the fixed sandbox port it prints instead — TO-VERIFY |
-| Web | `http://localhost:<port>/auth/callback` |
+| iOS / Android / macOS (embedding hosts) | `nsh.auth.sandbox://callback` |
+| Windows / Linux (`examples/host-desktop`) | `http://127.0.0.1/callback` — Discord requires the exact registered string, and the desktop launcher binds an OS-assigned port per flow, so a real loop from it is not possible without a relay through the broker (the button still proves the flow is triggered) |
+| Web | Nothing for the sandbox demo (paste-back completion); for a hosted web app, your exact HTTPS callback |
 
 **Where the client id goes:** the provider definition in your app's provider list.
 
@@ -117,21 +116,27 @@ integration of your own.
 the client secret, so the app never talks to GitHub's token endpoint directly — it goes through
 the broker, a small server you deploy (`tools/broker`, reference implementation in this repo).
 
-**Callback URL to enter:** the broker's callback endpoint, e.g.
-`https://broker.example.com/github/callback` — TO-VERIFY: exact path against
-`tools/broker/README.md` when it lands.
+**Callback URL to enter:** the redirect URI the app itself sends — for the desktop launcher, the
+loopback form (`http://127.0.0.1/callback`; GitHub exempts loopback from port matching). The
+broker has **no callback route**: GitHub sends the browser back to the app exactly as for any
+native app; only the code exchange detours through the broker.
 
-**Deploying the broker:**
+**Deploying the broker** (per [tools/broker/README.md](../tools/broker/README.md)):
 
-1. Register the GitHub OAuth app with the broker's callback URL (above).
-2. Deploy `tools/broker` where your app's users can reach it, behind TLS. TO-VERIFY: runtime and
-   build steps against `tools/broker/README.md` (broker area).
-3. Give the broker the client secret through its environment variable only —
-   expected `GITHUB_CLIENT_SECRET`, TO-VERIFY: exact name in `tools/broker/README.md`. Never in a
-   file that ships, never in the app.
-4. Point the app's GitHub provider definition at the broker base URL plus the client id. The app
-   sends the authorization code (and its PKCE verifier) to the broker; the broker adds the secret,
-   exchanges with GitHub, and returns the tokens over the app's existing authenticated channel.
+1. Register the GitHub OAuth app with the app's own redirect URI (above) — not a broker URL.
+2. Run the broker where the app can reach it: `node tools/broker/main.mjs` (default port 8756,
+   `--port 0` for an ephemeral one; it prints `BROKER_URL`). It has exactly one route, `POST
+   /token`, taking JSON `{ "code", "code_verifier", "redirect_uri" }`; it forwards those plus the
+   client id and secret to GitHub's token endpoint and returns the response verbatim, GitHub's
+   in-band-error quirk included. It holds no storage and binds `127.0.0.1` — put TLS in front
+   for production.
+3. Give the broker the client secret through its environment variable only:
+   `export GITHUB_CLIENT_SECRET=…` (name confirmed in `tools/broker/README.md`; the broker
+   refuses to start without it). Never in a file that ships, never in the app.
+4. Point the app's GitHub provider definition at the broker base URL (`brokerUrl`) plus the
+   client id. The app POSTs the code, its PKCE verifier and the redirect URI it used; the broker
+   adds the secret and returns the tokens. (`tools/broker/README.md` documents the
+   `BROKER_TOKEN_URL` / `BROKER_CLIENT_ID` overrides.)
 5. Prove the secret is absent: the build gate includes a grep over app build output for secret
    material (brief criterion 7). Run it after adding any provider config.
 
@@ -153,8 +158,9 @@ Profiles*.
 
 **Redirect URIs to enter (web / Android only):** your HTTPS endpoint that can receive Apple's
 `response_mode=form_post` — a POST body, not a query string, so a custom scheme cannot take it.
-This is why Apple's non-native path involves your server. TO-VERIFY: whether the reference broker
-gains an Apple endpoint; check `tools/broker/README.md`.
+This is why Apple's non-native path involves your server. The reference broker's single route
+(`POST /token`) forwards to a configurable provider token endpoint (`BROKER_TOKEN_URL`), so it can
+serve Apple's exchange; see [tools/broker/README.md](../tools/broker/README.md).
 
 **Where the client id goes:** the Services ID (web/Android) or App ID (iOS/macOS) in the provider
 definition; the key id and team id alongside it, server-side only.
@@ -173,9 +179,9 @@ loopback redirects with a variable port:
 
 | Surface | Enter |
 |---|---|
-| iOS / Android / macOS | `nsh-auth.demo://callback` |
-| Windows / Linux | `http://localhost` (Microsoft accepts any port at runtime) |
-| Web | `http://localhost:<port>/auth/callback` |
+| iOS / Android / macOS (embedding hosts) | `nsh.auth.sandbox://callback` |
+| Windows / Linux (`examples/host-desktop`) | `http://localhost` (Microsoft accepts any port at runtime) |
+| Web | Nothing for the sandbox demo (paste-back completion); for a hosted web app, your HTTPS callback |
 
 Microsoft is OIDC: ID tokens carry a `nonce`, which this library validates on every sign-in.
 
@@ -195,8 +201,9 @@ usable client secret), the callback URI(s), and the scopes you need (typically `
 
 | Surface | Enter |
 |---|---|
-| iOS / Android / macOS | `nsh-auth.demo://callback` |
-| Windows / Linux / Web | An exact HTTPS or loopback string — X requires the exact registered URI; use the fixed port the demo prints if it binds one — TO-VERIFY |
+| iOS / Android / macOS (embedding hosts) | `nsh.auth.sandbox://callback` |
+| Windows / Linux (`examples/host-desktop`) | An exact loopback or HTTPS string — X requires the exact registered URI, and the desktop launcher binds an OS-assigned port per flow, so a real loop from it is not possible without a relay through the broker (the button still proves the flow is triggered) |
+| Web | Nothing for the sandbox demo (paste-back completion); for a hosted web app, your exact HTTPS callback |
 
 **Where the client id goes:** the provider definition in your app's provider list.
 
@@ -221,9 +228,8 @@ built-in providers.
 
 ## Where the client id goes, precisely
 
-- **In this repository (demo):** the demo's provider config — the file in `examples/demo` that
-  lists providers with their sandbox ids. TO-VERIFY: exact file name when the demo area lands;
-  `examples/demo/README.md` will name it.
+- **In this repository (demo):** `examples/demo/src/dev/fixtures.ts` — `CLIENT_ID` (plus the
+  mock base URL and the redirect `nsh.auth.sandbox://callback`).
 - **In your own app:** wherever you construct the provider list. Both cores take the client id,
   redirect URIs, and (for generic providers) endpoints as plain configuration values. Nothing is
   compiled into the libraries; swapping a sandbox id for a real one is a config change, not a code

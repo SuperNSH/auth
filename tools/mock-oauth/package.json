@@ -6,6 +6,7 @@
   "description": "nsh-auth sandbox OAuth provider mock (not Google/Facebook/Discord/GitHub/Apple/Microsoft/X). Loopback only, zero dependencies.",
   "scripts": {
     "start": "node main.mjs",
+    "dev": "node main.mjs",
     "test": "bun test"
   }
 }

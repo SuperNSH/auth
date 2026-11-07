@@ -106,8 +106,8 @@ export function providerConfig(id: ProviderId, mockBaseUrl: string = DEFAULT_MOC
         needsBroker: true,
       };
     case "apple":
-      // The client_secret JWT is Apple's client authentication — the catalog has
-      // no PKCE for it. form_post is Apple's redirect rule; broker only.
+      // Apple's client secret is a signed JWT — the catalog has no PKCE for it.
+      // form_post is Apple's redirect rule; broker only.
       return {
         id,
         authorizeUrl: "https://appleid.apple.com/auth/authorize",

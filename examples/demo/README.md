@@ -11,21 +11,33 @@ provider is ever signed in to. The other seven providers point at their real
 domains with fake client ids, so a press proves the flow is triggered
 correctly and stops there.
 
+## Prerequisites
+
+- The `nsh` CLI, 0.4.0 (never upgrade it).
+- This repository cloned locally (the demo lives in `examples/demo`).
+- The two sibling libraries the demo imports, cloned alongside it — `nsh-form`
+  and `nsh-query` (the paths below assume `~/fo/nsh-form` and `~/fo/nsh-query`;
+  adjust if your checkouts live elsewhere). They are external dependencies,
+  not part of this repository.
+- `bun`, only if you want to run the sibling libraries' own test suites; the
+  demo's gates need just `nsh`.
+
 ## Setup (from a clean clone)
 
 ```sh
 cd examples/demo
 mkdir -p node_modules
-ln -s /Users/hmziq/fo/nsh-auth/packages/nsh-auth node_modules/nsh-auth
-ln -s /Users/hmziq/fo/nsh-form/packages/nsh-form node_modules/nsh-form
-ln -s /Users/hmziq/fo/nsh-query/packages/nsh-query node_modules/nsh-query
+ln -s ../../../packages/nsh-auth node_modules/nsh-auth
+ln -s ~/fo/nsh-form/packages/nsh-form node_modules/nsh-form
+ln -s ~/fo/nsh-query/packages/nsh-query node_modules/nsh-query
 ```
 
-Use absolute targets (or paths correct relative to `node_modules/`, e.g.
-`../../../packages/nsh-auth`): a link written as `../../packages/nsh-auth`
-resolves from `node_modules/` and lands on `examples/packages/`, which does
-not exist. `tsconfig.json` needs no `paths` entries; the `.nsh` types break
-if you add them.
+The `nsh-auth` link is relative and resolves inside any clone (three levels
+up from `node_modules/` to this repository's root). The sibling-library links
+assume the checkout location from Prerequisites. A link written as
+`../../packages/nsh-auth` resolves from `node_modules/` and lands on
+`examples/packages/`, which does not exist. `tsconfig.json` needs no `paths`
+entries; the `.nsh` types break if you add them.
 
 ## Gates
 
@@ -56,8 +68,13 @@ Web, on this machine (the demo's default mock address
 
 ```sh
 cd examples/demo
-nsh run --target web --port 8790
+nsh run --target web --port 8790 App.web.tsx
 ```
+
+`App.web.tsx` is required as the entry: the web runtime cannot load nsh-query
+(the `lifecycle` import is web-fatal on nsh 0.4.0), so the web surface mounts
+the query-free account screen variant. Running the bare command builds
+`App.tsx`, whose account screen crashes after a completed sign-in.
 
 `--port 0` asks the OS for a free port. A browser on another device cannot
 reach `127.0.0.1`; embedded surfaces pass the override instead (below).

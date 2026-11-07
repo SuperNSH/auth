@@ -38,18 +38,18 @@ approve, redirect back, exchange, session — runs with no real account.
    │    session store trait · single-flight refresh · sign-out with revocation
    │
    ├─ surfaces (one launcher mechanism each)
-   │    iOS / macOS    ASWebAuthenticationSession   native/ios
-   │    Android        Custom Tabs + intent filter  native/android
-   │    both reached from the embedding host via host.call("auth.authorize", ..)
-   │    in examples/host-ios and examples/host-android
-   │    Windows / Linux  system browser + 127.0.0.1 loopback listener, random port
-   │    web            redirect or popup, via web.host
+   │    iOS / Android  ASWebAuthenticationSession / Custom Tabs   native/ios, native/android
+   │                   reached from the embedding host via host.call("auth.authorize", ..)
+   │                   in examples/host-ios and examples/host-android
+   │    desktop        examples/host-desktop  system browser + a 127.0.0.1 loopback
+   │                   listener on an OS-assigned port (Rust host over the crate)
+   │    web            the demo under nsh run --target web; a loop completes only with
+   │                   a page-bridge host, so the hostless web demo ends at paste-back
    │
    ├─ tools/mock-oauth   local fake of every provider's authorize, token, userinfo,
    │                     revoke and JWKS endpoints, with each provider's quirks
    ├─ tools/broker       reference token broker for confidential clients (GitHub);
    │                     you deploy it, the secret lives only in its environment
-   │                     (directory produced by the broker area; may not exist yet)
    └─ examples/demo      per-provider buttons (brand rules) + a mock provider,
                          session screen; forms via nsh-form, profile via nsh-query
 ```
@@ -61,42 +61,63 @@ On the Android emulator the mock's host is `10.0.2.2`, not `127.0.0.1`.
 Everything below is sandbox-only: fake client ids (`nsh-auth-sandbox…`), a local mock, no real
 account, no credential typed anywhere.
 
-Prerequisites: `nsh` 0.4.0 (Homebrew) and `bun`.
+Prerequisites: `nsh` 0.4.0 (Homebrew); Node or bun for the mock; a Rust toolchain for the desktop
+host. Two loopback ports are involved: the mock's default **8755** — the demo's default expects it
+free — and the web dev server (the demo README uses **8790**). If one is busy: the mock takes
+`--port 0` / `--port <p>` plus an override (`--mock-url` on host-desktop; the demo's host params /
+`auth.config` — see `examples/demo/README.md`), and `nsh run` takes `--port`.
 
 ```sh
 # 1. Clone
 git clone <repository-url> nsh-auth
 cd nsh-auth
 
-# 2. Install mock dependencies and start the mock (terminal 1)
-cd tools/mock-oauth
-bun install
-bun run dev
-# The server prints its base URL, e.g. http://127.0.0.1:<port>. Keep it running.
-# TO-VERIFY: exact command and default port live in tools/mock-oauth/README.md
-# (being built by the mock area). The shape above is the intended one.
-
-# 3. Run the demo (terminal 2)
-cd examples/demo
-nsh run --target macos    # or: web | ios | android, per examples/demo/README.md
-# TO-VERIFY: examples/demo/README.md (demo area) is authoritative for its exact
-# commands, including any node_modules links the demo sets up (nsh-auth,
-# nsh-form, nsh-query) and how it is told the mock's base URL from step 2.
+# 2. Start the mock (terminal 1; it has zero dependencies)
+node tools/mock-oauth/main.mjs
+# prints MOCK_URL=http://127.0.0.1:8755 — keep it running. Equivalent from
+# tools/mock-oauth/: `bun run start` (a `dev` alias may also exist — the mock's
+# README is the source of truth).
 ```
 
-In the demo window, press **Mock provider**. The system browser (or ASWebAuthenticationSession on
-iOS/macOS, Custom Tabs on Android) opens the mock's authorize page — `127.0.0.1`, or `10.0.2.2` on
-the Android emulator; the scripted user approves; the redirect returns through the platform's real
-mechanism — loopback listener, scheme callback, or web redirect — and the session screen shows the
-mock user's claims. **Sign out** revokes the mock's tokens. On iOS and Android, restart the app and
-the session is restored from secure storage.
+**Path A — the full automatic loop (recommended).** The desktop embedding host; no Xcode or
+Android SDK needed.
+
+```sh
+# 3a. Run the desktop host (terminal 2)
+cd examples/host-desktop
+cargo run -p host-desktop -- --provider mock
+# if the mock is not on 8755: --mock-url http://127.0.0.1:<port>
+```
+
+A window opens, the system browser opens the mock's authorize page, the scripted user approves,
+the host's loopback listener catches the redirect, and the window shows the signed-in session.
+**Sign out** revokes the mock's tokens. The iOS and Android hosts (`examples/host-ios`,
+`examples/host-android`) run the same automatic loop through `ASWebAuthenticationSession` /
+Custom Tabs — they need Xcode and the Android SDK respectively; see their READMEs. On iOS and
+Android, restarting the app restores the session from secure storage.
+
+**Path B — the hostless demo, and what it cannot do.** A bare TSX app on NSH 0.4.0 has no way to
+receive a redirect.
+
+```sh
+# 3b. Run the demo standalone (its node_modules setup steps come first —
+#     see examples/demo/README.md)
+cd examples/demo
+nsh run --target macos
+```
+
+Press **Sign in with Mock**: the browser opens the mock's authorize page and the scripted user
+approves — and there it stops, because nothing catches the redirect. Copy the
+`nsh.auth.sandbox://callback?...` URL from the browser's address bar into the demo's "Finish a
+sign-in by hand" box and press **Finish sign-in**: the loop completes and the session screen
+appears. On the web target (`nsh run --target web --port 8790 App.web.tsx`, per the demo README)
+pressing the button cannot even open a browser — it reports `no_launcher`. A web loop completes
+only through a page-bridge host, which the demo does not ship.
 
 To watch the same flow fail safely, the mock can deny approval, send a wrong `state`, a wrong
-`nonce`, an expired code, or a revoked refresh token — see the mock suite (`nsh test` in
-`tools/mock-oauth` and in the core directories).
-
-Heads-up while the build is in progress: commands marked TO-VERIFY are being finalized by parallel
-areas. When their files land, the named file wins over the shape shown here.
+`nonce`, an expired code, or a revoked refresh token. The suites: `bun test` in
+`tools/mock-oauth`, `cargo test` in `crates/nsh-auth` (and in `examples/host-desktop`), `nsh
+test` in `packages/nsh-auth` and `examples/demo`.
 
 ## Bring your own provider
 
@@ -119,8 +140,10 @@ handing the session's ID token to the Firebase credential API. Nothing to config
 
 - A TSX app packaged with no embedding host can start a flow with `openUrl`, but on iOS and Android
   NSH 0.4.0 gives it no way to receive the redirect back — there is no inbound-URL module in that
-  configuration. Native sign-in on those platforms needs the host (`examples/host-ios`,
-  `examples/host-android`). On the web, redirect and popup flows work without a host.
+  configuration. On the web it cannot even launch the browser (the demo's mock button reports
+  `no_launcher` there), and a loop completes only through a page-bridge host feeding the redirect
+  to `handleRedirect` — which the demo does not ship. A full automatic loop therefore needs an
+  embedding host: `examples/host-ios`, `examples/host-android`, `examples/host-desktop`.
 - Desktop token storage is a `0600` file under the user's profile. It is not Keychain-grade:
   anyone with the user's file access can read it. The mobile paths use the Keychain and Android
   Keystore. See [docs/threats.md](docs/threats.md) for the full picture, including what the
@@ -133,8 +156,8 @@ handing the session's ID token to the Firebase credential API. Nothing to config
 | [docs/setup.md](docs/setup.md) | Per-provider registration, redirect URIs, broker deployment |
 | [docs/threats.md](docs/threats.md) | Threat table: risk, surface, mitigation, code anchor |
 | [docs/upstream-issues.md](docs/upstream-issues.md) | Bugs found in `nsh-query` / `nsh-form` |
-| [docs/providers.md](docs/providers.md) | Per-provider endpoints, scopes, redirect rules, quirks — *produced by the providers area; may not exist yet* |
-| [docs/research.md](docs/research.md) | Flow research with citations, NSH 0.4.0 experiments — *produced by the research area; may not exist yet* |
-| [docs/security-review.md](docs/security-review.md) | Security audit report — *produced at the audit phase; may not exist yet* |
+| [docs/providers.md](docs/providers.md) | Per-provider endpoints, scopes, redirect rules, quirks |
+| [docs/research.md](docs/research.md) | Flow research with citations, NSH 0.4.0 experiments |
+| [docs/security-review.md](docs/security-review.md) | Security audit report |
 | [docs/STATUS.md](docs/STATUS.md) | Build progress and what was verified how |
 | [docs/evidence/](docs/evidence/) | Screenshots and logs from the device proofs |
