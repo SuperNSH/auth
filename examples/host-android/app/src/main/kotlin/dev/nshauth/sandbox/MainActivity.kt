@@ -2,25 +2,33 @@ package dev.nshauth.sandbox
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import com.longbridge.nsh.NshView
 import dev.nshauth.sandbox.auth.AuthHostModule
+import dev.nshauth.sandbox.auth.NativeSignInModule
 
 /**
  * Embeds the nsh-auth demo bundle (assets/nsh) and answers its host channel:
- * Custom Tabs authorize, Keystore-backed secure storage and launch config.
- * The provider redirect returns through the nsh.auth.sandbox://callback intent
- * filter and completes the pending auth.authorize with {callbackUrl}.
+ * Custom Tabs authorize, Keystore-backed secure storage, native SDK sign-in
+ * (auth.nativeSignIn) and launch config. The provider redirect returns through
+ * the nsh.auth.sandbox://callback intent filter and completes the pending
+ * auth.authorize with {callbackUrl}; Facebook's login result arrives through
+ * onActivityResult instead of a redirect.
  */
 class MainActivity : Activity() {
 
     private lateinit var nsh: NshView
     private lateinit var auth: AuthHostModule
+    private lateinit var signIn: NativeSignInModule
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = AuthHostModule(this)
+        // Only the app owner's manifest knows the real web client id, so the
+        // module rejects google sign-in rather than guessing (see its KDoc).
+        signIn = NativeSignInModule(this, manifestServerClientId())
         auth.handleLaunchIntent(intent) // the launcher's extras; a redirect can cold-start us
         nsh = NshView(this)
         nsh.setErrorListener { Log.e(TAG, it) }
@@ -40,6 +48,11 @@ class MainActivity : Activity() {
         auth.handleRedirectIntent(intent)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        signIn.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onResume() {
         super.onResume()
         // An authorize that came back without a redirect (browser backed out) is cancelled.
@@ -48,6 +61,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         auth.onHostDestroyed()
+        signIn.onHostDestroyed()
         nsh.destroy()
         super.onDestroy()
     }
@@ -55,6 +69,16 @@ class MainActivity : Activity() {
     private fun installAuthHandlers() {
         nsh.handle("auth.config") { _, reply ->
             reply.resolve(auth.configReply())
+        }
+        nsh.handle("auth.nativeSignIn") { data, reply ->
+            val provider = requireString(data, "provider", "auth.nativeSignIn")
+            val nonce = optionalString(data, "nonce")
+            signIn.nativeSignIn(provider, nonce) { result ->
+                result.fold(
+                    onSuccess = { reply.resolve(it) },
+                    onFailure = { reply.reject(it.message ?: "error") },
+                )
+            }
         }
         nsh.handle("auth.authorize") { data, reply ->
             val url = requireString(data, "url", "auth.authorize")
@@ -110,6 +134,12 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun manifestServerClientId(): String? =
+        packageManager
+            .getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            .metaData
+            ?.getString(NativeSignInModule.SERVER_CLIENT_ID_METADATA)
+
     private fun requireString(data: Any?, name: String, call: String): String {
         val value = (data as? Map<*, *>)?.get(name) as? String
         check(!value.isNullOrEmpty()) { "$call requires {\"$name\": string}" }
@@ -125,6 +155,6 @@ class MainActivity : Activity() {
         // allowed here (nsh-core 0.4.0 access.rs), so name the mock hosts the
         // demo declares too; 10.0.2.2 is the emulator's alias for this Mac's loopback.
         const val HOST_GRANT =
-            """{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }"""
+            """{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config", "auth.nativeSignIn"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }"""
     }
 }

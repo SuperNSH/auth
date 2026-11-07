@@ -156,7 +156,10 @@ custom-tab code translated from AppAuth-Android into this repository's Kotlin,
 small behaviors adapted from AppAuth-iOS, flutter_secure_storage and
 expo-secure-store into our own Swift/Kotlin, and the keyring crate family plus
 androidx.browser consumed as dependencies. What was taken from each, with
-copyright lines and license texts, is recorded in
+copyright lines and license texts — including the optional native adapters'
+SDK dependencies (GoogleSignIn-iOS, Facebook's iOS and Android SDKs, Google's
+Android Credential Manager artifacts), whose out-of-family licenses carry
+recorded acceptance decisions — is recorded in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Provider logos and sign-in
 button artwork are deliberately not stored here; the demo renders
 brand-compliant buttons with assets the app owner supplies (see

@@ -4,6 +4,7 @@
 // lifecycle: apps built with the iOS 26+ SDK require it (this machine's SDK
 // is 27.0).
 
+import FacebookCore
 import NativeShell
 import UIKit
 
@@ -16,7 +17,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // An auth host must never persist provider responses to disk: the
         // engine's URLSession cached token JSON into Cache.db-wal.
         URLCache.shared = URLCache(memoryCapacity: 0, diskCapacity: 0)
-        return true
+        // FBSDK 19 injects its Info.plist provider only during this call;
+        // without it Settings.appID lazily caches nil and LoginManager's
+        // validateAppID throws "App ID not found" (device crash, see
+        // docs/evidence/facebook/ios-native-crash.ips).
+        return ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 }
 
@@ -55,6 +60,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 final class HostViewController: UIViewController {
     private let app = NshAppView()
     private let authModule = AuthHostModule()
+    private let signInModule = NativeSignInModule()
     private let status = UILabel()
 
     override func viewDidLoad() {
@@ -93,6 +99,7 @@ final class HostViewController: UIViewController {
                 #"{ "host": ["auth.*"], "network": { "hosts": ["127.0.0.1", "localhost"] } }"#
             )
             authModule.register(on: app, anchorView: app)
+            signInModule.register(on: app, anchorView: app)
             guard let bundleURL = Bundle.main.url(forResource: "bundle", withExtension: "nshc", subdirectory: "nsh") else {
                 status.text = "no nsh/bundle.nshc in the app; run examples/host-ios/build-gate.sh"
                 return

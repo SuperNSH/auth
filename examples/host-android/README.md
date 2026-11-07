@@ -11,6 +11,19 @@ answers its `host` channel:
   redirect, which returns through the `nsh.auth.sandbox://callback` intent
   filter in `app/src/main/AndroidManifest.xml`. With no browser installed it
   rejects up front instead of launching into nothing.
+- `auth.nativeSignIn` runs the native SDK flows: Google through Credential
+  Manager (a bottom sheet owned by Play services; our sandbox web client id
+  makes Google itself reject inside that sheet, which surfaces as the reject
+  message) and Facebook through `facebook-login` (its own login dialog; the
+  result returns through `onActivityResult`, not the redirect scheme). The
+  manifest needs the two `com.facebook.sdk.*` meta-data entries and the
+  `nsh.auth.server-client-id` Google web client id (fake sandbox values
+  below). Facebook silently fails to initialize without its entries; Google
+  sign-in rejects with a configuration error without its key - no sandbox
+  fallback, because the returned id_token's `aud` carries that id and a real
+  Google config could never pass the core's `aud` check against a hard-coded
+  sandbox value. A native flow killed mid-dialog leaves nothing pending - the
+  SDKs own their state; call again.
 - `auth.pendingAuthorize` reports (or with `{clear: true}` consumes) an
   authorize flow parked by a process death, including the callback when its
   redirect arrived after a cold start.
@@ -21,8 +34,10 @@ answers its `host` channel:
   (the `provider` launch intent extra).
 
 The native module itself lives in `native/android/` and is compiled into this
-app via a `kotlin.directories` entry in `app/build.gradle.kts` (AGP 9's
-built-in Kotlin; the module has no `kotlin-android` plugin).
+app via a `kotlin.srcDir` entry in `app/build.gradle.kts` (AGP 9's built-in
+Kotlin compiles it; there is no separate `kotlin-android` plugin application,
+and AGP 9 refuses one - see the build note below for why the built-in
+compiler's version is forced upward).
 
 ## Prerequisites
 
@@ -53,6 +68,25 @@ The gate is idempotent and fails on any error. It runs, in order:
    `local.properties`, and runs `./gradlew assembleDebug` with
    `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
    and `ANDROID_HOME=$HOME/Library/Android/sdk`.
+
+Two network-dependent build facts, both deliberate:
+
+- **Maven resolution.** The `auth.nativeSignIn` dependencies
+  (`androidx.credentials:credentials` + `credentials-play-services-auth`
+  1.6.0 and `com.google.android.libraries.identity.googleid:googleid` 1.2.1
+  from `dl.google.com`, `com.facebook.android:facebook-login` 19.0.1 from
+  `repo1.maven.org`) resolve on the first Gradle run; versions are pinned
+  exactly in `app/build.gradle.kts` (no ranges, no dynamic `+`). Later runs
+  resolve against the local Gradle cache.
+- **The Kotlin compiler engine.** AGP 9's built-in Kotlin is the
+  `org.jetbrains.kotlin:kotlin-gradle-plugin` artifact, pinned to 2.2.10 by
+  every AGP stable line up to 9.5.1 - a compiler that reads Kotlin metadata
+  only up to 2.3.0. `googleid` 1.2.1 ships 2.4.0 metadata, so
+  `build.gradle.kts` forces `kotlin-gradle-plugin` to 2.4.10 on the
+  buildscript classpath (Gradle conflict resolution picks the higher). AGP 9
+  hard-rejects applying `org.jetbrains.kotlin.android` as a plugin ("no
+  longer required since AGP 9.0"), so this classpath force is the only way
+  to consume googleid while keeping the pinned artifact versions.
 
 The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Debug builds link
 `nsh-dev.aar`; release builds link `nsh.aar` (see `app/build.gradle.kts`).
@@ -145,10 +179,11 @@ with `ERR_ACCESS_DENIED`:
 The host grants a ceiling of its own (`setGrantedCapabilities` in
 `MainActivity.kt`): a call must be both declared by the bundle and allowed by
 the host, so the host grant mirrors the demo's names (`auth.*` covers all of
-the below) and adds the mock network hosts its token exchange fetches need:
+the below; `auth.nativeSignIn` is named explicitly) and adds the mock network
+hosts its token exchange fetches need:
 
 ```json
-{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }
+{ "host": ["auth.authorize", "auth.pendingAuthorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config", "auth.nativeSignIn"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }
 ```
 
 Keep the two lists in sync; a host that grants less than the bundle declares
@@ -162,6 +197,33 @@ denies the call with `not granted` even though the app declared it.
 | `auth.store.load` | `{key}` | `{value: string \| null}` | reject with the storage error |
 | `auth.store.clear` | `{key?}` - no key wipes everything | `{}` | reject with the storage error |
 | `auth.config` | `{}` | `{mockBaseUrl?, autoStart?}` - keys absent when unset | - |
+| `auth.nativeSignIn` | `{provider: "google" \| "facebook", nonce?}` - `nonce` is the RAW nonce from the core | `{provider: "google", idToken, nonce?}` or `{provider: "facebook", accessToken, expiresAt?}` | reject `cancelled` (user cancelled), `cancelled: superseded by a new nativeSignIn call`, `cancelled: host destroyed`, or the SDK's own error message (Google's `GetCredentialException` message - with the sandbox client id that is Google's own rejection from inside its sheet; Facebook's `FacebookException` message); google without the `nsh.auth.server-client-id` manifest meta-data rejects with a configuration error (no sandbox fallback); unknown provider name rejects with an argument error |
+
+Manifest additions for Facebook (fake sandbox values; without them
+facebook-login 19.0.1 does not crash - its `FacebookInitProvider` catches and
+logs the init failure at INFO - but every SDK call then fails at use time):
+
+```xml
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="1234567890123456" />
+<meta-data android:name="com.facebook.sdk.ClientToken" android:value="nsh-auth-sandbox-client-token" />
+```
+
+And for Google (the web client id the returned id_token's `aud` carries;
+host-owned key - neither credentials 1.6.0 nor googleid 1.2.1 defines one;
+`NativeSignInModule` rejects `auth.nativeSignIn google` when it is absent,
+so a real app must put its own registered web client id here):
+
+```xml
+<meta-data android:name="nsh.auth.server-client-id" android:value="nsh-auth-sandbox-web.apps.googleusercontent.com" />
+```
+
+(sandbox value; fake on purpose).
+
+The SDK's own manifest brings `FacebookActivity`, `CustomTabMainActivity`,
+`CustomTabActivity` and `FacebookInitProvider`; no `fb<APP_ID>` intent filter
+is needed for login on Android. Credential Manager itself takes only the
+string at call time - the meta-data above is this host module's config
+surface, read by `MainActivity` and passed to the module.
 
 Launch params (`host.params`, set by the host before the bundle loads; the
 host is the source of truth for the redirect URI):
@@ -192,6 +254,6 @@ bound.
 - `app/src/main/kotlin/dev/nshauth/sandbox/MainActivity.kt` - NshView wiring
   and the host channel handlers.
 - `native/android/` (outside this directory, compiled in via
-  `kotlin.directories`) - `AuthHostModule.kt`, `SecureStore.kt`.
+  `kotlin.directories`) - `AuthHostModule.kt`, `NativeSignInModule.kt`, `BrowserSelector.kt`, `BrowserDescriptor.kt`, `CustomTabManager.kt`, `SecureStore.kt`.
 - `build-gate.sh` - the build described above.
 - `gradle/wrapper/` + `gradlew` - Gradle 9.3.1, matching AGP 9.1.0.

@@ -6,7 +6,8 @@
 // Usage: node tools/check-no-secrets.mjs [--root <dir>]...
 //   --root may repeat; defaults to the repository root (parent of tools/).
 // Scanned per root: packages/, crates/, native/, fixtures/ and examples/ in
-// full — examples/ covers both source trees and build outputs.
+// full — examples/ covers both source trees and build outputs. Sole skip
+// beyond SKIP_DIRS: SPM checkouts under examples/**/build/derived/SourcePackages.
 
 import { readdirSync, statSync, readFileSync } from "node:fs";
 import { join, dirname, relative, sep } from "node:path";
@@ -28,6 +29,15 @@ const BINARY_EXT = new Set([
   ".dll", ".bin", ".pdf", ".a", ".o", ".aab", ".xcframework", ".node",
 ]);
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+// Third-party SPM package checkouts under examples/**/build/derived/SourcePackages are
+// covered by THIRD_PARTY_NOTICES.md; only project-authored content is scanned for secrets.
+function isSpmCheckoutDir(segments) {
+  const n = segments.length;
+  if (n < 4 || segments[n - 1] !== "SourcePackages") return false;
+  if (segments[0] !== "examples") return false;
+  return segments[n - 2] === "derived" && segments[n - 3] === "build";
+}
 
 // [name, regex, fakeCheckValueGroup?] — group 1 (or fakeGroup) is checked against FAKE_MARKER.
 const VALUE_PATTERNS = [
@@ -67,7 +77,7 @@ function collectArgs(argv) {
   return { roots: roots.length ? roots : [DEFAULT_ROOT] };
 }
 
-function listFiles(dir, out) {
+function listFiles(dir, relSegments, out) {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -78,7 +88,9 @@ function listFiles(dir, out) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) continue;
-      listFiles(full, out);
+      const childSegments = [...relSegments, entry.name];
+      if (isSpmCheckoutDir(childSegments)) continue;
+      listFiles(full, childSegments, out);
     } else if (entry.isFile()) {
       out.push(full);
     }
@@ -104,7 +116,7 @@ function scan() {
 
   for (const root of args.roots) {
     const targets = [];
-    for (const dir of SCAN_DIRS) listFiles(join(root, dir), targets);
+    for (const dir of SCAN_DIRS) listFiles(join(root, dir), [dir], targets);
 
     for (const path of targets) {
       let stat;

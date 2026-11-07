@@ -176,3 +176,20 @@ each provider's brand guidelines. This repository's policy is unchanged by phase
 - Text references to library names in attribution and provenance records are fine
   (that is required attribution, and for BSD-3-Clause it is the only permitted use of
   the copyright holders' names in derived-product contexts).
+
+## Recorded decisions (phase 3, 2026-11-07)
+
+Two phase-3 dependencies are outside the MIT/BSD/Apache family. Per this
+doc's rule, the acceptance decisions are recorded here and mirrored in
+THIRD_PARTY_NOTICES.md:
+
+1. **Facebook Platform License** — `facebook-ios-sdk` 19.0.1 (FacebookLogin
+   product) and `com.facebook.android:facebook-login` 19.0.1. Proprietary;
+   app-integration use as a build dependency accepted for the opt-in native
+   Facebook adapter only; the SDK binary is pulled by the developer's own
+   build (never redistributed by this repo); the browser-based flow remains
+   the default.
+2. **Google Android Software Development Kit License** — `googleid` 1.2.1
+   (and the Credential Manager play-services bridge it requires). Same
+   app-integration-use acceptance for the opt-in native Google adapter on
+   Android; `androidx.credentials` 1.6.0 itself is Apache-2.0.

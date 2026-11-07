@@ -26,3 +26,9 @@ export async function codeChallengeS256(verifier: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
   return base64urlEncode(new Uint8Array(digest));
 }
+
+/** Lowercase hex SHA-256: Apple's native sign-in carries this hash of the raw nonce in both the request and the id token's nonce claim. */
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}

@@ -1,5 +1,54 @@
 # STATUS
 
+## Phase 3 — native SDK adapters (complete, verified)
+
+Implemented the brief's optional native-SDK design line: Google, Facebook and
+Sign in with Apple through the hosts, behind the same provider interface.
+Research and coordinates in `docs/research/native-sdks.md`; license decisions
+in `docs/research/native-licensing.md` + `THIRD_PARTY_NOTICES.md` (Facebook
+Platform License and the Google Android SDK license are proprietary — the
+recorded acceptances cover app-integration use only; browser flows remain the
+default).
+
+- **Channel**: `auth.nativeSignIn {provider, nonce?}` on both hosts and in the
+  TS core, with `signIn()` auto-selecting native legs for google/apple/
+  facebook on host surfaces, falling back to the browser launcher when a host
+  lacks a provider (apple on Android → browser, proven live) and surfacing
+  real SDK/provider failures without double-flowing.
+- **Token shapes**: iOS Google `serverAuthCode` → the existing exchange
+  (broker when configured); Android Google `idToken` → JWKS verify (aud =
+  injected server client id, nonce verbatim — Credential Manager has no
+  serverAuthCode; the deprecated library was skipped); Apple `identityToken`
+  → JWKS + sha256(raw)-nonce (verified live that the entitlement does not
+  block presentation on the iOS 27 simulator); Facebook `accessToken` →
+  session + Graph `/me`.
+- **Tests**: 45 headless + 27 protocol in the TS core, every new test red-
+  proven; native modules typechecked (kotlinc 2.4.10 — required for googleid
+  1.2.1 metadata, forced on the buildscript classpath; xcodebuild with SPM
+  resolution).
+- **Device proofs**: iOS — Google's consent alert → Safari sheet on
+  accounts.google.com with Google's own `401 invalid_client`; Facebook's SDK
+  dialog → its "Invalid app ID" page on `limited.facebook.com` (after fixing
+  the FBSDK-v19 init crash: plist keys alone do not initialize the SDK —
+  `ApplicationDelegate.shared` is required, research corrected); Apple's
+  system alert (no Apple Account signed in — completing is forbidden by the
+  sandbox). Android — Credential Manager ran for Google (framework log
+  proof; `TYPE_NO_CREDENTIAL` surfaced in-app on the account-less emulator);
+  Facebook's dialog → `m.facebook.com` "Invalid app ID"; Apple → browser
+  fallback to `appleid.apple.com`. Mock loop + restore regressions re-passed
+  on both platforms.
+- **Audit**: phase-3 audit converged — no highs; 1 medium (iOS Facebook
+  expiresAt seconds-vs-ms, fails closed) + 4 lows fixed and re-audit-
+  confirmed, plus the binary-plist gate-scan dead-coverage finding fixed with
+  red-first proof at probe and gate level.
+- **Honest residuals**: native SDK flows cannot complete with fake sandbox
+  ids (provider surfaces reject them — that rejection is the pass standard);
+  Apple's full sheet requires a signed-in Apple Account (forbidden);
+  Android-Google id tokens carry no nonce on the account-less emulator
+  (verified, documented); the 30s engine host-call timeout bounds interactive
+  SDK capture flows (flagged for the coordinator; surfaces were reached
+  within it in every proof).
+
 ## Phase 2.5 — desktop transport on the platform fetch (complete, verified)
 
 Adopted the sibling `nsh-http` (Rust crate wrapping `nsh_core::prelude::fetch`)
@@ -157,3 +206,20 @@ on device.
   arbitrary byte-exact test fixtures, not configuration.
 - Vision judgments used pixel OCR + uiautomator/semantic dumps when the vision
   MCP rate-limited; every disclosure is in `docs/evidence/*/` logs.
+
+## No-secrets scanner exemption — SPM checkouts (2026-11-07)
+
+Phase 3 added SPM packages to `examples/host-ios`; Xcode checks the upstream
+sources out at `examples/host-ios/build/derived/SourcePackages/checkouts/`
+(gitignored via `examples/host-ios/.gitignore`, machine-local). The scanner's
+first run over that tree produced 9 false positives in GoogleSignIn-iOS sample
+plists and facebook-ios-sdk test fixtures — upstream constants the project did
+not author, covered by `THIRD_PARTY_NOTICES.md`. The scanner now skips exactly
+`examples/**/build/derived/SourcePackages` — the checkout directory only, not
+the build dir: project-authored build output (e.g. the built `.app`, which the
+iOS gate greps for `client_secret`) stays scanned. Red-first negative test in
+`tools/tests/check-no-secrets.test.ts`: a planted secret inside a fake
+checkout tree is not flagged, while the same secret under
+`build/derived/Build/Products/`, in a `SourcePackages` dir outside
+`build/derived`, and in example source all still fail. Verified 2026-11-07:
+tools suite 147 pass / 0 fail, full-repo scan clean (1879 files, was 9 hits).

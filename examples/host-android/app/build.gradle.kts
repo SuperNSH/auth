@@ -15,7 +15,6 @@ android {
         versionName = "0.1.0"
     }
 
-    // AGP 9's built-in Kotlin defaults jvmTarget to this targetCompatibility.
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -23,10 +22,9 @@ android {
 
     sourceSets {
         getByName("main") {
-            // Built-in Kotlin takes extra Kotlin dirs only via the kotlin set
-            // (java.srcDirs no longer compiles .kt). AuthHostModule and
-            // SecureStore live under native/android; one source of truth.
-            kotlin.directories += "../../../native/android"
+            // AuthHostModule, SecureStore and NativeSignInModule live under
+            // native/android; one source of truth, no copied file.
+            kotlin.srcDir("../../../native/android")
         }
     }
 
@@ -44,6 +42,22 @@ dependencies {
     debugImplementation(files("libs/nsh-dev.aar"))
     releaseImplementation(files("libs/nsh.aar"))
     implementation("androidx.browser:browser:1.8.0")
+    // auth.nativeSignIn adapters. Exact versions pinned (no ranges, no `+`):
+    // resolution hits dl.google.com (androidx.credentials) and repo1.maven.org
+    // (facebook-login); see build-gate.sh / README for the network step.
+    // credentials-play-services-auth is the GMS bridge that makes
+    // GetGoogleIdOption work outside bare-metal devices.
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
+    implementation("com.facebook.android:facebook-login:19.0.1")
+}
+
+// Aligned with compileOptions above; a mismatch fails the Kotlin compile.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }
 
 val demoDir = rootDir.parentFile.resolve("demo")

@@ -2,12 +2,23 @@ import { base64urlEncode } from "../src/base64";
 import type { Jwk } from "../src/jwks";
 import type { PendingAuthorize } from "../src/host";
 import { expect, open, test } from "nsh/test";
-import type { App, StubRequest, StubResponse } from "nsh/test";
+import type { App, HostMessage, StubRequest, StubResponse } from "nsh/test";
 
 const MOCK = "http://127.0.0.1:8755";
 const BROKER = "https://broker.nsh-auth-sandbox.example";
 const CLIENT_ID = "nsh-auth-sandbox.apps.googleusercontent.com";
 const REDIRECT = "nsh.auth.sandbox://callback";
+// The native SDK legs' endpoints: the real provider URLs, stubbed here like
+// every other host in the harness (no real network).
+const GOOGLE_JWKS = "https://www.googleapis.com/oauth2/v3/certs";
+const APPLE_JWKS = "https://appleid.apple.com/auth/keys";
+const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
+const GOOGLE_USERINFO = "https://openidconnect.googleapis.com/v1/userinfo";
+const FACEBOOK_ME = "https://graph.facebook.com/me?fields=id,name,email,picture";
+// The id tokens of the native legs are issued for these, not for CLIENT_ID:
+// google's Credential Manager sets the web (server) client id, Apple the bundle id.
+const GOOGLE_WEB_AUDIENCE = "nsh-auth-sandbox-web.apps.googleusercontent.com";
+const APPLE_BUNDLE_ID = "dev.nshauth.sandbox";
 const SESSION_KEY = "nsh-auth:session";
 const EVIDENCE = "/Users/hmziq/fo/nsh-auth/docs/evidence/ts-core";
 const PROVIDERS = ["google", "facebook", "discord", "github", "apple", "microsoft", "x", "oidc", "mock"] as const;
@@ -162,9 +173,18 @@ interface HostHandlers {
   store: Map<string, unknown>;
   /** The host's parked authorize record, exactly as the Android host seals it; {} is its nothing-parked answer. */
   pending?: PendingAuthorize | Record<string, never> | null;
+  /** The fake `auth.nativeSignIn` handler. Left out: the embedder handles no such name, which is the channel-absence scenario. Throwing rejects the call the way a real host rejects a dismissed sheet ("cancelled") or a failed SDK call. */
+  nativeSignIn?: (request: NativeSignInRequest) => unknown;
+}
+
+/** What the core sends over `auth.nativeSignIn`, per the pinned channel contract. */
+interface NativeSignInRequest {
+  provider?: string;
+  nonce?: string;
 }
 
 function hostOptions(handlers: HostHandlers) {
+  const nativeSignInHandler = handlers.nativeSignIn;
   return {
     handlers: {
       "auth.authorize": async ({ url }: { url: string }) => ({ callbackUrl: handlers.onAuthorize(url) }),
@@ -188,9 +208,20 @@ function hostOptions(handlers: HostHandlers) {
         }
         return handlers.pending ?? null;
       },
+      ...(nativeSignInHandler
+        ? {
+            "auth.nativeSignIn": async (request: NativeSignInRequest) => {
+              nativeRequests.push(request);
+              return await nativeSignInHandler(request);
+            },
+          }
+        : {}),
     },
   };
 }
+
+// Every auth.nativeSignIn request the fake host received, across the current app.
+const nativeRequests: NativeSignInRequest[] = [];
 
 // The exact authorize URL the app must send, built the same way the provider sees it.
 function expectedAuthorizeUrl(
@@ -233,6 +264,13 @@ function authorizeParts(url: string): { state: string; nonce: string | null; cha
 
 async function challengeOf(verifier: string): Promise<string> {
   return base64urlEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))));
+}
+
+// Hex SHA-256 computed independently of the core's own helper, so the Apple
+// nonce rule is pinned from the outside.
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 // Saves a state's pixels on a real target; a headless run draws nothing, so it skips.
@@ -901,4 +939,688 @@ test("a host without the pending channel boots and signs in exactly as before", 
   await app.waitFor("text:status authenticated");
   expect(app.shows("text:provider mock")).toBe(true);
   expect(typeof hostStore.get(SESSION_KEY)).toBe("string");
+});
+
+// ---------------------------------------------------------------------------
+// Native SDK legs (`auth.nativeSignIn`): the pinned channel contract, the
+// per-provider nonce rules, auto-selection and its fallbacks.
+// ---------------------------------------------------------------------------
+
+const NATIVE_KEYS = { kid: "sandbox-key", alg: "RS256", use: "sig" };
+
+function authorizeCalls(app: App): HostMessage[] {
+  return app.host.calls().filter((entry) => entry.name === "auth.authorize");
+}
+
+test("google's iOS native leg exchanges the serverAuthCode directly and lands a session", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`POST ${GOOGLE_TOKEN}`]: {
+        body: { access_token: "native-google-access", refresh_token: "native-google-refresh", expires_in: 3600, scope: "openid profile email" },
+      },
+      [`GET ${GOOGLE_USERINFO}`]: {
+        body: { sub: "google-native-user", name: "Google Native", email: "native@example.com", picture: "https://google.example/avatar.png" },
+      },
+    },
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      nativeSignIn: () => ({ provider: "google", serverAuthCode: "native-server-code" }),
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider google")).toBe(true);
+  expect(app.shows("text:user Google Native")).toBe(true);
+  // The channel call carried the provider and a CSPRNG nonce for the host to bind.
+  expect(nativeRequests).toHaveLength(1);
+  expect(nativeRequests[0]?.provider).toBe("google");
+  expect(nativeRequests[0]?.nonce).toMatch(/^[A-Za-z0-9_-]{22}$/);
+  // Google's token endpoint saw the server code; an SDK leg has no verifier.
+  const exchange = app.requests().find((request) => request.method === "POST" && request.url === GOOGLE_TOKEN);
+  const form = new URLSearchParams(exchange?.body ?? "");
+  expect(form.get("grant_type")).toBe("authorization_code");
+  expect(form.get("code")).toBe("native-server-code");
+  expect(form.get("client_id")).toBe(CLIENT_ID);
+  expect(form.get("redirect_uri")).toBe(REDIRECT);
+  expect(form.get("code_verifier")).toBeNull();
+  // The native answer finished the flow alone: no browser leg ran.
+  expect(authorizeCalls(app)).toHaveLength(0);
+  expect(app.openedUrls()).toHaveLength(0);
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { accessToken?: string; refreshToken?: string; provider?: string };
+  expect(saved.provider).toBe("google");
+  expect(saved.accessToken).toBe("native-google-access");
+  expect(saved.refreshToken).toBe("native-google-refresh");
+});
+
+test("google's native serverAuthCode is redeemed through the broker when one is configured", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const brokerRequests: StubRequest[] = [];
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`POST ${BROKER}/token`]: (request) => {
+        brokerRequests.push(request);
+        return { body: { accessToken: "broker-google-access", refreshToken: "broker-google-refresh", expiresIn: 3600, scope: "openid profile email" } };
+      },
+      [`GET ${GOOGLE_USERINFO}`]: {
+        body: { sub: "google-broker-user", name: "Google Broker", email: "broker@example.com", picture: "https://google.example/avatar.png" },
+      },
+    },
+    host: {
+      // The broker is the only holder of the server client's secret, which is
+      // what a serverAuthCode is redeemed with.
+      params: { brokerUrl: BROKER },
+      ...hostOptions({
+        store: new Map(),
+        onAuthorize: (url) => url,
+        nativeSignIn: () => ({ provider: "google", serverAuthCode: "broker-server-code" }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider google")).toBe(true);
+  expect(app.shows("text:user Google Broker")).toBe(true);
+  expect(brokerRequests).toHaveLength(1);
+  const payload = JSON.parse(brokerRequests[0]?.body ?? "{}") as Record<string, unknown>;
+  expect(payload.provider).toBe("google");
+  expect(payload.code).toBe("broker-server-code");
+  expect(payload.redirectUri).toBe(REDIRECT);
+  expect(brokerRequests[0]?.body ?? "").not.toContain("client_secret");
+  // The direct token endpoint must never see a server code from the app.
+  expect(app.requests().some((request) => request.url === GOOGLE_TOKEN)).toBe(false);
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("google's Android native leg verifies the id token for the server audience with the nonce verbatim", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${GOOGLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { nativeAudiences: { google: GOOGLE_WEB_AUDIENCE } },
+      ...hostOptions({
+        store: hostStore,
+        onAuthorize: (url) => url,
+        nativeSignIn: async (request) => ({
+          provider: "google",
+          idToken: await signIdToken(keys, {
+            iss: "https://accounts.google.com",
+            sub: "android-google-user",
+            aud: GOOGLE_WEB_AUDIENCE,
+            name: "Android Google",
+            email: "android@example.com",
+            exp: 3600,
+            nonce: request.nonce,
+          }),
+          nonce: request.nonce,
+        }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider google")).toBe(true);
+  expect(app.shows("text:user Android Google")).toBe(true);
+  // Only the JWKS was fetched: an id-token leg has no token endpoint and no userinfo call.
+  expect(app.requests().map((request) => request.url)).toEqual([GOOGLE_JWKS]);
+  expect(authorizeCalls(app)).toHaveLength(0);
+  // The session stands on the id token: its exp is the expiry and it is the only bearer.
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { expiresAt?: number; accessToken?: string; idToken?: string; refreshToken?: string };
+  expect(saved.expiresAt).toBe(3_600_000);
+  expect(typeof saved.idToken).toBe("string");
+  expect(saved.accessToken).toBe(saved.idToken);
+  expect(saved.refreshToken).toBeUndefined();
+});
+
+test("an android google id token with a foreign nonce does not sign anyone in", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${GOOGLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { nativeAudiences: { google: GOOGLE_WEB_AUDIENCE } },
+      ...hostOptions({
+        store: new Map(),
+        onAuthorize: (url) => url,
+        nativeSignIn: async (request) => ({
+          provider: "google",
+          idToken: await signIdToken(keys, {
+            iss: "https://accounts.google.com",
+            sub: "android-google-user",
+            aud: GOOGLE_WEB_AUDIENCE,
+            exp: 3600,
+            // Replay: the token's binding points somewhere else entirely.
+            nonce: "nonce-replayed-from-elsewhere",
+          }),
+          nonce: request.nonce,
+        }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:error nonce_mismatch");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(app.shows("id:sign-in-google")).toBe(true);
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("an android google id token without a configured audience is refused before any fetch", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${GOOGLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: hostOptions({
+      store: new Map(),
+      onAuthorize: (url) => url,
+      nativeSignIn: async (request) => ({
+        provider: "google",
+        idToken: await signIdToken(keys, {
+          iss: "https://accounts.google.com",
+          sub: "android-google-user",
+          aud: GOOGLE_WEB_AUDIENCE,
+          exp: 3600,
+          nonce: request.nonce,
+        }),
+        nonce: request.nonce,
+      }),
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:error unknown");
+  expect(app.shows("text:status error")).toBe(true);
+  // Fail closed before the network: no key fetch, no browser leg.
+  expect(app.requests().map((request) => request.url)).toEqual([]);
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("apple's native leg verifies the identity token against Apple's rules and keeps the authorization code", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${APPLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { nativeAudiences: { apple: APPLE_BUNDLE_ID } },
+      ...hostOptions({
+        store: hostStore,
+        onAuthorize: (url) => url,
+        nativeSignIn: async (request) => ({
+          provider: "apple",
+          identityToken: await signIdToken(keys, {
+            iss: "https://appleid.apple.com",
+            sub: "apple-native-user",
+            aud: APPLE_BUNDLE_ID,
+            email: "apple@example.com",
+            exp: 3600,
+            // Apple's rule: the token's nonce claim is the HASH of the raw nonce.
+            nonce: await sha256Hex(request.nonce ?? ""),
+          }),
+          authorizationCode: "apple-single-use-code",
+          nonce: request.nonce,
+        }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-apple");
+  await app.press("id:sign-in-apple");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider apple")).toBe(true);
+  expect(app.shows("text:user apple-native-user")).toBe(true);
+  expect(app.requests().map((request) => request.url)).toEqual([APPLE_JWKS]);
+  expect(authorizeCalls(app)).toHaveLength(0);
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { authorizationCode?: string; expiresAt?: number; accessToken?: string; idToken?: string };
+  // The single-use code is kept on the record for the server (broker) exchange.
+  expect(saved.authorizationCode).toBe("apple-single-use-code");
+  expect(saved.expiresAt).toBe(3_600_000);
+  expect(saved.accessToken).toBe(saved.idToken);
+});
+
+test("an apple identity token whose nonce claim is the raw nonce is refused", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${APPLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { nativeAudiences: { apple: APPLE_BUNDLE_ID } },
+      ...hostOptions({
+        store: new Map(),
+        onAuthorize: (url) => url,
+        nativeSignIn: async (request) => ({
+          provider: "apple",
+          identityToken: await signIdToken(keys, {
+            iss: "https://appleid.apple.com",
+            sub: "apple-native-user",
+            aud: APPLE_BUNDLE_ID,
+            exp: 3600,
+            // The Google rule applied to Apple's token: the raw nonce, unhashed.
+            nonce: request.nonce,
+          }),
+          authorizationCode: "apple-single-use-code",
+          nonce: request.nonce,
+        }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-apple");
+  await app.press("id:sign-in-apple");
+  await app.waitFor("text:error nonce_mismatch");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("an apple result echoing a foreign nonce is refused before any fetch", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${APPLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { nativeAudiences: { apple: APPLE_BUNDLE_ID } },
+      ...hostOptions({
+        store: new Map(),
+        onAuthorize: (url) => url,
+        nativeSignIn: async (request) => ({
+          provider: "apple",
+          identityToken: await signIdToken(keys, {
+            iss: "https://appleid.apple.com",
+            sub: "apple-native-user",
+            aud: APPLE_BUNDLE_ID,
+            exp: 3600,
+            nonce: await sha256Hex(request.nonce ?? ""),
+          }),
+          authorizationCode: "apple-single-use-code",
+          // The claim is right but the echo lies: fail closed.
+          nonce: "a-different-nonce-entirely-xx",
+        }),
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-apple");
+  await app.press("id:sign-in-apple");
+  await app.waitFor("text:error nonce_mismatch");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(app.requests().map((request) => request.url)).toEqual([]);
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("facebook's native leg wraps the access token and names the user from Graph", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${FACEBOOK_ME}`]: {
+        body: { id: "fb-user-1", name: "Facebook Native", email: "fb@example.com", picture: { data: { url: "https://facebook.example/pic.png" } } },
+      },
+    },
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      nativeSignIn: () => ({ provider: "facebook", accessToken: "fb-native-token", expiresAt: 86_400_000 }),
+    }),
+  });
+  await app.waitFor("id:sign-in-facebook");
+  await app.press("id:sign-in-facebook");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider facebook")).toBe(true);
+  expect(app.shows("text:user Facebook Native")).toBe(true);
+  expect(app.shows("text:scope openid public_profile email")).toBe(true);
+  // Graph /me saw the token as the host handed it over.
+  const me = app.requests().find((request) => request.url === FACEBOOK_ME);
+  expect(me?.headers["authorization"]).toBe("Bearer fb-native-token");
+  expect(authorizeCalls(app)).toHaveLength(0);
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { accessToken?: string; expiresAt?: number; idToken?: string };
+  expect(saved.accessToken).toBe("fb-native-token");
+  expect(saved.expiresAt).toBe(86_400_000);
+  expect(saved.idToken).toBeUndefined();
+});
+
+test("a facebook native token with no host-reported expiry never expires locally", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`GET ${FACEBOOK_ME}`]: { body: { id: "fb-user-1", name: "Facebook Native", email: "fb@example.com" } },
+    },
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      nativeSignIn: () => ({ provider: "facebook", accessToken: "fb-native-token" }),
+    }),
+  });
+  await app.waitFor("id:sign-in-facebook");
+  await app.press("id:sign-in-facebook");
+  await app.waitFor("text:status authenticated");
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "{}") as { expiresAt?: number };
+  expect(saved.expiresAt).toBe(0);
+  expect(app.shows("text:status authenticated")).toBe(true);
+});
+
+test("cancelling the native sheet leaves the state exactly as it was", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {},
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      nativeSignIn: () => {
+        throw new Error("cancelled");
+      },
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:status idle");
+  // No error report, no session, no store write, and no browser leg either.
+  expect(app.shows("id:error")).toBe(false);
+  expect(app.shows("id:sign-in-google")).toBe(true);
+  expect(hostStore.has(SESSION_KEY)).toBe(false);
+  expect(app.requests()).toHaveLength(0);
+  expect(authorizeCalls(app)).toHaveLength(0);
+  expect(app.openedUrls()).toHaveLength(0);
+});
+
+test("cancelling a native sign-in over a restored session keeps that session", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>([
+    [
+      SESSION_KEY,
+      JSON.stringify({ provider: "mock", accessToken: "restored-access", refreshToken: "restored-refresh", expiresAt: 3_600_000, scope: "openid profile email offline_access" }),
+    ],
+  ]);
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {},
+    host: {
+      params: { autoSignIn: ["google"] },
+      ...hostOptions({
+        store: hostStore,
+        onAuthorize: (url) => url,
+        nativeSignIn: () => {
+          throw new Error("cancelled");
+        },
+      }),
+    },
+  });
+  await app.waitFor("text:status authenticated");
+  // The native channel was attempted (and its sheet dismissed) before the asserts below.
+  await app.waitUntil(() => nativeRequests.length > 0);
+  // The cancel restored the sign-in's starting point: the restored session, not an error.
+  expect(app.shows("text:provider mock")).toBe(true);
+  expect(app.shows("id:error")).toBe(false);
+  expect(app.shows("text:status error")).toBe(false);
+  expect(hostStore.get(SESSION_KEY)).toBeTruthy();
+  expect(authorizeCalls(app)).toHaveLength(0);
+});
+
+test("a native SDK failure is an error, not a browser fallback", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {},
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      nativeSignIn: () => {
+        throw new Error("GetCredentialException: 16: the OAuth client was not found");
+      },
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:error unknown");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(app.shows("id:sign-in-google")).toBe(true);
+  expect(hostStore.has(SESSION_KEY)).toBe(false);
+  expect(app.requests()).toHaveLength(0);
+  expect(authorizeCalls(app)).toHaveLength(0);
+  expect(app.openedUrls()).toHaveLength(0);
+});
+
+// Android's NativeSignInModule serves only google and facebook; this is its
+// unknown-provider rejection verbatim (NativeSignInModule.kt, wrapped in an
+// IllegalArgumentException and delivered with code ERR_NSH_HOST_ERROR).
+const androidUnknownProvider = (request: NativeSignInRequest): never => {
+  throw new Error(`auth.nativeSignIn: unknown provider "${request.provider}" (known: google, facebook)`);
+};
+
+test("apple on an android-shaped host falls back to the browser, google stays native", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const brokerBodies: string[] = [];
+  let authorizeUrl = "";
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`POST ${BROKER}/token`]: async (request) => {
+        brokerBodies.push(request.body ?? "");
+        return {
+          body: {
+            accessToken: "apple-browser-access",
+            // The broker signs for Apple's browser flow; the nonce claim must
+            // be the one the authorize URL carried or verification refuses.
+            idToken: await signIdToken(keys, {
+              iss: "https://appleid.apple.com",
+              sub: "apple-browser-user",
+              aud: CLIENT_ID,
+              email: "apple-browser@example.com",
+              name: "Apple Browser User",
+              exp: 3600,
+              nonce: authorizeParts(authorizeUrl).nonce ?? "",
+            }),
+            expiresIn: 3600,
+            scope: "openid name email",
+          },
+        };
+      },
+      // signOut of the apple session revokes through the broker too.
+      [`POST ${BROKER}/revoke`]: { body: {} },
+      [`GET ${APPLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+      [`GET ${GOOGLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+    },
+    host: {
+      params: { brokerUrl: BROKER, nativeAudiences: { google: GOOGLE_WEB_AUDIENCE } },
+      ...hostOptions({
+        store: hostStore,
+        onAuthorize: (url) => {
+          authorizeUrl = url;
+          return `nsh.auth.sandbox://callback?code=apple-fallback-code&state=${authorizeParts(url).state}`;
+        },
+        nativeSignIn: async (request) => {
+          if (request.provider === "apple") androidUnknownProvider(request);
+          return {
+            provider: "google",
+            idToken: await signIdToken(keys, {
+              iss: "https://accounts.google.com",
+              sub: "android-google-user",
+              aud: GOOGLE_WEB_AUDIENCE,
+              exp: 3600,
+              nonce: request.nonce ?? "",
+            }),
+            nonce: request.nonce,
+          };
+        },
+      }),
+    },
+  });
+  await app.waitFor("id:sign-in-apple");
+  await app.press("id:sign-in-apple");
+  await app.waitFor("text:status authenticated");
+  // The fallback built Apple's real authorize URL (form_post, no PKCE) and
+  // completed through the broker; reaching a session proves the id token's
+  // nonce claim matched the nonce the core sent, or verification would have
+  // refused it.
+  expect(authorizeUrl).toMatch(authorizePattern("apple"));
+  expect(app.shows("text:provider apple")).toBe(true);
+  expect(app.shows("text:user Apple Browser User")).toBe(true);
+  expect(nativeRequests.map((request) => request.provider)).toEqual(["apple"]);
+  expect(authorizeCalls(app)).toHaveLength(1);
+  // Apple has no PKCE and no secret may ride along: the exchange carries the
+  // bare code and redirect to the broker.
+  const exchange = JSON.parse(brokerBodies[0] ?? "{}") as Record<string, unknown>;
+  expect(exchange.provider).toBe("apple");
+  expect(exchange.code).toBe("apple-fallback-code");
+  expect(exchange.codeVerifier).toBeUndefined();
+  expect(brokerBodies[0] ?? "").not.toContain("client_secret");
+
+  // Back to the buttons: the same host still serves google's native leg —
+  // the rejection class is per provider, never a whole-channel verdict. The
+  // Android id-token path names the user from the token's own claims.
+  await app.press("id:sign-out-anytime");
+  await app.waitFor("text:status idle");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:user android-google-user");
+  expect(app.shows("text:provider google")).toBe(true);
+  expect(nativeRequests.map((request) => request.provider)).toEqual(["apple", "google"]);
+  expect(authorizeCalls(app)).toHaveLength(1);
+});
+
+test("a channel-prefixed configuration failure is still an error, not a browser fallback", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {},
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => url,
+      // iOS's own prefixed failure shape: the channel answered, the leg is
+      // misconfigured — nothing about the provider is absent.
+      nativeSignIn: () => {
+        throw new Error("auth.nativeSignIn google: GIDClientID missing from Info.plist");
+      },
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:error unknown");
+  expect(app.shows("text:status error")).toBe(true);
+  expect(hostStore.has(SESSION_KEY)).toBe(false);
+  expect(authorizeCalls(app)).toHaveLength(0);
+  expect(app.openedUrls()).toHaveLength(0);
+});
+
+test("a host whose embedder predates the native channel falls back to the browser loop", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  nativeRequests.length = 0;
+  const hostStore = new Map<string, unknown>();
+  let fallbackNonce = "";
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {
+      [`POST ${GOOGLE_TOKEN}`]: async () => ({
+        body: {
+          access_token: "fallback-access",
+          id_token: await signIdToken(keys, {
+            iss: "https://accounts.google.com",
+            sub: "fallback-user",
+            aud: CLIENT_ID,
+            name: "Fallback User",
+            exp: 3600,
+            nonce: fallbackNonce,
+          }),
+          expires_in: 3600,
+          scope: "openid profile email",
+        },
+      }),
+      [`GET ${GOOGLE_JWKS}`]: { body: { keys: [{ ...keys.publicJwk, ...NATIVE_KEYS }] } },
+      [`GET ${GOOGLE_USERINFO}`]: {
+        body: { sub: "fallback-user", name: "Fallback User", email: "fallback@example.com", picture: "https://google.example/avatar.png" },
+      },
+    },
+    // No nativeSignIn handler: the engine answers that the embedder handles no
+    // such name, and the core must complete the sign-in in the browser.
+    host: hostOptions({
+      store: hostStore,
+      onAuthorize: (url) => {
+        fallbackNonce = authorizeParts(url).nonce ?? "";
+        return `nsh.auth.sandbox://callback?code=fallback-code&state=${authorizeParts(url).state}`;
+      },
+    }),
+  });
+  await app.waitFor("id:sign-in-google");
+  await app.press("id:sign-in-google");
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("text:provider google")).toBe(true);
+  expect(app.shows("text:user Fallback User")).toBe(true);
+  expect(authorizeCalls(app)).toHaveLength(1);
+  expect(authorizeCalls(app)[0]?.name).toBe("auth.authorize");
+});
+
+test("an explicit native-only signIn on a host without the channel reports no_launcher", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", {
+    clock: { time: 0 },
+    network: {},
+    host: hostOptions({ store: new Map(), onAuthorize: (url) => url }),
+  });
+  await app.waitFor("id:sign-in-native-facebook");
+  await app.press("id:sign-in-native-facebook");
+  await app.waitFor("text:error no_launcher");
+  expect(app.shows("text:status error")).toBe(true);
+  // Explicit native-only means no silent browser leg.
+  expect(authorizeCalls(app)).toHaveLength(0);
+  expect(app.openedUrls()).toHaveLength(0);
+});
+
+test("an explicit native-only signIn on a hostless surface reports no_launcher", async () => {
+  scenario.reset();
+  nativeRequests.length = 0;
+  const app = await open("../App.tsx", { clock: { time: 0 }, network: {} });
+  await app.waitFor("id:sign-in-native-facebook");
+  await app.press("id:sign-in-native-facebook");
+  await app.waitFor("text:error no_launcher");
+  expect(app.shows("text:status error")).toBe(true);
+  // No host means no browser fallback either: the caller asked for native only.
+  expect(app.openedUrls()).toHaveLength(0);
 });

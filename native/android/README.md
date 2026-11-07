@@ -10,6 +10,38 @@ under this directory.
   configuration (`provider` / `mockBaseUrl` launcher extras, loopback rewritten
   to `10.0.2.2` on the emulator), the cancelled/resume bookkeeping, and the
   persisted pending-authorize record (below).
+- `NativeSignInModule.kt` - the native SDK adapters behind `auth.nativeSignIn`:
+  Google through Credential Manager (`androidx.credentials:credentials` +
+  `credentials-play-services-auth` 1.6.0, `googleid` 1.2.1) and Facebook
+  through `facebook-login` 19.0.1. Both SDKs work from this host's plain
+  `Activity`, verified against the resolved artifacts: Credential Manager's
+  play-services bridge starts its own `HiddenActivity` from an activity
+  context (its stated requirement is "Activity-based context", not
+  ComponentActivity/FragmentActivity), and facebook-login's
+  `logIn(Activity, permissions)` overload exists exactly for activities that
+  are not an `ActivityResultRegistryOwner` (the result returns through
+  `onActivityResult`; the registry-based overload needs a ComponentActivity).
+  Google needs a web client id string (`GetGoogleIdOption.Builder
+  .setServerClientId`): the host reads it from the manifest meta-data
+  `nsh.auth.server-client-id` and passes it to the module's constructor, and a
+  production app without it gets a loud configuration rejection instead of a
+  sandbox fallback - the returned id_token's `aud` carries this id, so the
+  core's `aud` check could never pass a hard-coded sandbox value. The key is
+  host-owned: neither credentials 1.6.0 nor googleid 1.2.1 defines a manifest
+  key for it (verified in the resolved AARs). The sandbox host manifest
+  carries the obviously-fake `nsh-auth-sandbox-web.apps.googleusercontent.com`,
+  and `googleid` 1.2.1 has `setNonce`, so the RAW nonce from the core is bound
+  verbatim into the returned id_token (Android-Google, unlike iOS-Apple's
+  sha256 rule). With our unregistered client id the failure is Google's own
+  error surfaced as the `GetCredentialException` message - the expected
+  sandbox outcome. Facebook login (permissions `public_profile`, `email`)
+  needs the two `com.facebook.sdk.*` meta-data entries in the host manifest:
+  19.0.1 does not crash without them (`FacebookInitProvider` catches the init
+  failure and logs at INFO, so "it didn't crash" is never "it initialized"),
+  but every SDK call then fails at use time. SDK flows keep no pending record
+  here - the SDKs own their state; a flow killed mid-dialog just leaves the
+  in-flight completion to be failed on host destroy, and the app calls
+  `auth.nativeSignIn` again.
 - `BrowserSelector.kt` + `BrowserDescriptor.kt` - translated from
   AppAuth-Android (`openid/AppAuth-Android` at `e5f5184`,
   `library/java/net/openid/appauth/browser/{BrowserSelector,BrowserDescriptor}.java`,
@@ -49,6 +81,7 @@ also granted in the host's `setGrantedCapabilities` and declared by the demo's
 | Name | Args | Reply | Reject message |
 |---|---|---|---|
 | `auth.authorize` | `{url, scheme, verifier?, state?, provider?}` - `scheme` must be `nsh.auth.sandbox`, the scheme the host manifest routes; the last three are optional resumption metadata for the pending record | `{callbackUrl}` | `cancelled`, `cancelled: superseded by a new authorize call`, `cancelled: host destroyed`, `auth.authorize: no browser is installed on this device; the authorize URL cannot be opened`, a not-registered-scheme error, or an argument error |
+| `auth.nativeSignIn` | `{provider: "google" \| "facebook", nonce?}` - `nonce` is the RAW nonce from the core | `{provider: "google", idToken, nonce?}` or `{provider: "facebook", accessToken, expiresAt?}` (`expiresAt` is ms since epoch) | `cancelled` (user cancelled either SDK surface), `cancelled: superseded by a new nativeSignIn call`, `cancelled: host destroyed`, or the SDK's own error message (Google's `GetCredentialException`, Facebook's `FacebookException`); google without `nsh.auth.server-client-id` in the host manifest rejects with a configuration error (no sandbox fallback); an unknown provider name rejects with an argument error |
 | `auth.pendingAuthorize` | `{}` to report, `{clear: true}` to consume | `{scheme, url, state?, provider?, verifier?, callbackUrl?}` or `{}` when nothing is parked | - |
 | `auth.store.save` | `{key, value}` | `{}` | storage error message |
 | `auth.store.load` | `{key}` | `{value: string \| null}` | storage error message |

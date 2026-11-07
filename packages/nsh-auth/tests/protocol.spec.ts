@@ -6,7 +6,7 @@ import { base64urlDecode, base64urlEncode } from "../src/base64";
 import { parseCallback } from "../src/callback";
 import { AuthError } from "../src/errors";
 import { decodeJwt, verifyIdToken } from "../src/jwks";
-import { codeChallengeS256, createCodeVerifier, createNonce, createState } from "../src/pkce";
+import { codeChallengeS256, createCodeVerifier, createNonce, createState, sha256Hex } from "../src/pkce";
 import { providerConfig } from "../src/providers";
 import { sessionExpired, type Session } from "../src/types";
 import { exchangeCode, refreshTokens, revokeToken } from "../src/tokens";
@@ -139,6 +139,13 @@ describe("pkce", () => {
     expect(createNonce()).toHaveLength(22);
     expect(createState()).not.toBe(createState());
     expect(await challengeOf(verifier)).toHaveLength(43);
+  });
+
+  test("sha256Hex matches the FIPS vectors Apple's native nonce rule leans on", async () => {
+    expect(await sha256Hex("")).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    expect(await sha256Hex("abc")).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    expect(await sha256Hex("abc")).toHaveLength(64);
+    expect(await sha256Hex("abc")).not.toMatch(/[^0-9a-f]/);
   });
 });
 

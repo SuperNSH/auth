@@ -13,6 +13,8 @@ export interface Session {
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
+  /** Apple's native sign-in keeps its single-use authorization code here for the server (broker) exchange; the session itself stands on the verified identity token. */
+  authorizationCode?: string;
   /** Wall-clock milliseconds after which the access token is dead; refresh extends it. */
   expiresAt: number;
   scope: string;
@@ -45,6 +47,12 @@ export interface AuthConfig {
   mockBaseUrl?: string;
   /** Where confidential-client providers (GitHub, Apple) exchange codes; runs on the app owner's server. */
   brokerUrl?: string;
+  /**
+   * Audiences the native SDK legs' id tokens are issued for — google: the web
+   * (server) client id Credential Manager puts in `aud`; apple: the app's
+   * bundle id. The browser path checks `clientId` instead; these legs cannot.
+   */
+  nativeAudiences?: { google?: string; apple?: string };
   /** auto: the host's secure store when a host embeds the app, memory otherwise. */
   storage?: "auto" | "host" | "memory";
   /** Where wall-clock time comes from; defaults to `Date.now`. Tests inject a manual one. */
@@ -59,6 +67,8 @@ export interface Auth {
   status: Signal<AuthStatus>;
   error: Signal<AuthError | null>;
   signIn(provider: ProviderId): Promise<void>;
+  /** The native SDK leg only (google, apple, facebook): no browser fallback — rejects with `no_launcher` when the host has no channel. */
+  signInNative(provider: ProviderId, options?: { audience?: string }): Promise<void>;
   handleRedirect(url: string): Promise<void>;
   refresh(): Promise<void>;
   signOut(): Promise<void>;

@@ -10078,3 +10078,4 @@ Timestamp               Ty Process[PID:TID]
 2026-11-07 16:27:54.454 Df NshAuthSandbox[70288:c57cb2] [com.apple.UIKit:BackgroundTask] Ending task with identifier 6 and description: <_UIBackgroundTaskInfo: 0x103bb5e00>: taskID = 6, taskName = com.apple.UIKit.CABackingStoreCollect, creationTime = 145399 (elapsed = 0), _expireHandler: (null)
 2026-11-07 16:27:54.454 Df NshAuthSandbox[70288:c57cb2] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x104a84460> (used by background task with identifier 6: <_UIBackgroundTaskInfo: 0x103bb5e00>: taskID = 6, taskName = com.apple.UIKit.CABackingStoreCollect, creationTime = 145399 (elapsed = 0))
 2026-11-07 16:27:54.454 Df NshAuthSandbox[70288:c57cb2] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x104a84460> for task identifier: 6
+Child process terminated with signal 9: Killed

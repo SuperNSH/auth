@@ -10,6 +10,25 @@
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true">
 
+        <!-- facebook-login 19.0.1 needs both entries to initialize (values are
+             our obviously-fake sandbox ids). Missing entries do not crash: the
+             SDK's FacebookInitProvider catches the failure and logs at INFO,
+             so every SDK call then fails at use time instead. -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="1234567890123456" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="nsh-auth-sandbox-client-token" />
+
+        <!-- The Google web client id Credential Manager requests the id_token
+             for (its aud). Host-owned key: neither credentials 1.6.0 nor
+             googleid 1.2.1 defines one, and NativeSignInModule rejects google
+             sign-in when it is absent. The sandbox value is fake on purpose. -->
+        <meta-data
+            android:name="nsh.auth.server-client-id"
+            android:value="nsh-auth-sandbox-web.apps.googleusercontent.com" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

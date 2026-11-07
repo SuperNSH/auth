@@ -33,6 +33,11 @@ no secret ever travels in a request from the app.
 
 `signIn` picks its launcher in this order:
 
+0. **The provider's native SDK** (`google`, `apple`, `facebook`, only when a
+   host embeds the app). It calls `auth.nativeSignIn` — Google's Credential
+   Manager or GoogleSignIn, Apple's system sheet, Facebook's dialog. Details,
+   the per-provider nonce rules and the fallback rules are in the next
+   section. If the host has no such channel, `signIn` continues below.
 1. **A host embeds the app** (`host.available()`). It calls
    `host.call("auth.authorize", { url, scheme })` and the host answers with
    `{ callbackUrl }` — an `ASWebAuthenticationSession` on iOS/macOS or Custom
@@ -59,6 +64,76 @@ no secret ever travels in a request from the app.
 `handleRedirect` and the host path are the same machinery: parse the callback,
 check `state`, exchange the code, verify the id token's signature and `nonce`,
 load the user, store the session.
+
+## Native SDK legs (`auth.nativeSignIn`)
+
+On iOS and Android the provider's own SDK is the better surface: Google blocks
+embedded web views, Apple's sheet is the system's, Facebook's dialog runs its
+own PKCE. When a host embeds the app, `signIn` for `google`, `apple` and
+`facebook` tries the native channel first, and only a **missing channel** falls
+back to the browser loop:
+
+- The core generates a raw nonce (CSPRNG, the same family as `state` and the
+  browser nonce) and calls `host.call("auth.nativeSignIn", { provider, nonce })`.
+- **Channel absent** — no host, the name not granted, or an embedder built
+  before the channel existed (the engine answers "handles no ..."): the call
+  counts as absent and the browser launcher runs, exactly as before. Web and
+  hostless builds never attempt the call. Absence can also be per provider: a
+  host whose native module does not serve this provider — Android implements
+  google and facebook only — rejects with `auth.nativeSignIn: unknown
+  provider ...`, which counts as absent for that provider alone, so `apple`
+  on Android signs in through the browser instead of hard-erroring.
+- **Cancelled** — the host rejects with a `cancelled` message when the user
+  dismisses the sheet. The `signIn` promise rejects with `access_denied` and
+  the signals return to what they were: no error report, no session change.
+- **SDK or provider failure** — any other rejection. It lands on `error`
+  (code `unknown`, the host's message kept) with status `error`. No silent
+  browser retry after a real failure, and no double flow: a failure and a
+  cancel never launch the browser.
+
+`auth.signInNative(provider)` is the same flow without the fallback: a missing
+channel rejects with `no_launcher` instead of opening a browser, and it takes
+an optional `{ audience }` override for the one call.
+
+### What each leg returns, and how the core verifies it
+
+| Leg | The host answers with | What the core does |
+| --- | --- | --- |
+| google on iOS | `{provider, serverAuthCode}` | Redeems the code with the existing `exchangeCode` machinery — through `brokerUrl` when configured (a server code is the SERVER client's grant; its secret never lives in the app), or direct to Google's token endpoint otherwise. Then the browser path's tail: userinfo, store save, signals. |
+| google on Android | `{provider, idToken, nonce?}` | `verifyIdToken` against Google's JWKS: `iss https://accounts.google.com`, `aud` = `nativeAudiences.google`, nonce claim == the raw nonce **verbatim**. The session stands on the id token: its `exp` is the session's expiry and the token is the only bearer credential (it fills both `idToken` and `accessToken`). |
+| apple on iOS | `{provider, identityToken, authorizationCode, nonce}` | `verifyIdToken` against Apple's JWKS (`https://appleid.apple.com/auth/keys`): `iss https://appleid.apple.com`, `aud` = `nativeAudiences.apple`, nonce claim == **SHA-256 hex of the raw nonce** — the opposite of Google's rule, because Apple's request already carried the hash. The session keeps `authorizationCode` on the record: single-use, and exchanging it needs an Apple client secret, so the broker owns that leg; the session itself stands on the verified identity token. |
+| facebook (both) | `{provider, accessToken, expiresAt?}` | Session wrap — no exchange, no JWKS, the classic SDK token is opaque — plus Graph `/me` for the user signal. `expiresAt` is the host's epoch ms when it has one, otherwise 0 (never expires locally). |
+
+Every result answers with `provider` and echoes the raw `nonce` (apple always,
+google when the request carried one); an echo that is not the nonce the core
+sent is a `nonce_mismatch` before anything is fetched.
+
+The nonce rules, side by side:
+
+| Provider | The request carried | The token's `nonce` claim | The core compares |
+| --- | --- | --- | --- |
+| google, native | raw nonce | raw nonce | verbatim |
+| apple, native | `sha256(raw)` | `sha256(raw)` | `sha256Hex(rawNonce)` |
+| browser flows | raw nonce (authorize URL) | raw nonce | verbatim |
+
+### Configuring the native audiences
+
+```ts
+const auth = createAuth({
+  clientId: "your-ios-client-id.apps.googleusercontent.com",
+  redirectUri: "com.example.app://callback",
+  nativeAudiences: {
+    // The id tokens of the native legs are issued for these, not for clientId:
+    google: "your-web-client-id.apps.googleusercontent.com", // Credential Manager's serverClientId
+    apple: "com.example.app", // the app's bundle id
+  },
+});
+```
+
+A missing audience fails the leg with a clear config error before any fetch —
+fail loud rather than silently falling back to the browser. Hosts implement the
+channel to this contract; apps declare `auth.nativeSignIn` under
+`capabilities.host`.
 
 ## Surviving process death (hosts)
 
@@ -143,12 +218,20 @@ nsh check && nsh build && nsh test && bun test
   response without rotation keeping the previous token, transient (network,
   5xx) refresh failures leaving the session for retry, sign-out, the host
   launcher with its secure store, the GitHub broker path with its Accept
-  header, restore including the 60-second expiry margin, and the parked-flow
+  header, restore including the 60-second expiry margin, the parked-flow
   boot resume (completes with its callback, reports `interrupted` without one,
-  and works unchanged on a host that lacks the channel).
+  and works unchanged on a host that lacks the channel), and the native SDK
+  legs over a fake `auth.nativeSignIn` host: each shape's happy path (google
+  serverAuthCode direct and through the broker, google id token with the
+  verbatim nonce, apple identity token with the sha256 nonce and the kept
+  authorization code, facebook wrap with Graph `/me`), the nonce and echo
+  mismatches, the missing-audience refusal, cancel restoring the prior state,
+  SDK failure reporting without a browser fallback, the browser fallback on a
+  channel-absent embedder, and `signInNative` reporting `no_launcher`.
 - `bun test` (plain) — the pure protocol units in `tests/protocol.spec.ts`
   against a loopback `Bun.serve` mock on 127.0.0.1 with a fake clock: base64url
-  and PKCE vectors, byte-exact authorize URLs, callback parsing, token exchange
+  and PKCE vectors, the SHA-256 hex vectors Apple's native nonce rule leans
+  on, byte-exact authorize URLs, callback parsing, token exchange
   and error mapping, retryability classification, expiry tolerance, the broker,
   JWKS RS256 verification, user mapping.
   `bunfig.toml` scopes bun to that file with

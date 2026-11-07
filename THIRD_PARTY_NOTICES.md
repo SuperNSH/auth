@@ -13,18 +13,25 @@ three distinct ways, each with different license obligations:
   repository's own Swift/Kotlin/Rust/TypeScript. No upstream source file is
   copied, modified or redistributed; each entry still records the upstream
   copyright, license, and what was taken.
-- **Dependencies** — the keyring crate family and androidx.browser are consumed
-  as built artifacts (cargo / Gradle), never vendored as source. Their entries
-  record the exact versions this repository pins and their licenses.
+- **Dependencies** — the keyring crate family, androidx.browser and, since
+  phase 3, the native-SDK dependencies of the optional native adapters
+  (GoogleSignIn-iOS, the Facebook iOS and Android SDKs, Google's Android
+  Credential Manager artifacts) are consumed as built artifacts
+  (cargo / Gradle / SPM), never vendored as source. Their entries record the
+  exact versions this repository pins and their licenses; the out-of-family
+  SDK licenses carry a recorded decision per
+  [docs/research/native-licensing.md](docs/research/native-licensing.md).
 
 One further project, tauri-plugin-oauth, is credited for two design ideas
 adopted with no code copied.
 
 License facts were verified from the upstream repositories and package metadata
 on 2026-11-07; the sources are recorded in
-[docs/research/native-licensing.md](docs/research/native-licensing.md). When a
-covered artifact is upgraded or dropped, its entry here moves or goes with it in
-the same commit.
+[docs/research/native-licensing.md](docs/research/native-licensing.md) and, for
+the phase-3 native SDKs, in
+[docs/research/native-sdks.md](docs/research/native-sdks.md) §6. When a covered
+artifact is upgraded or dropped, its entry here moves or goes with it in the
+same commit.
 
 ## AppAuth-iOS
 
@@ -398,6 +405,127 @@ SOFTWARE.
 - Copyright: Google and the Android Open Source Project, per the license
   headers in the androidx sources.
 
+## GoogleSignIn-iOS
+
+- Dependency: GoogleSignIn-iOS 10.1.0, consumed as an SPM source package from
+  https://github.com/google/GoogleSignIn-iOS by `examples/host-ios`; not
+  vendored. The built app embeds the compiled package, so Apache-2.0 §4(a)
+  applies and is satisfied by the license text reproduced in this file (see
+  AppAuth-Android above).
+- Copyright: Copyright 2021 Google LLC (upstream public headers, e.g.
+  `GIDConfiguration.h`); the repo LICENSE is the unmodified Apache-2.0 text
+  (GitHub license API `spdx_id: apache-2.0`, verified 2026-11-07).
+- Transitive source dependencies pulled by the same resolution — AppAuth-iOS
+  3.x, GTMAppAuth, gtm-session-fetcher, GoogleUtilities, AppCheckCore — are
+  Apache-2.0 projects per their own repositories
+  (docs/research/native-sdks.md §6). AppAuth-iOS is already covered above;
+  each remaining LICENSE is re-read, and its exact commit cited here, when
+  the committed `Package.resolved` pins it.
+- License: Apache-2.0 (text reproduced above under AppAuth-Android).
+
+## Facebook iOS SDK (FacebookLogin)
+
+- Dependency: the `FacebookLogin` product of facebook-ios-sdk v19.0.1,
+  resolved as SPM binary XCFrameworks from Meta's tagged release, with
+  SHA-256 checksums pinned in upstream `Package.swift`
+  (https://github.com/facebook/facebook-ios-sdk); not vendored, and never
+  redistributed standalone.
+- Copyright: Copyright (c) Meta Platforms, Inc. and affiliates. All rights
+  reserved. (LICENSE, main)
+- License: **Facebook Platform License**
+  (https://github.com/facebook/facebook-ios-sdk/blob/main/LICENSE; GitHub
+  classifies it `NOASSERTION`). Outside the MIT/BSD/Apache-2.0 family, so
+  per docs/research/native-licensing.md it enters only with the recorded
+  decision below. Upstream also ships a NOTICE file (Mixpanel Apache-2.0
+  attribution); the Apache-2.0 text it points to is already reproduced in
+  this file under AppAuth-Android.
+
+**Recorded decision (out-of-family license), 2026-11-07.**
+
+- What the license permits and requires for our use: use, copy, modification
+  and distribution of the SDK in source or binary form are permitted "for
+  use in connection with the web services and APIs provided by Facebook",
+  subject to the Facebook Platform Policy (http://developers.facebook.com/policy/),
+  with the copyright notice kept in all copies or substantial portions. That
+  is exactly the shape of an app-integration dependency: this repository
+  embeds the SDK only inside example apps that talk to Facebook's own login
+  services, and distributes no standalone copy of the SDK. The SDK binary
+  enters an app because the developer's own build pulls it from Meta's
+  tagged release at build time; nothing is vendored into this repository.
+- Acceptance: the project accepts the Facebook Platform License for the
+  optional native Facebook adapter only (the `auth.nativeSignIn` host-call path in
+  the iOS and Android hosts). The browser-based flow remains the default
+  Facebook sign-in in this repository, the native adapters are opt-in, and
+  an app that does not enable them carries no Facebook SDK.
+- Recorded here per docs/research/native-licensing.md's out-of-family rule;
+  verification basis: docs/research/native-sdks.md §6 (LICENSE read at
+  main, 2026-11-07). Full license text:
+
+```text
+Copyright (c) Meta Platforms, Inc. and affiliates. All rights reserved.
+
+You are hereby granted a non-exclusive, worldwide, royalty-free license to use,
+copy, modify, and distribute this software in source code or binary form for use
+in connection with the web services and APIs provided by Facebook.
+
+As with any software that integrates with the Facebook platform, your use of
+this software is subject to the Facebook Platform Policy
+[http://developers.facebook.com/policy/]. This copyright notice shall be
+included in all copies or substantial portions of the software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+## Google Android SDKs (googleid, androidx.credentials)
+
+- Dependencies: `com.google.android.libraries.identity.googleid:googleid`
+  1.2.1 and `androidx.credentials:credentials` 1.6.0 (with
+  `credentials-play-services-auth` at the same version), consumed as built
+  AARs from the Google Maven repository by `examples/host-android`; not
+  vendored.
+- Licenses, per the artifacts' Maven POMs (fetched 2026-11-07):
+  - `googleid` 1.2.1: **"Android Software Development Kit License"** —
+    Google's SDK terms (https://developer.android.com/studio/terms.html, the
+    POM's license URL), not an OSI license and outside the
+    MIT/BSD/Apache-2.0 family, so the recorded acceptance below applies.
+  - `androidx.credentials` 1.6.0: "The Apache Software License, Version
+    2.0" — in family, same treatment as androidx.browser above; §4(a) is
+    satisfied by the Apache-2.0 text reproduced in this file.
+- Recorded acceptance (out-of-family license), 2026-11-07: Google's Android
+  SDK terms govern development of Android applications with the SDK and
+  govern the `googleid` artifact's distribution inside the example APKs. It
+  is accepted here as a dependency of the optional native Google adapter
+  only (the `auth.nativeSignIn` host-call path), pulled by the developer's own
+  Gradle build from Google Maven, never vendored or redistributed
+  standalone. The browser-based (Custom Tabs) flow remains the default
+  Google sign-in in this repository, the native adapter is opt-in, and an
+  app that does not enable it carries no `googleid` artifact. Verification
+  basis: docs/research/native-sdks.md §4 and §6.
+- Evaluated and skipped: `com.google.android.gms:play-services-auth` 22.0.0 —
+  Google labels its GoogleSignIn API "outdated and no longer supported" in
+  favor of Credential Manager (docs/research/native-sdks.md §4); not pinned,
+  nothing distributed, so no entry beyond this line.
+
+## Facebook Android SDK (facebook-login)
+
+- Dependency: `com.facebook.android:facebook-login` 19.0.1, consumed as a
+  built AAR from Maven Central (`repo1.maven.org`) by
+  `examples/host-android`; not vendored, and never redistributed standalone.
+- Copyright: Copyright (c) Meta Platforms, Inc. and affiliates. All rights
+  reserved. (LICENSE.txt — same text as the iOS LICENSE)
+- License: **Facebook Platform License** (Maven POM `<license><name>`; POM
+  URL https://github.com/meta/facebook-android-sdk/blob/main/LICENSE.txt,
+  verified 2026-11-07). The license text, the recorded decision and the
+  NOTICE obligation are shared with the iOS SDK and recorded once under
+  Facebook iOS SDK (FacebookLogin) above. Upstream's NOTICE.txt carries
+  Apache-2.0 texts for the SDK's bundled third-party code; the Apache-2.0
+  text is reproduced in this file under AppAuth-Android.
+
 ## tauri-plugin-oauth
 
 - Source: https://github.com/FabianLars/tauri-plugin-oauth (canonical
@@ -428,11 +556,16 @@ SOFTWARE.
   time (docs/providers.md, docs/setup.md).
 - Library artwork, such as AppAuth-iOS's `appauth_lockup.svg` — not copied; no
   use here requires it.
-- Provider native SDKs (Google Sign-In, Facebook Login SDK, Apple's auth
-  frameworks) — reached through the embedding hosts at runtime, never copied
-  into this repository.
+- Provider SDK code inside this repository. Since phase 3 the Google and
+  Facebook SDKs are consumed as build-time dependencies when the optional
+  native adapters are enabled (entries above, with the recorded decisions
+  their out-of-family licenses require); Apple's auth frameworks are OS
+  frameworks, not distributed by us. No provider SDK is vendored or copied
+  into this repository, and none is redistributed standalone.
 - Copyleft. No GPL, AGPL, SSPL or LGPL code is in this repository. Verified
   against every artifact studied in phase 2 (2026-11-07): the SPDX set is
   Apache-2.0, MIT and BSD-3-Clause only
   (docs/research/native-licensing.md). Any future import outside that family
-  needs an explicit decision recorded there first.
+  needs an explicit decision recorded there first; phase 3's out-of-family
+  SDK licenses are dependencies, not imports, and carry their recorded
+  decisions in the entries above.

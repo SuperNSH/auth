@@ -11,6 +11,10 @@
 		AB0000001D00000000000002 /* AuthHostModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000001D00000000000002 /* AuthHostModule.swift */; };
 		AB0000001D00000000000003 /* AuthKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000001D00000000000003 /* AuthKeychain.swift */; };
 		AB0000001D00000000000004 /* nsh in Resources */ = {isa = PBXBuildFile; fileRef = A90000001D00000000000005 /* nsh */; };
+		AB0000001D00000000000005 /* NativeSignInModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000001D00000000000006 /* NativeSignInModule.swift */; };
+		AB0000001D00000000000008 /* AuthSignInMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000001D00000000000007 /* AuthSignInMath.swift */; };
+		AB0000001D00000000000006 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = AD0000001D00000000000011 /* GoogleSignIn */; };
+		AB0000001D00000000000007 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = AD0000001D00000000000012 /* FacebookLogin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +24,8 @@
 		A90000001D00000000000003 /* AuthKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthKeychain.swift; sourceTree = "<group>"; };
 		A90000001D00000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A90000001D00000000000005 /* nsh */ = {isa = PBXFileReference; lastKnownFileType = folder; path = nsh; sourceTree = "<group>"; };
+		A90000001D00000000000006 /* NativeSignInModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSignInModule.swift; sourceTree = "<group>"; };
+		A90000001D00000000000007 /* AuthSignInMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSignInMath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +33,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB0000001D00000000000006 /* GoogleSignIn in Frameworks */,
+				AB0000001D00000000000007 /* FacebookLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +73,8 @@
 			children = (
 				A90000001D00000000000002 /* AuthHostModule.swift */,
 				A90000001D00000000000003 /* AuthKeychain.swift */,
+				A90000001D00000000000006 /* NativeSignInModule.swift */,
+				A90000001D00000000000007 /* AuthSignInMath.swift */,
 			);
 			name = "native-ios-sources";
 			path = ../../native/ios/Sources;
@@ -87,6 +97,10 @@
 			dependencies = (
 			);
 			name = NshAuthSandbox;
+			packageProductDependencies = (
+				AD0000001D00000000000011 /* GoogleSignIn */,
+				AD0000001D00000000000012 /* FacebookLogin */,
+			);
 			productName = NshAuthSandbox;
 			productReference = A50000001D00000000000001 /* NshAuthSandbox.app */;
 			productType = "com.apple.product-type.application";
@@ -114,6 +128,10 @@
 				Base,
 			);
 			mainGroup = A70000001D00000000000001;
+			packageReferences = (
+				AD0000001D00000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				AD0000001D00000000000002 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
+			);
 			preferredProjectLocalizations = (
 				en,
 			);
@@ -162,6 +180,8 @@
 				AB0000001D00000000000001 /* AppDelegate.swift in Sources */,
 				AB0000001D00000000000002 /* AuthHostModule.swift in Sources */,
 				AB0000001D00000000000003 /* AuthKeychain.swift in Sources */,
+				AB0000001D00000000000005 /* NativeSignInModule.swift in Sources */,
+				AB0000001D00000000000008 /* AuthSignInMath.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +229,7 @@
 			buildSettings = {
 				/* The dev framework links in Debug only; Release links NativeShell. */
 				ARCHS = arm64;
+				CODE_SIGN_ENTITLEMENTS = NshAuthSandbox.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
@@ -241,14 +262,15 @@
 		A20000001D00000000000012 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(NSH_EMBED_DIR)/NativeShell.xcframework/ios-arm64-simulator",
-				);
+			ARCHS = arm64;
+			CODE_SIGN_ENTITLEMENTS = NshAuthSandbox.entitlements;
+			CODE_SIGN_IDENTITY = "-";
+			CODE_SIGN_STYLE = Manual;
+			CURRENT_PROJECT_VERSION = 1;
+			ENABLE_USER_SCRIPT_SANDBOXING = NO;
+			FRAMEWORK_SEARCH_PATHS = (
+				"$(NSH_EMBED_DIR)/NativeShell.xcframework/ios-arm64-simulator",
+			);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -289,6 +311,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AD0000001D00000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = exactVersion;
+				version = 10.1.0;
+			};
+		};
+		AD0000001D00000000000002 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 19.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AD0000001D00000000000011 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AD0000001D00000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		AD0000001D00000000000012 /* FacebookLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AD0000001D00000000000002 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */;
+			productName = FacebookLogin;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000001D00000000000001 /* Project object */;
 }

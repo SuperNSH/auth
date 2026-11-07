@@ -8,12 +8,26 @@ const PROVIDERS: ProviderId[] = ["google", "facebook", "discord", "github", "app
 
 const brokerParam = host.params.brokerUrl;
 
+function audienceOf(value: unknown): string | undefined {
+  return typeof value === "string" && value ? value : undefined;
+}
+
+const audiencesParam = host.params.nativeAudiences;
+const nativeAudiences =
+  audiencesParam && typeof audiencesParam === "object" && !Array.isArray(audiencesParam)
+    ? {
+        google: audienceOf((audiencesParam as Record<string, unknown>).google),
+        apple: audienceOf((audiencesParam as Record<string, unknown>).apple),
+      }
+    : undefined;
+
 const authorizeUrlDraft = signal("");
 
 const auth = createAuth({
   clientId: "nsh-auth-sandbox.apps.googleusercontent.com",
   redirectUri: "nsh.auth.sandbox://callback",
   brokerUrl: typeof brokerParam === "string" ? brokerParam : undefined,
+  nativeAudiences,
   clock: { nowMs: () => Date.now() },
   onAuthorizeUrl: (url) => authorizeUrlDraft.set(url),
 });
@@ -81,19 +95,30 @@ function App() {
       <If
         when={auth.session()}
         else={
-          <Each of={PROVIDERS}>
-            {(provider) => (
-              <Text
-                testID={`sign-in-${provider()}`}
-                role="button"
-                accessibilityLabel={`Sign in with ${provider()}`}
-                onPress={() => auth.signIn(provider()).catch(() => {})}
-                class="text-primary"
-              >
-                {`Sign in with ${provider()}`}
-              </Text>
-            )}
-          </Each>
+          <View class="gap-2">
+            <Each of={PROVIDERS}>
+              {(provider) => (
+                <Text
+                  testID={`sign-in-${provider()}`}
+                  role="button"
+                  accessibilityLabel={`Sign in with ${provider()}`}
+                  onPress={() => auth.signIn(provider()).catch(() => {})}
+                  class="text-primary"
+                >
+                  {`Sign in with ${provider()}`}
+                </Text>
+              )}
+            </Each>
+            <Text
+              testID="sign-in-native-facebook"
+              role="button"
+              accessibilityLabel="Native-only sign in with Facebook"
+              onPress={() => auth.signInNative("facebook").catch(() => {})}
+              class="text-muted-foreground"
+            >
+              Native-only Facebook
+            </Text>
+          </View>
         }
       >
         {(current) => (

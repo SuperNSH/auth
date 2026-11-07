@@ -100,6 +100,37 @@ describe("check-no-secrets smoke gate", () => {
     expect(res.stderr).toContain(join("examples", "demo", "src", "github-config.ts") + ":1");
   });
 
+  test("SPM checkouts (examples/**/build/derived/SourcePackages) are skipped; the same secret in project-authored trees still fails", () => {
+    const root = makeTempRepo();
+    // upstream-shaped false positives: an SDK test fixture with its own app secret
+    // and a sample-app plist with the vendor's client id, as checked out by Xcode
+    const checkoutDir = join(root, "examples", "host-ios", "build", "derived", "SourcePackages", "checkouts", "facebook-ios-sdk", "FBSDKCoreKitTests");
+    mkdirSync(checkoutDir, { recursive: true });
+    writeFileSync(join(checkoutDir, "CrashObserverFixture.plist"), REAL_CLIENT_SECRET + "\n");
+    writeFileSync(join(checkoutDir, "SignInSample-Info.plist"), `CLIENT_ID = ${REAL_GOOGLE_CLIENT_ID};\n`);
+
+    // control 1: derived build output authored by the project (the app bundle) stays scanned
+    const appBundleDir = join(root, "examples", "host-ios", "build", "derived", "Build", "Products", "Host.app");
+    mkdirSync(appBundleDir, { recursive: true });
+    writeFileSync(join(appBundleDir, "auth-config.plist"), REAL_CLIENT_SECRET + "\n");
+    // control 2: a SourcePackages dir NOT under examples/**/build/derived stays scanned
+    const localPackagesDir = join(root, "examples", "host-ios", "SourcePackages", "checkouts", "our-kit");
+    mkdirSync(localPackagesDir, { recursive: true });
+    writeFileSync(join(localPackagesDir, "config.plist"), REAL_CLIENT_SECRET + "\n");
+    // control 3: example source stays scanned
+    const srcDir = join(root, "examples", "host-ios", "Host", "src");
+    mkdirSync(srcDir, { recursive: true });
+    writeFileSync(join(srcDir, "config.ts"), REAL_CLIENT_SECRET + "\n");
+
+    const res = runScanner(root);
+    expect(res.code).toBe(1);
+    expect(res.stderr).toContain("client_secret-literal");
+    expect(res.stderr).toContain(join("examples", "host-ios", "build", "derived", "Build", "Products", "Host.app", "auth-config.plist") + ":1");
+    expect(res.stderr).toContain(join("examples", "host-ios", "SourcePackages", "checkouts", "our-kit", "config.plist") + ":1");
+    expect(res.stderr).toContain(join("examples", "host-ios", "Host", "src", "config.ts") + ":1");
+    expect(res.stderr).not.toContain(join("examples", "host-ios", "build", "derived", "SourcePackages"));
+  });
+
   test("a private key in native/ fails; a fake-marked one under fixtures/ passes", () => {
     const root = makeTempRepo();
     const nativeDir = join(root, "native", "ios", "Signing");

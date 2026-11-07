@@ -1,10 +1,20 @@
-import { openUrl, signal } from "nsh";
+import { openUrl, signal, untracked } from "nsh";
 import { buildAuthorizeUrl } from "./authorize";
 import { parseCallback } from "./callback";
 import { AuthError } from "./errors";
-import { clearPendingAuthorize, hostAuthorize, hostAvailable, HostStore, loadPendingAuthorize, type PendingAuthorize } from "./host";
+import {
+  clearPendingAuthorize,
+  hostAuthorize,
+  hostAvailable,
+  HostStore,
+  loadPendingAuthorize,
+  nativeSignIn,
+  type NativeSignInProvider,
+  type NativeSignInResult,
+  type PendingAuthorize,
+} from "./host";
 import { verifyIdToken } from "./jwks";
-import { codeChallengeS256, createCodeVerifier, createNonce, createState } from "./pkce";
+import { codeChallengeS256, createCodeVerifier, createNonce, createState, sha256Hex } from "./pkce";
 import { DEFAULT_MOCK_BASE_URL, providerConfig, type ProviderConfig, type ProviderId } from "./providers";
 import { MemoryStore } from "./store";
 import { sessionExpired, type Auth, type AuthConfig, type AuthStatus, type Session, type SessionStore, type UserInfo } from "./types";
@@ -12,6 +22,9 @@ import { exchangeCode, refreshTokens, revokeToken } from "./tokens";
 import { fetchUserInfo, mapUserInfo } from "./userinfo";
 
 const SESSION_KEY = "nsh-auth:session";
+
+// The providers whose native SDK legs the auth.nativeSignIn channel serves.
+const NATIVE_SIGN_IN_PROVIDERS: ReadonlySet<string> = new Set(["google", "apple", "facebook"]);
 
 interface Pending {
   provider: ProviderId;
@@ -69,7 +82,38 @@ export function createAuth(config: AuthConfig): Auth {
     return config.redirectUri.slice(0, config.redirectUri.indexOf("://"));
   }
 
+  /** The shared preamble of every sign-in: clear the error, park authorizing, and supersede whatever flow ran before. */
+  function beginSignIn(): { restoreStatus: AuthStatus; restoreError: AuthError | null } {
+    const restoreStatus = status();
+    const restoreError = error();
+    error.set(null);
+    status.set("authorizing");
+    const previous = pending;
+    pending = null;
+    generation += 1;
+    previous?.reject(new AuthError("unknown", "superseded by a new sign-in"));
+    return { restoreStatus, restoreError };
+  }
+
   async function signIn(provider: ProviderId): Promise<void> {
+    const restore = beginSignIn();
+    const epoch = generation;
+    // The native SDK leg first, on any host: a missing channel — whole-channel
+    // or per provider (Android has no native apple leg) — falls through to the
+    // browser below, while a cancel or SDK failure stops here — no double-flow
+    // after a real answer.
+    if (hostAvailable() && NATIVE_SIGN_IN_PROVIDERS.has(provider)) {
+      const outcome = await runNativeSignIn(provider as NativeSignInProvider, restore);
+      if (outcome === "done") return;
+      // Absent channel, but a sign-out or a newer sign-in took over meanwhile:
+      // this flow is dead, not deferred.
+      if (generation !== epoch) return;
+    }
+    return browserSignIn(provider);
+  }
+
+  /** The browser launcher: build the authorize URL, park the flow, open the surface. */
+  async function browserSignIn(provider: ProviderId): Promise<void> {
     const providerInfo = providerConfig(provider, mockBaseUrl);
     const verifier = createCodeVerifier();
     const state = createState();
@@ -85,16 +129,195 @@ export function createAuth(config: AuthConfig): Auth {
       nonce: providerInfo.wantsNonce ? nonce : undefined,
     });
     config.onAuthorizeUrl?.(url);
-    error.set(null);
-    status.set("authorizing");
-    const previous = pending;
-    pending = null;
-    generation += 1;
-    previous?.reject(new AuthError("unknown", "superseded by a new sign-in"));
     return new Promise<void>((resolve, reject) => {
       pending = { provider, state, nonce, verifier, scopes: scopes.join(" "), resolve, reject };
       void launch(url);
     });
+  }
+
+  async function signInNative(provider: ProviderId, options?: { audience?: string }): Promise<void> {
+    if (!NATIVE_SIGN_IN_PROVIDERS.has(provider)) {
+      throw new AuthError("unknown", `native sign-in serves google, apple and facebook, not ${provider}`);
+    }
+    const restore = beginSignIn();
+    const outcome = await runNativeSignIn(provider as NativeSignInProvider, restore, options?.audience);
+    if (outcome === "absent") {
+      const authError = new AuthError("no_launcher", `this host has no native sign-in channel for ${provider}`);
+      status.set("error");
+      error.set(authError);
+      throw authError;
+    }
+  }
+
+  type NativeOutcome = "absent" | "done";
+
+  /** Runs the native SDK leg and settles the signals itself: "absent" means no channel (the caller falls back to the browser); otherwise it resolves "done" or throws with the failure already reported. */
+  async function runNativeSignIn(
+    provider: NativeSignInProvider,
+    restore: { restoreStatus: AuthStatus; restoreError: AuthError | null },
+    audience?: string,
+  ): Promise<NativeOutcome> {
+    const epoch = generation;
+    // The raw nonce rides the channel call in clear; the hosts bind it per
+    // provider rule — Apple hashes it into the request and the id token,
+    // Google's Credential Manager compares it verbatim (see the legs).
+    const rawNonce = createNonce();
+    let result: NativeSignInResult;
+    try {
+      const answered = await nativeSignIn({ provider, nonce: rawNonce });
+      if (!answered) return "absent";
+      result = answered;
+    } catch (cause) {
+      if (generation !== epoch) throw toAuthError(cause);
+      if (nativeCancelled(cause)) {
+        // The user backed out before anything happened: restore the state the
+        // sign-in found and report nothing on the signals.
+        status.set(restore.restoreStatus);
+        error.set(restore.restoreError);
+        throw new AuthError("access_denied", "the native sign-in was cancelled");
+      }
+      const authError = toAuthError(cause);
+      status.set("error");
+      error.set(authError);
+      throw authError;
+    }
+    status.set("exchanging");
+    try {
+      await publishNativeSession(provider, result, rawNonce, audience, epoch);
+      return "done";
+    } catch (cause) {
+      const authError = toAuthError(cause);
+      if (generation !== epoch) throw authError;
+      status.set("error");
+      error.set(authError);
+      throw authError;
+    }
+  }
+
+  /** Completes a native SDK result into a session: verify per the provider's nonce rule, then the same store save and signal publish as the browser path. */
+  async function publishNativeSession(
+    provider: NativeSignInProvider,
+    result: NativeSignInResult,
+    rawNonce: string,
+    audience: string | undefined,
+    epoch: number,
+  ): Promise<void> {
+    if (result.provider !== provider) {
+      throw new AuthError("unknown", `the host answered with ${result.provider}, not ${provider}`);
+    }
+    // The echo must be the nonce the core sent; the id token's own claim is
+    // checked per provider rule below.
+    if (result.nonce !== undefined && result.nonce !== rawNonce) {
+      throw new AuthError("nonce_mismatch", "the native sign-in echoed a nonce the core did not send");
+    }
+    const providerInfo = providerConfig(provider, mockBaseUrl);
+    const fallbackScope = providerInfo.defaultScopes.join(" ");
+    let next: Session;
+    let raw: Record<string, unknown>;
+    if (provider === "google" && result.serverAuthCode) {
+      // google on iOS: the serverAuthCode is the SERVER (web) client's grant,
+      // redeemed with that client's secret, which only the broker holds — so a
+      // configured broker owns the leg. The direct call stays for sandbox
+      // tests, whose transport plays Google's token endpoint.
+      const exchangeConfig: ProviderConfig = config.brokerUrl ? { ...providerInfo, needsBroker: true } : providerInfo;
+      const response = await exchangeCode({
+        config: exchangeConfig,
+        clientId: config.clientId,
+        redirectUri: config.redirectUri,
+        code: result.serverAuthCode,
+        brokerUrl: config.brokerUrl,
+        nowMs: () => clock.nowMs(),
+        fallbackScope,
+      });
+      // The exchanged id token is bound by its single-use code, not by a nonce
+      // this flow chose — the SDK leg sent none — so no nonce check here.
+      let claims: Record<string, unknown> | null = null;
+      if (response.idToken && providerInfo.jwksUrl) {
+        claims = await verifyIdToken({
+          idToken: response.idToken,
+          jwksUrl: providerInfo.jwksUrl,
+          issuer: providerInfo.issuer,
+          audience: config.clientId,
+          nowMs: () => clock.nowMs(),
+        });
+      }
+      if (providerInfo.userinfoUrl) {
+        raw = await fetchUserInfo(providerInfo.userinfoUrl, response.accessToken);
+      } else if (claims) {
+        raw = claims;
+      } else {
+        throw new AuthError("unknown", "neither userinfo nor id-token claims came back");
+      }
+      next = {
+        provider,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        idToken: response.idToken,
+        expiresAt: response.expiresAt,
+        scope: response.scope,
+      };
+    } else if (provider === "google" && result.idToken) {
+      // google on Android: aud is the server (web) client id —
+      // nativeAudiences.google, not clientId — and Google's rule compares the
+      // nonce VERBATIM.
+      const built = await idTokenSession(
+        provider,
+        providerInfo,
+        result.idToken,
+        { audience: audience ?? config.nativeAudiences?.google, audienceField: "nativeAudiences.google", nonceRule: "verbatim" },
+        rawNonce,
+        () => clock.nowMs(),
+      );
+      next = built.session;
+      raw = built.claims;
+    } else if (provider === "apple" && result.identityToken) {
+      // apple on iOS: aud is the app's bundle id, and Apple's rule is the
+      // opposite of Google's — the request carried sha256(raw), so the token's
+      // nonce claim is the hash and verification hashes the raw nonce again.
+      const built = await idTokenSession(
+        provider,
+        providerInfo,
+        result.identityToken,
+        { audience: audience ?? config.nativeAudiences?.apple, audienceField: "nativeAudiences.apple", nonceRule: "sha256" },
+        rawNonce,
+        () => clock.nowMs(),
+      );
+      // The code is single-use and its exchange needs an Apple client secret,
+      // so the broker owns that leg; the session keeps the code for the server.
+      next = { ...built.session, authorizationCode: result.authorizationCode };
+      raw = built.claims;
+    } else if (provider === "facebook" && result.accessToken) {
+      // facebook: the SDK leg issues an opaque Graph token outright — no
+      // exchange, no JWKS. Without a host-reported expiry the session never
+      // expires locally (expiresAt 0), per the Session contract.
+      next = {
+        provider,
+        accessToken: result.accessToken,
+        expiresAt: typeof result.expiresAt === "number" ? result.expiresAt : 0,
+        scope: fallbackScope,
+      };
+      if (!providerInfo.userinfoUrl) throw new AuthError("unknown", "facebook has no userinfo endpoint");
+      raw = await fetchUserInfo(providerInfo.userinfoUrl, result.accessToken);
+    } else {
+      throw new AuthError("unknown", `the host returned no ${provider} credential the core can consume`);
+    }
+    // A sign-out or a newer sign-in during the leg owns the state now; never
+    // apply this session across an epoch change.
+    if (generation !== epoch) throw new AuthError("unknown", "cancelled by a sign-out or a newer sign-in");
+    await store.save(next);
+    // The save can race a sign-out's clear: re-check and drop what was written.
+    if (generation !== epoch) {
+      try {
+        await store.clear();
+      } catch {
+        // the cancellation report must not be masked by a store error
+      }
+      throw new AuthError("unknown", "cancelled by a sign-out or a newer sign-in");
+    }
+    session.set(next);
+    user.set(mapUserInfo(provider, raw));
+    status.set("authenticated");
+    error.set(null);
   }
 
   async function launch(url: string): Promise<void> {
@@ -372,21 +595,28 @@ export function createAuth(config: AuthConfig): Auth {
     error.set(null);
   }
 
+  // Every action runs untracked: their preambles read the very signals they
+  // write (beginSignIn reads status for the cancel-restore), and a caller
+  // invoking one inside an effect would subscribe to them — each write then
+  // re-ran that effect and re-entered the action, superseding its own flow.
   return {
     session,
     user,
     status,
     error,
-    signIn,
-    handleRedirect: (url: string): Promise<void> => deliverRedirect(url),
-    refresh: (): Promise<void> => {
-      // Single flight: parallel refreshes share the request in flight.
-      refreshing ??= doRefresh().finally(() => {
-        refreshing = null;
-      });
-      return refreshing;
-    },
-    signOut,
+    signIn: (provider: ProviderId): Promise<void> => untracked(() => signIn(provider)),
+    signInNative: (provider: NativeSignInProvider, options?: { audience?: string }): Promise<void> =>
+      untracked(() => signInNative(provider, options)),
+    handleRedirect: (url: string): Promise<void> => untracked(() => deliverRedirect(url)),
+    refresh: (): Promise<void> =>
+      untracked(() => {
+        // Single flight: parallel refreshes share the request in flight.
+        refreshing ??= doRefresh().finally(() => {
+          refreshing = null;
+        });
+        return refreshing;
+      }),
+    signOut: (): Promise<void> => untracked(() => signOut()),
   };
 }
 
@@ -396,6 +626,52 @@ function callbackError(error: string, description: string | null): AuthError {
     return new AuthError("expired_code", description ?? error);
   }
   return new AuthError("unknown", description ?? error);
+}
+
+/** Builds the id-token-only session of a native SDK leg that issued no tokens beyond the id token itself. */
+async function idTokenSession(
+  provider: ProviderId,
+  providerInfo: ProviderConfig,
+  idToken: string,
+  checks: { audience?: string; audienceField: string; nonceRule: "verbatim" | "sha256" },
+  rawNonce: string,
+  nowMs: () => number,
+): Promise<{ session: Session; claims: Record<string, unknown> }> {
+  if (!checks.audience) {
+    throw new AuthError("unknown", `native ${provider} sign-in needs ${checks.audienceField} in the config: the id token is issued for it, not clientId`);
+  }
+  if (!providerInfo.jwksUrl) throw new AuthError("unknown", `${provider} has no JWKS to verify the id token against`);
+  const claims = await verifyIdToken({
+    idToken,
+    jwksUrl: providerInfo.jwksUrl,
+    issuer: providerInfo.issuer,
+    audience: checks.audience,
+    // The nonce rules differ: Google's Credential Manager compares the raw
+    // nonce verbatim; Apple's request carried sha256(raw), so the claim is the
+    // hash and the raw nonce is hashed again before comparing.
+    expectedNonce: checks.nonceRule === "verbatim" ? rawNonce : await sha256Hex(rawNonce),
+    nowMs,
+  });
+  const exp = typeof claims.exp === "number" ? claims.exp : null;
+  if (exp === null) throw new AuthError("unknown", "the id token has no exp to expire the session by");
+  return {
+    session: {
+      provider,
+      // The id token is the leg's only bearer credential; the session lives
+      // exactly as long as it, and refresh has nothing to refresh.
+      accessToken: idToken,
+      idToken,
+      expiresAt: exp * 1000,
+      scope: providerInfo.defaultScopes.join(" "),
+    },
+    claims,
+  };
+}
+
+/** The hosts reject a dismissed native surface with a "cancelled" message (their contract); any other rejection is an SDK or provider failure. */
+function nativeCancelled(cause: unknown): boolean {
+  const message = cause instanceof Error ? cause.message : String(cause);
+  return message === "cancelled" || message.startsWith("cancelled");
 }
 
 function toAuthError(cause: unknown): AuthError {
