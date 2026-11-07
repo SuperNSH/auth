@@ -1485,10 +1485,14 @@ dependencies = [
  "nsh-base",
  "nsh-core",
  "nsh-engine",
+ "nsh-http",
  "nsh-platform-linux",
  "nsh-platform-macos",
  "nsh-platform-windows",
  "nsh-testing",
+ "serde_json",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -2299,6 +2303,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nsh-http"
+version = "0.1.0"
+dependencies = [
+ "nsh-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nsh-macros"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2392,6 +2405,7 @@ dependencies = [
  "nsh-core",
  "nsh-engine",
  "regex",
+ "ureq",
 ]
 
 [[package]]

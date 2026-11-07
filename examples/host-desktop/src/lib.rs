@@ -4,6 +4,7 @@
 mod browser;
 mod flow;
 mod loopback;
+mod nsh_http_transport;
 mod options;
 mod session_store;
 mod ui;

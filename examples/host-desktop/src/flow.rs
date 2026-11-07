@@ -4,14 +4,17 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use nsh_auth::{
-    Auth, AuthConfig, Http, MemoryStore, ProviderId, ReqwestHttp, SessionStore, SystemClock,
-};
+use nsh_auth::{Auth, AuthConfig, Http, MemoryStore, ProviderId, SessionStore, SystemClock};
 use nsh_core::prelude::*;
 
 use crate::browser::open_system_browser;
 use crate::loopback::CallbackServer;
 use crate::options::Options;
+
+/// The browser leg of a flow: opens the authorize URL. Injectable so the
+/// headless full-flow test plays the browser itself — no test may `open` a
+/// real browser on this machine.
+pub(crate) type Opener = Arc<dyn Fn(&str) -> Result<(), String> + Send + Sync>;
 
 /// The sandbox client id: fake on purpose, shared with the core's tests. No
 /// real client id is ever registered or embedded here.
@@ -81,6 +84,8 @@ pub(crate) struct Launcher {
     pub(crate) local_error: Signal<Option<SharedString>>,
     pub(crate) redirect_origin: SharedString,
     pub(crate) startup_provider: Option<ProviderId>,
+    /// The system-browser opener by default; tests swap it (see `Opener`).
+    pub(crate) opener: Opener,
     generation: Stored<u64>,
     /// The flow's handles: the watchdog cancels the work through them and a
     /// new flow cancels the abandoned one. (A dropped `Spawned` does not
@@ -113,12 +118,13 @@ impl Launcher {
         store: Arc<dyn SessionStore>,
         options: &Options,
     ) -> Result<Self, String> {
-        let http = Arc::new(ReqwestHttp::new().map_err(|error| error.to_string())?);
+        let (http, transport_note) = crate::nsh_http_transport::select(options.transport)?;
+        log::info!("{transport_note}");
         Self::connect_with_http(store, http, options)
     }
 
-    /// `http` is injected too so tests run on an in-process transport; the
-    /// app itself always runs on reqwest.
+    /// `http` is injected too so tests can stand a transport of their own in
+    /// place of the one `--transport` selects.
     pub(crate) fn connect_with_http(
         store: Arc<dyn SessionStore>,
         http: Arc<dyn Http>,
@@ -182,6 +188,7 @@ impl Launcher {
             local_error: signal(None),
             redirect_origin: redirect.into(),
             startup_provider,
+            opener: Arc::new(open_system_browser),
             generation: stored(0_u64),
             pending: stored(None),
             watchdog: stored(None),
@@ -281,6 +288,7 @@ pub(crate) fn sign_in(launcher: &Launcher, provider: ProviderId) {
     log::info!("authorize {provider:?} -> {}", redacted_url(&request.url));
 
     let auth = Arc::clone(&launcher.auth);
+    let opener = Arc::clone(&launcher.opener);
     let active = launcher.active;
     let local_error = launcher.local_error;
     let generation = launcher.generation;
@@ -297,7 +305,8 @@ pub(crate) fn sign_in(launcher: &Launcher, provider: ProviderId) {
         previous.cancel();
     }
     let task = spawn(async move {
-        let opened = blocking(move || open_system_browser(&request.url)).await;
+        let opener = Arc::clone(&opener);
+        let opened = blocking(move || opener(&request.url)).await;
         let opened = opened.unwrap_or_else(|error| Err(error.to_string()));
         if let Err(message) = opened {
             local_error.set(Some(SharedString::from(format!(
@@ -383,8 +392,10 @@ pub fn print_authorize_url(options: &Options) -> std::process::ExitCode {
             return std::process::ExitCode::FAILURE;
         }
     };
-    let http = match ReqwestHttp::new() {
-        Ok(http) => http,
+    // The URL is built offline, so the transport here never makes a call;
+    // it is selected the same way the app's flows are, honoring `--transport`.
+    let (http, _transport_note) = match crate::nsh_http_transport::select(options.transport) {
+        Ok(selected) => selected,
         Err(error) => {
             eprintln!("{error}");
             return std::process::ExitCode::FAILURE;
@@ -397,7 +408,7 @@ pub fn print_authorize_url(options: &Options) -> std::process::ExitCode {
             build_config(provider, &server.redirect_uri(), options),
             Arc::new(MemoryStore::new()),
             Arc::new(SystemClock),
-            Arc::new(http),
+            http,
         );
         auth.authorize_request(provider)
     });

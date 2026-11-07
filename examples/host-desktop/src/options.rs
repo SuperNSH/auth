@@ -15,6 +15,12 @@ Usage: cargo run -p host-desktop -- [options]
                          store (Keychain, Credential Manager) and the default
                          on macOS and Windows; `json` is the 0600 files under
                          ~/.nsh-auth-desktop and the default on Linux.
+  --transport <nsh|reqwest>
+                         How token and userinfo calls travel. `nsh` is the
+                         platform's own fetch through the nsh-http client and
+                         the default; `reqwest` bypasses the platform transport
+                         (its own sockets and runtime) and is kept as an
+                         escape hatch.
   --redirect-port <port> Pin the loopback callback port instead of an
                          OS-assigned one, for providers that require an exact
                          registered port.
@@ -34,6 +40,9 @@ pub struct Options {
     /// `--store <json|keyring>`: which store backs sessions; `None` asks for
     /// the per-OS default. `pub(crate)`: `StoreKind` is an internal type.
     pub(crate) store: Option<crate::session_store::StoreKind>,
+    /// `--transport <nsh|reqwest>`: which HTTP transport the flows run on;
+    /// the platform fetch by default.
+    pub(crate) transport: crate::nsh_http_transport::TransportKind,
     /// `--redirect-port <port>`: pin the loopback callback port; `None`
     /// binds an OS-assigned port.
     pub redirect_port: Option<u16>,
@@ -51,6 +60,7 @@ impl Default for Options {
             mock_url: None,
             broker_url: "http://127.0.0.1:8756".to_owned(),
             store: None,
+            transport: Default::default(),
             redirect_port: None,
             print_urls: false,
             help: false,
@@ -81,7 +91,8 @@ impl Options {
                 "--mock-url" => Some(1),
                 "--broker-url" => Some(2),
                 "--store" => Some(3),
-                "--redirect-port" => Some(4),
+                "--transport" => Some(4),
+                "--redirect-port" => Some(5),
                 "--print-urls" => {
                     options.print_urls = true;
                     None
@@ -106,6 +117,15 @@ impl Options {
                             None => {
                                 eprintln!(
                                     "nsh-auth desktop: `--store` takes json or keyring, not `{value}`"
+                                );
+                                options.invalid = true;
+                            }
+                        },
+                        4 => match crate::nsh_http_transport::parse_transport(&value) {
+                            Some(kind) => options.transport = kind,
+                            None => {
+                                eprintln!(
+                                    "nsh-auth desktop: `--transport` takes nsh or reqwest, not `{value}`"
                                 );
                                 options.invalid = true;
                             }
@@ -155,6 +175,19 @@ mod tests {
     fn an_unknown_store_kind_or_a_missing_value_is_invalid() {
         assert!(args(&["--store", "plaintext"]).invalid);
         assert!(args(&["--store"]).invalid);
+    }
+
+    #[test]
+    fn transport_parses_both_kinds_and_defaults_to_the_platform_fetch() {
+        use crate::nsh_http_transport::TransportKind;
+        assert_eq!(args(&["--transport", "nsh"]).transport, TransportKind::Nsh);
+        assert_eq!(
+            args(&["--transport", "reqwest"]).transport,
+            TransportKind::Reqwest
+        );
+        assert_eq!(args(&[]).transport, TransportKind::Nsh);
+        assert!(args(&["--transport", "hyper"]).invalid);
+        assert!(args(&["--transport"]).invalid);
     }
 
     #[test]

@@ -7,13 +7,43 @@ and the session once the loop is complete.
 
 Flow, in order: the app binds `127.0.0.1` and picks its store (the OS
 credential store by default on macOS and Windows, 0600 JSON files
-otherwise — the active store is named in the startup log), builds the
-crate's `Auth` with `redirect_uri = http://127.0.0.1:<port>/callback`,
-calls `authorize_request(provider)` (PKCE, `state`, `nonce` are the
-crate's job), opens the browser at the authorize URL (`open` on macOS),
-serves exactly one `/callback` request on the listener, and hands the
-callback URL to `complete(provider, url)`. The window's status, session
-and user read the crate's signals directly. Sign-out calls `sign_out()`.
+otherwise — the active store is named in the startup log) and its
+transport (nsh-http over the platform fetch by default — also named in
+the startup log), builds the crate's `Auth` with
+`redirect_uri = http://127.0.0.1:<port>/callback`, calls
+`authorize_request(provider)` (PKCE, `state`, `nonce` are the crate's
+job), opens the browser at the authorize URL (`open` on macOS), serves
+exactly one `/callback` request on the listener, and hands the callback
+URL to `complete(provider, url)`. The window's status, session and user
+read the crate's signals directly. Sign-out calls `sign_out()`.
+
+## Prerequisites
+
+- The repo's `crates/nsh-auth` and `crates/nsh-auth-keyring` (path
+  dependencies, part of this repository).
+- The sibling library the default transport runs on, cloned alongside it —
+  `nsh-http` (the paths assume `~/fo/nsh-http`; adjust if your checkout
+  lives elsewhere). It is an external dependency, not part of this
+  repository, and stays read-only for this build:
+  `examples/host-desktop/Cargo.toml` refers to
+  `../../../nsh-http/crates/nsh-http`.
+
+## Which transport
+
+Token and userinfo calls run over the platform's own transport by default:
+`NshHttpTransport` (`src/nsh_http_transport.rs`) adapts the crate's `Http`
+seam onto the sibling `nsh-http` client, whose transport is
+`nsh_core::prelude::fetch` — the engine's network stack, the only path that
+runs under the app's capability checks and answers NSH's stubs and test
+clocks (measured comparison: `~/fo/nsh-http/docs/decision.md`).
+
+`--transport reqwest` switches to `crates/nsh-auth`'s `ReqwestHttp` (reqwest
++ rustls). It is the bypass-the-platform transport: it opens its own
+sockets outside the engine's fetch path and needs its own tokio runtime.
+It is kept as an escape hatch, not as the default — measured and observed
+on 0.4.0, its futures stall inside engine-spawned tasks under headless
+runs (docs/upstream-issues.md), which is exactly what the flow tests
+watch for.
 
 ## Run it
 
@@ -38,10 +68,12 @@ Flags:
 | `--mock-url <url>` | Base URL of the local mock provider | `http://127.0.0.1:8755` |
 | `--broker-url <url>` | Token broker for confidential clients (GitHub) | `http://127.0.0.1:8756` |
 | `--store <json\|keyring>` | Where sessions live (see "Where sessions live" below) | `keyring` on macOS and Windows, `json` on Linux |
+| `--transport <nsh\|reqwest>` | How token calls travel (see "Which transport" above) | `nsh` |
 | `--redirect-port <port>` | Pin the loopback callback port instead of an OS-assigned one, for providers that require an exact registered port | OS-assigned (`:0`) |
 
-An unknown `--store` value or an unusable `--redirect-port` (not a TCP port
-between 1 and 65535) is a startup error, not a silent default.
+An unknown `--store` value, an unknown `--transport` value, or an unusable
+`--redirect-port` (not a TCP port between 1 and 65535) is a startup error,
+not a silent default.
 
 The mock provider talks to the server from `tools/mock-oauth` (see its
 README for how to start it). GitHub exchanges tokens only through the broker
@@ -58,7 +90,9 @@ cargo run -p host-desktop -- --provider mock 2> /tmp/host-desktop.log
 
 The lines, in order: `sessions: <store>` (which store backs this run — an
 OS-keyring default that cannot be honored is downgraded to the JSON store
-with a warn line saying why, never silently), `authorize Google ->
+with a warn line saying why, never silently), `transport: <transport>`
+(`nsh-http over the platform fetch` by default; the reqwest line names
+itself as the bypass transport), `authorize Google ->
 <authorize URL, state and nonce redacted>` (the endpoint, client id,
 scopes, redirect URI and `code_challenge_method` — the trigger proof;
 `state` and `nonce` are anti-CSRF secrets, so their values never reach the
@@ -166,4 +200,9 @@ cargo build
 ```
 
 Headless UI tests run with `cargo test` (they render the screen and never
-open a browser).
+open a browser). Two of them run the complete mock loop — authorize,
+redirect through the real loopback callback server, exchange, userinfo,
+session — once through the platform transport and once through the
+`--transport reqwest` escape hatch, both against an in-test loopback-only
+mock provider; the reqwest one is the standing probe for the phase-2 stall
+(docs/upstream-issues.md).
