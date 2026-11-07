@@ -65,13 +65,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # nsh-auth-keyring is desktop-only (macOS, Windows and Linux credential stores),
-        # so the mobile and web checks cover the core crate, nsh-auth.
+        # nsh-auth-keyring is desktop-only (macOS, Windows and Linux credential stores), so these
+        # checks cover the core crate, nsh-auth. wasm32 is not checked: the web surface runs the
+        # TypeScript core, and rand 0.8 needs getrandom's js feature there, which the crate does not enable.
         include:
           - { os: macos-latest, target: aarch64-apple-ios }
           - { os: macos-latest, target: aarch64-apple-ios-sim }
           - { os: ubuntu-latest, target: aarch64-linux-android }
-          - { os: ubuntu-latest, target: wasm32-unknown-unknown }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
@@ -202,6 +202,8 @@ jobs:
           echo "simulator $udid"
           sed -i '' "s/^SIM_UDID=\"[^\"]*\"/SIM_UDID=\"$udid\"/" examples/host-ios/build-gate.sh
           grep -n '^SIM_UDID=' examples/host-ios/build-gate.sh
+      - name: Place the sibling libraries the demo imports
+        run: ./tools/ci/place-demo-deps.sh
       - name: Run the whole-tree smoke gate
         run: bash tools/smoke.sh
 
