@@ -6,5 +6,5 @@ resolver = "3"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/freeoxide/nsh-auth"
+repository = "https://github.com/SuperNSH/auth"
 authors = ["hmziqrs"]
