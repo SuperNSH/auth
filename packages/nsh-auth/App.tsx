@@ -12,7 +12,7 @@ const authorizeUrlDraft = signal("");
 
 const auth = createAuth({
   clientId: "nsh-auth-sandbox.apps.googleusercontent.com",
-  redirectUri: "nsh-auth-demo://callback",
+  redirectUri: "nsh.auth.sandbox://callback",
   brokerUrl: typeof brokerParam === "string" ? brokerParam : undefined,
   clock: { nowMs: () => Date.now() },
   onAuthorizeUrl: (url) => authorizeUrlDraft.set(url),

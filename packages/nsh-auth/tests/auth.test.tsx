@@ -6,7 +6,7 @@ import type { App, StubRequest, StubResponse } from "nsh/test";
 const MOCK = "http://127.0.0.1:8755";
 const BROKER = "https://broker.nsh-auth-sandbox.example";
 const CLIENT_ID = "nsh-auth-sandbox.apps.googleusercontent.com";
-const REDIRECT = "nsh-auth-demo://callback";
+const REDIRECT = "nsh.auth.sandbox://callback";
 const SESSION_KEY = "nsh-auth:session";
 const EVIDENCE = "/Users/hmziq/fo/nsh-auth/docs/evidence/ts-core";
 const PROVIDERS = ["google", "facebook", "discord", "github", "apple", "microsoft", "x", "oidc", "mock"] as const;
@@ -223,7 +223,7 @@ async function signedInWithMock(keys: Keys): Promise<App> {
   await app.press("id:sign-in-mock");
   const parts = authorizeParts(app.openedUrls()[0] ?? "");
   scenario.nonce = parts.nonce ?? "";
-  await app.type("id:callback-url", `nsh-auth-demo://callback?code=${scenario.code}&state=${parts.state}`);
+  await app.type("id:callback-url", `nsh.auth.sandbox://callback?code=${scenario.code}&state=${parts.state}`);
   await app.press("id:submit-callback");
   await app.waitFor("text:status authenticated");
   return app;
@@ -279,7 +279,7 @@ test("mock sign-in completes the loop and lands on the session screen", async ()
   const parts = authorizeParts(url);
   expect(url).toBe(expectedAuthorizeUrl("mock", { state: parts.state, nonce: parts.nonce ?? undefined, challenge: parts.challenge }));
   scenario.nonce = parts.nonce ?? "";
-  await app.type("id:callback-url", `nsh-auth-demo://callback?code=${scenario.code}&state=${parts.state}`);
+  await app.type("id:callback-url", `nsh.auth.sandbox://callback?code=${scenario.code}&state=${parts.state}`);
   await app.press("id:submit-callback");
   await app.waitFor("text:status authenticated");
   expect(app.shows("text:provider mock")).toBe(true);
@@ -306,7 +306,7 @@ test("a denial at the provider lands in error, not a session", async () => {
   await app.waitFor("id:sign-in-mock");
   await app.press("id:sign-in-mock");
   const state = authorizeParts(app.openedUrls()[0] ?? "").state;
-  await app.type("id:callback-url", `nsh-auth-demo://callback?error=access_denied&error_description=User+denied&state=${state}`);
+  await app.type("id:callback-url", `nsh.auth.sandbox://callback?error=access_denied&error_description=User+denied&state=${state}`);
   await app.press("id:submit-callback");
   await app.waitFor("text:error access_denied");
   expect(app.shows("text:status error")).toBe(true);
@@ -321,7 +321,7 @@ test("a callback whose state does not match is refused", async () => {
   const app = await open("../App.tsx", { clock: { time: 0 }, network: mockRoutes(keys) });
   await app.waitFor("id:sign-in-mock");
   await app.press("id:sign-in-mock");
-  await app.type("id:callback-url", "nsh-auth-demo://callback?code=sandbox-code&state=forged-by-an-attacker");
+  await app.type("id:callback-url", "nsh.auth.sandbox://callback?code=sandbox-code&state=forged-by-an-attacker");
   await app.press("id:submit-callback");
   await app.waitFor("text:error state_mismatch");
   expect(app.shows("text:status error")).toBe(true);
@@ -336,7 +336,7 @@ test("a callback without a state parameter is rejected as state_mismatch", async
   await app.waitFor("id:sign-in-mock");
   await app.press("id:sign-in-mock");
   // A forged intent can carry a code with no state: the core must not treat absence as a pass.
-  await app.type("id:callback-url", "nsh-auth-demo://callback?code=sandbox-code");
+  await app.type("id:callback-url", "nsh.auth.sandbox://callback?code=sandbox-code");
   await app.press("id:submit-callback");
   await app.waitFor("text:error state_mismatch");
   expect(app.shows("text:status error")).toBe(true);
@@ -352,7 +352,7 @@ test("an id token with a foreign nonce does not sign anyone in", async () => {
   await app.press("id:sign-in-mock");
   const parts = authorizeParts(app.openedUrls()[0] ?? "");
   scenario.nonce = "nonce-replayed-from-elsewhere";
-  await app.type("id:callback-url", `nsh-auth-demo://callback?code=${scenario.code}&state=${parts.state}`);
+  await app.type("id:callback-url", `nsh.auth.sandbox://callback?code=${scenario.code}&state=${parts.state}`);
   await app.press("id:submit-callback");
   await app.waitFor("text:error nonce_mismatch");
   expect(app.shows("text:status error")).toBe(true);
@@ -368,7 +368,7 @@ test("an expired code is reported as expired, not as a session", async () => {
   await app.waitFor("id:sign-in-mock");
   await app.press("id:sign-in-mock");
   const state = authorizeParts(app.openedUrls()[0] ?? "").state;
-  await app.type("id:callback-url", `nsh-auth-demo://callback?code=${scenario.code}&state=${state}`);
+  await app.type("id:callback-url", `nsh.auth.sandbox://callback?code=${scenario.code}&state=${state}`);
   await app.press("id:submit-callback");
   await app.waitFor("text:error expired_code");
   expect(app.shows("text:status error")).toBe(true);
@@ -424,7 +424,7 @@ test("a sign-out during an in-flight refresh does not resurrect the session", as
       store: hostStore,
       onAuthorize: (url) => {
         scenario.nonce = authorizeParts(url).nonce ?? "";
-        return `nsh-auth-demo://callback?code=host-code&state=${authorizeParts(url).state}`;
+        return `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}`;
       },
     }),
   });
@@ -457,7 +457,7 @@ test("a sign-out during the code exchange does not resurrect the session", async
       store: hostStore,
       onAuthorize: (url) => {
         scenario.nonce = authorizeParts(url).nonce ?? "";
-        return `nsh-auth-demo://callback?code=host-code&state=${authorizeParts(url).state}`;
+        return `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}`;
       },
     }),
   });
@@ -486,7 +486,7 @@ test("a host drives the authorize surface and keeps the session in its secure st
       store: hostStore,
       onAuthorize: (url) => {
         scenario.nonce = authorizeParts(url).nonce ?? "";
-        return `nsh-auth-demo://callback?code=host-code&state=${authorizeParts(url).state}`;
+        return `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}`;
       },
     }),
   });
@@ -495,7 +495,7 @@ test("a host drives the authorize surface and keeps the session in its secure st
   await app.waitFor("text:status authenticated");
   const call = app.host.calls().find((entry) => entry.name === "auth.authorize");
   const data = (call?.data ?? {}) as { url?: string; scheme?: string };
-  expect(data.scheme).toBe("nsh-auth-demo");
+  expect(data.scheme).toBe("nsh.auth.sandbox");
   expect(data.url ?? "").toMatch(authorizePattern("mock"));
   // The Android host requires the stored value to be a JSON string (requireString).
   expect(typeof hostStore.get(SESSION_KEY)).toBe("string");
@@ -525,7 +525,7 @@ test("a stale host callback from a superseded sign-in is dropped and the active 
         "auth.authorize": async ({ url }: { url: string }) => {
           authorizeCalls += 1;
           scenario.nonce = authorizeParts(url).nonce ?? "";
-          const answer = { callbackUrl: `nsh-auth-demo://callback?code=host-code&state=${authorizeParts(url).state}` };
+          const answer = { callbackUrl: `nsh.auth.sandbox://callback?code=host-code&state=${authorizeParts(url).state}` };
           // The runner answers host handlers one at a time, so holding the
           // first answer also holds the second authorize; the hold is in real
           // time because handlers get no clock-coupled delay from the runner.
@@ -561,7 +561,7 @@ test("github's exchange goes through the broker and never carries a secret", asy
       params: { brokerUrl: BROKER },
       ...hostOptions({
         store: new Map(),
-        onAuthorize: (url) => `nsh-auth-demo://callback?code=broker-code&state=${authorizeParts(url).state}`,
+        onAuthorize: (url) => `nsh.auth.sandbox://callback?code=broker-code&state=${authorizeParts(url).state}`,
       }),
     },
   });

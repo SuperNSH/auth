@@ -60,7 +60,7 @@ Start the mock first (its own README defines the exact command; default port
 8755, use one port everywhere):
 
 ```sh
-cd tools/mock-oauth && <see tools/mock-oauth/README.md>
+node tools/mock-oauth/main.mjs   # per tools/mock-oauth/README.md
 ```
 
 Web, on this machine (the demo's default mock address
