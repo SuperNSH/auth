@@ -2,8 +2,7 @@
 // (TanStack Query on NSH). Call createProfileQuery inside a component;
 // ProfileView draws the result.
 import { Text, View } from "nsh";
-import { type QueryObserverResult, createQuery } from "nsh-query";
-import { QueryClient } from "@tanstack/query-core";
+import { type QueryObserverResult, createQuery, QueryClient } from "nsh-query";
 
 export interface Profile {
   sub: string;

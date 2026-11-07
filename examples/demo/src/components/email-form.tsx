@@ -16,12 +16,12 @@ function emailError(value: string): string | undefined {
 }
 
 export function EmailForm() {
-  const form = createForm({
+  const form = createForm(() => ({
     defaultValues: { email: contact() ?? "" },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       setContact(value.email.trim());
     },
-  });
+  }));
   return (
     <View class="gap-2" testID="email-form">
       <Text class="text-sm font-medium text-foreground">Contact email</Text>
@@ -56,7 +56,7 @@ export function EmailForm() {
           </View>
         )}
       </form.Field>
-      <Button label="Save email" variant="outline" onPress={() => void form.submit()} testID="save-email" />
+      <Button label="Save email" variant="outline" onPress={() => void form.handleSubmit()} testID="save-email" />
       <If when={contact()}>
         {(saved) => <Text class="text-sm text-muted-foreground">{`Saved: ${saved()}`}</Text>}
       </If>
