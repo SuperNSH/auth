@@ -20,11 +20,11 @@ cp -R "$ROOT/packages/nsh-auth" "$NODE_MODULES/nsh-auth"
 
 for lib in form query; do
     git clone --quiet "https://github.com/SuperNSH/$lib.git" "$WORK/nsh-$lib"
-    (cd "$WORK/nsh-$lib" && bun install)
+    # Install inside the package: the repo root has no package.json, and the
+    # package's own node_modules travels with the copy, so @tanstack/* resolve
+    # through the nested layout.
+    (cd "$WORK/nsh-$lib/packages/nsh-$lib" && bun install)
     cp -R "$WORK/nsh-$lib/packages/nsh-$lib" "$NODE_MODULES/nsh-$lib"
-    if [ -d "$WORK/nsh-$lib/node_modules" ]; then
-        cp -R "$WORK/nsh-$lib/node_modules/." "$NODE_MODULES/"
-    fi
 done
 
 ls "$NODE_MODULES"
