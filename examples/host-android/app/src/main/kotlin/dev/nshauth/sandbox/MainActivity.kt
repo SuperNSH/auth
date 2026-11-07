@@ -105,8 +105,10 @@ class MainActivity : Activity() {
 
     private companion object {
         const val TAG = "host-android"
-        // Must stay in sync with the demo's nsh.json "capabilities.host".
+        // The grant is a ceiling: a call must be both declared by the bundle and
+        // allowed here (nsh-core 0.4.0 access.rs), so name the mock hosts the
+        // demo declares too; 10.0.2.2 is the emulator's alias for this Mac's loopback.
         const val HOST_GRANT =
-            """{ "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"] }"""
+            """{ "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }"""
     }
 }

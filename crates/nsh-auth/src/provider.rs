@@ -90,9 +90,9 @@ pub struct AuthorizeRequest {
 }
 
 /// One provider's built-in rules. `confidential` marks providers whose token
-/// endpoint needs a client secret (GitHub, Facebook's code exchange, Apple's
-/// per-request secret JWT): such an app must set `broker_url`, and the
-/// secret lives on the operator's broker, never in the app.
+/// endpoint needs a client secret (GitHub, Apple's per-request secret JWT,
+/// Facebook's classic manual-flow shape): such an app must set `broker_url`,
+/// and the secret lives on the operator's broker, never in the app.
 pub(crate) struct ProviderDef {
     pub auth_url: &'static str,
     pub token_url: &'static str,
@@ -116,28 +116,32 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             userinfo_url: Some("https://openidconnect.googleapis.com/v1/userinfo"),
             revoke_url: Some("https://oauth2.googleapis.com/revoke"),
             jwks_url: Some("https://www.googleapis.com/oauth2/v3/certs"),
-            scopes: &["openid", "email", "profile"],
+            scopes: &["openid", "profile", "email"],
             scope_separator: " ",
             use_pkce: true,
             use_nonce: true,
             confidential: false,
             issuer: Some("https://accounts.google.com"),
-            authorize_extras: &[],
+            // Without these Google issues no refresh token at all, and only
+            // on the first consent (docs/providers.md, catalog).
+            authorize_extras: &[("access_type", "offline"), ("prompt", "consent")],
         },
         ProviderId::Facebook => ProviderDef {
-            // Manual login flow on Graph v26.0 (current July 2026 release; a
-            // version is guaranteed for two years). No PKCE and no nonce; the
-            // code exchange needs the app secret, so the broker handles it.
-            auth_url: "https://www.facebook.com/v26.0/dialog/oauth",
-            token_url: "https://graph.facebook.com/v26.0/oauth/access_token",
-            userinfo_url: Some("https://graph.facebook.com/v26.0/me"),
-            revoke_url: Some("https://graph.facebook.com/v26.0/me/permissions"),
-            jwks_url: None,
-            scopes: &["public_profile", "email"],
-            scope_separator: ",",
-            use_pkce: false,
-            use_nonce: false,
-            confidential: true,
+            // OIDC code flow on Graph v27.0 (the docs' sampled pin; a
+            // version is guaranteed for two years): code_challenge is
+            // required and the secret becomes optional when the verifier is
+            // sent, so the public path runs secretless. The classic manual
+            // flow (secret required) stays behind the broker.
+            auth_url: "https://www.facebook.com/v27.0/dialog/oauth",
+            token_url: "https://graph.facebook.com/v27.0/oauth/access_token",
+            userinfo_url: Some("https://graph.facebook.com/v27.0/me?fields=id,name,email,picture"),
+            revoke_url: Some("https://graph.facebook.com/v27.0/me/permissions"),
+            jwks_url: Some("https://www.facebook.com/.well-known/oauth/openid/jwks/"),
+            scopes: &["openid", "public_profile", "email"],
+            scope_separator: " ",
+            use_pkce: true,
+            use_nonce: true,
+            confidential: false,
             issuer: None,
             authorize_extras: &[],
         },
@@ -158,9 +162,11 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             authorize_extras: &[],
         },
         ProviderId::Github => ProviderDef {
-            // No PKCE, no refresh tokens, no revocation endpoint: OAuth app
-            // tokens do not expire and users revoke in GitHub settings. The
-            // code exchange needs the client secret, so the broker handles it.
+            // PKCE S256 is supported on the authorize leg ("plain" is not),
+            // and the exchange still requires the client secret: the code
+            // and its verifier go through the broker, which holds the
+            // secret. OAuth-app tokens do not expire by default and there is
+            // no app-side revocation endpoint: sign-out is local.
             auth_url: "https://github.com/login/oauth/authorize",
             token_url: "https://github.com/login/oauth/access_token",
             userinfo_url: Some("https://api.github.com/user"),
@@ -168,28 +174,30 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             jwks_url: None,
             scopes: &["read:user", "user:email"],
             scope_separator: " ",
-            use_pkce: false,
+            use_pkce: true,
             use_nonce: false,
             confidential: true,
             issuer: None,
             authorize_extras: &[],
         },
         ProviderId::Apple => ProviderDef {
-            // query response_mode keeps the code in the redirect's query,
-            // which is what the callback parser reads. The token and revoke
-            // endpoints need an ES256 client-secret JWT: the broker signs it.
+            // form_post is mandatory once scopes are requested: the code
+            // arrives as a form body at the https Return URL, and the
+            // receiving relay turns it into the callback URL. The token and
+            // revoke endpoints need an ES256 client-secret JWT: the broker
+            // signs it.
             auth_url: "https://appleid.apple.com/auth/authorize",
             token_url: "https://appleid.apple.com/auth/token",
             userinfo_url: None,
             revoke_url: Some("https://appleid.apple.com/auth/revoke"),
             jwks_url: Some("https://appleid.apple.com/auth/keys"),
-            scopes: &["name", "email"],
+            scopes: &["openid", "name", "email"],
             scope_separator: " ",
             use_pkce: false,
             use_nonce: true,
             confidential: true,
             issuer: Some("https://appleid.apple.com"),
-            authorize_extras: &[("response_mode", "query")],
+            authorize_extras: &[("response_mode", "form_post")],
         },
         ProviderId::Microsoft => ProviderDef {
             // Entra v2.0 common tenant. `offline_access` is what returns a
@@ -201,7 +209,7 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             userinfo_url: Some("https://graph.microsoft.com/oidc/userinfo"),
             revoke_url: None,
             jwks_url: Some("https://login.microsoftonline.com/common/discovery/v2.0/keys"),
-            scopes: &["openid", "email", "profile", "offline_access"],
+            scopes: &["openid", "profile", "email", "offline_access", "User.Read"],
             scope_separator: " ",
             use_pkce: true,
             use_nonce: true,
@@ -210,11 +218,12 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             authorize_extras: &[],
         },
         ProviderId::X => ProviderDef {
-            // X requires PKCE and state on every authorize request.
-            auth_url: "https://twitter.com/i/oauth2/authorize",
-            token_url: "https://api.twitter.com/2/oauth2/token",
-            userinfo_url: Some("https://api.twitter.com/2/users/me"),
-            revoke_url: Some("https://api.twitter.com/2/oauth2/revoke"),
+            // X requires PKCE and state on every authorize request; the
+            // current endpoints live on x.com / api.x.com.
+            auth_url: "https://x.com/i/oauth2/authorize",
+            token_url: "https://api.x.com/2/oauth2/token",
+            userinfo_url: Some("https://api.x.com/2/users/me"),
+            revoke_url: Some("https://api.x.com/2/oauth2/revoke"),
             jwks_url: None,
             scopes: &["users.read", "tweet.read", "offline.access"],
             scope_separator: " ",
@@ -230,7 +239,7 @@ pub(crate) fn def(id: ProviderId) -> ProviderDef {
             userinfo_url: None,
             revoke_url: None,
             jwks_url: None,
-            scopes: &["openid", "email", "profile"],
+            scopes: &["openid", "profile", "email", "offline_access"],
             scope_separator: " ",
             use_pkce: true,
             use_nonce: true,

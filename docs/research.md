@@ -21,7 +21,7 @@ Summary matrix (details and citations below):
 | Provider | PKCE | Client secret at token step | Redirect for a native app | id_token |
 | --- | --- | --- | --- | --- |
 | Google | S256 | optional | loopback (desktop) / reversed-client-id custom scheme (iOS) / SDK on Android | yes, RS256 |
-| Facebook | **not supported** in the classic manual flow | **required** (server-to-server) | https URL in "Valid OAuth Redirect URIs"; `login_success.html` for a desktop webview; `ms-app:` for UWP | no (Limited Login has an OIDC token, iOS only) |
+| Facebook | classic manual flow: none; OIDC code flow: required (S256 or `plain`, `plain` if the method is omitted) | classic manual flow: **required** (server-to-server); OIDC code flow: **optional** with `code_verifier` | https URL in "Valid OAuth Redirect URIs"; `login_success.html` for a desktop webview; `ms-app:` for UWP | OIDC code flow: yes, RS256; classic: no (Limited Login also has one, iOS only) |
 | Discord | S256 only (`none` auth allowed) | not needed with PKCE | https or custom scheme registered in the portal | optional (no OIDC by default) |
 | GitHub | S256 only, strongly recommended | **required** — broker needed | callback URL: https; loopback allowed with any port | no |
 | Apple | no PKCE; `state`+`nonce` | **required** — it is a JWT the developer signs | `response_mode=form_post` to a registered https return URL | yes, RS256, `code id_token` |
@@ -30,9 +30,13 @@ Summary matrix (details and citations below):
 | Generic OIDC | per discovery doc | per provider | per provider | per provider |
 
 The practical rule the table forces: **anything with a required secret
-(GitHub, Facebook, Apple) goes through the token broker; the rest work as
-public clients.** Google is public-client capable but its Android path wants
-the Credential Manager SDK.
+(GitHub, Apple, Facebook's classic manual flow) goes through the token
+broker; the rest work as public clients.** Facebook has two documented shapes
+and they split differently: its OIDC code flow with PKCE is public-client
+capable — the secret is optional when the `code_verifier` is sent — and that
+is the shape nsh-auth implements, while the classic manual flow (no PKCE,
+secret required) stays behind the broker. Google is public-client capable but
+its Android path wants the Credential Manager SDK.
 
 ### Google
 
@@ -102,26 +106,43 @@ the Credential Manager SDK.
   scopes via `auth_type=rerequest` and `/me/permissions`. Denial returns
   `error_reason=user_denied&error=access_denied`.
   [https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow/]
+- OIDC code flow with PKCE ("OIDC Code Flow with PKCE for Manually Built
+  Facebook Login"): same dialog URL as the classic flow, plus a required
+  `code_challenge` (`code_challenge_method` "defaults to plain if not
+  included. Values include S256 and plain"), a required `nonce`, and the
+  `openid` scope ("To use OIDC, you must include openid in the list of
+  permissions"). Token exchange is the same
+  `GET https://graph.facebook.com/v{version}/oauth/access_token` with
+  `code_verifier` alongside `code`; "The `client_secret` parameter is now
+  optional. If not included in your request, you must specify the
+  `code_verifier`." The response adds an `id_token` next to the opaque access
+  token; discovery and JWKS documents live under
+  `https://www.facebook.com/.well-known/` (exact URLs in providers.md). The
+  page flags the flow as in testing.
+  [https://developers.facebook.com/documentation/facebook-login/guides/advanced/oidc-token]
 - Redirects: the owner registers **Valid OAuth redirect URIs** under
   Facebook Login → Settings (Client OAuth Settings), https enforced. For the
   documented desktop flow inside an app's webview the redirect must be
   `https://www.facebook.com/connect/login_success.html`; Windows UWP may use
   `ms-app://{package-security-identifier}`. No general custom-scheme support is
-  documented. [same page]
+  documented. [manual-flow page]
 - Limited Login (iOS/Unity only) is the OIDC-shaped flow: it "returns an
   `AuthenticationToken` that wraps an OpenID Connect token", takes a `nonce`,
   does not call Graph API and now lives under `limited.facebook.com`.
   [https://developers.facebook.com/docs/facebook-login/limited-login]
-- Consequence for us: because the token step demands the app secret, **a
-  browser-only Facebook flow requires the broker**; the alternative per surface
-  is the native SDK adapter (Facebook Login SDK) on mobile, which owns the flow
-  itself. The brief's assumption "manual flow with PKCE" did not survive the
-  docs — see Design decisions.
-- Per surface: iOS/Android = SDK adapter (or broker + https redirect); desktop
-  = system browser to an https redirect through the broker (the doc's
-  `login_success.html` path is a webview flow we reject — same credential
-  exposure RFC 8252 warns about); web = JS SDK or manual flow with an https
-  redirect through the broker.
+- Consequence for us: the two shapes split the decision. The **OIDC code flow
+  with PKCE runs as a public client** (secret optional with the verifier), and
+  that is what nsh-auth implements for the browser flow. The **classic manual
+  flow demands the app secret server-to-server**, so it stays behind the
+  broker; the other per-surface alternative is the native SDK adapter (Facebook
+  Login SDK) on mobile, which owns the flow itself. The brief's assumption
+  "manual flow with PKCE" was half right — the shape exists, but it is the
+  OIDC code flow, not the classic manual flow. See Design decisions.
+- Per surface: web and desktop = system browser to the registered https
+  redirect, OIDC+PKCE, no broker needed (the doc's `login_success.html` path
+  is a webview flow we reject — same credential exposure RFC 8252 warns
+  about); iOS/Android = SDK adapter or an https relay through the broker,
+  since no custom-scheme redirect is documented for a hand-built mobile flow.
 
 ### Discord
 
@@ -606,18 +627,27 @@ take", with the reason:
    redirect → token/refresh → id_token/userinfo), and AppAuth's `AuthState`
    shows the session-object pattern (Part 2). Nothing in the evidence favors a
    different core shape.
-2. **Token broker seam — confirmed, and widened.** The brief named GitHub; the
-   docs add **Facebook** (secret required at token step; no PKCE to protect the
-   code instead) and **Apple** (`client_secret_post` only, secret is a signed
-   JWT) to the broker list. X, Discord, Microsoft and generic OIDC stay
-   public-client. Google is public-client on desktop/iOS via loopback/custom
-   scheme but Android's supported path is Credential Manager — the SDK adapter
-   covers it.
-3. **Facebook "manual flow with PKCE" — changed.** The current manual-flow
-   doc has no PKCE at all (measured: zero matches on the page). Facebook in a
-   browser flow is therefore always broker-exchanged (secret on the server),
-   or goes through the native SDK adapter on mobile. Documented in providers.md
-   as "secret required, PKCE not supported".
+2. **Token broker seam — confirmed, widened, then narrowed for Facebook.** The
+   brief named GitHub; the docs add **Apple** (`client_secret_post` only,
+   secret is a signed JWT) and Facebook's classic manual flow (secret required
+   at the token step; no PKCE to protect the code instead) to the broker list.
+   Facebook's other documented shape — the OIDC code flow with PKCE, secret
+   optional when the `code_verifier` is sent — is public-client capable, and
+   that is the shape nsh-auth implements. X, Discord, Microsoft and generic
+   OIDC stay public-client. Google is public-client on desktop/iOS via
+   loopback/custom scheme but Android's supported path is Credential Manager —
+   the SDK adapter covers it.
+3. **Facebook "manual flow with PKCE" — changed, twice.** The classic
+   manual-flow doc has no PKCE at all (measured: zero matches on that page)
+   and requires the secret server-to-server, so that shape is broker-exchanged.
+   But Facebook also documents an OIDC code flow with PKCE — the brief's
+   assumption was half right — where "the `client_secret` parameter is now
+   optional. If not included in your request, you must specify the
+   `code_verifier`." That public-client shape is what nsh-auth implements; the
+   classic shape stays behind the broker, and mobile keeps the SDK adapter (or
+   the broker's https relay) because no custom-scheme redirect is documented
+   for a hand-built flow. Documented in providers.md as "two documented flow
+   shapes, different auth".
 4. **Launchers per surface — confirmed in shape, pinned in detail.**
    ASWebAuthenticationSession on iOS and macOS (exclusive callback per calling
    app; ephemeral option exists — AppAuth-iOS exposes

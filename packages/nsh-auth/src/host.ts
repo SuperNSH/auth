@@ -16,8 +16,15 @@ export class HostStore implements SessionStore {
 
   async load(): Promise<Session | null> {
     try {
-      const answer = await host.call<{ value: Session | null }>("auth.store.load", { key: this.key });
-      return answer.value ?? null;
+      const answer = await host.call<{ value: Session | string | null }>("auth.store.load", { key: this.key });
+      // The hosts keep the value as a JSON string (Keychain, Keystore); a
+      // string that does not parse is absent data, not a store failure.
+      if (typeof answer.value !== "string") return answer.value ?? null;
+      try {
+        return (JSON.parse(answer.value) as Session) ?? null;
+      } catch {
+        return null;
+      }
     } catch (error) {
       throw new AuthError("store_error", `auth.store.load failed: ${String(error)}`);
     }
@@ -25,7 +32,9 @@ export class HostStore implements SessionStore {
 
   async save(session: Session): Promise<void> {
     try {
-      await host.call("auth.store.save", { key: this.key, value: session });
+      // Hosts keep the value as a JSON string (Android's requireString
+      // rejects objects) — mirrors load's parse.
+      await host.call("auth.store.save", { key: this.key, value: JSON.stringify(session) });
     } catch (error) {
       throw new AuthError("store_error", `auth.store.save failed: ${String(error)}`);
     }
@@ -43,7 +52,7 @@ export class HostStore implements SessionStore {
 /** Asks the host to open the authorize surface (ASWebAuthenticationSession, Custom Tabs) and return the callback it caught. */
 export async function hostAuthorize(url: string, scheme: string): Promise<string> {
   try {
-      const answer = await host.call<{ callbackUrl: string }>("auth.authorize", { url, scheme });
+    const answer = await host.call<{ callbackUrl: string }>("auth.authorize", { url, scheme });
     if (typeof answer.callbackUrl !== "string" || !answer.callbackUrl) {
       throw new Error("the host returned no callbackUrl");
     }

@@ -1,5 +1,7 @@
-// The session screen: status line, package user, userinfo profile, the tokens
-// readout, and the refresh and sign-out actions.
+// The session screen (native entry): status line, package user, userinfo
+// profile through nsh-query, the tokens readout, and refresh/sign-out.
+// The web entry mounts account-screen.web instead: nsh-query's lifecycle
+// import is missing on the 0.4.0 web runtime and crashes it.
 import { Text, View } from "nsh";
 import { authConfig, claimInfo, refreshSession, session, status, user } from "../auth";
 import { contact } from "../store";
@@ -27,7 +29,7 @@ export function AccountScreen(props: { onSignOut: () => void }) {
   };
   return (
     <View class="flex-1 bg-background">
-      <View class="gap-2 border-b border-border p-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <View class="gap-2 border-b border-border p-4">
         <Text class="text-xl font-semibold text-foreground">Account</Text>
         <Text class="text-sm text-muted-foreground">{`Status: ${status()}`}</Text>
         <If when={user()}>
@@ -38,7 +40,7 @@ export function AccountScreen(props: { onSignOut: () => void }) {
           )}
         </If>
       </View>
-      <View class="flex-1 gap-4 p-4 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+      <View class="flex-1 gap-4 p-4 pb-6">
         <AuthErrorBanner />
         <ProfileView query={profile} />
         <If when={contact()}>

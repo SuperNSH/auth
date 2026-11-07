@@ -1,0 +1,25 @@
+node:net:2167
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+               ^
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:8755
+    at Server.setupListenHandle [as _listen2] (node:net:2167:16)
+    at listenInCluster (node:net:2224:12)
+    at node:net:2448:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 8755
+}
+
+Node.js v24.19.0
+
+# 2026-11-07 note: this start attempt failed with EADDRINUSE because port 8755
+# was already held by an identical instance of this repo's mock
+# (node tools/mock-oauth/main.mjs --port 8755, started 08:50:44 by a sibling
+# agent working the Android proofs on this shared Mac; left running per
+# instructions). The iOS flows above ran against that instance at
+# http://127.0.0.1:8755 (GET /__control answered
+# {"sandbox":"nsh-auth sandbox","deny":false,...} before and after).

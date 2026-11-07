@@ -77,7 +77,7 @@ export function createAuth(config: AuthConfig): Auth {
       clientId: config.clientId,
       redirectUri: config.redirectUri,
       scopes,
-      codeChallenge: await codeChallengeS256(verifier),
+      codeChallenge: providerInfo.usePkce ? await codeChallengeS256(verifier) : undefined,
       state,
       nonce: providerInfo.wantsNonce ? nonce : undefined,
     });

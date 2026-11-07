@@ -12,21 +12,32 @@ const EVIDENCE = "/Users/hmziq/fo/nsh-auth/docs/evidence/ts-core";
 const PROVIDERS = ["google", "facebook", "discord", "github", "apple", "microsoft", "x", "oidc", "mock"] as const;
 type ProviderName = (typeof PROVIDERS)[number];
 
-// Pinned per provider, independently of src/providers.ts: the tests hold the contract.
-const EXPECTED: Record<ProviderName, { base: string; scopes: string[]; nonce: boolean; responseMode?: string }> = {
-  google: { base: "https://accounts.google.com/o/oauth2/v2/auth", scopes: ["openid", "email", "profile"], nonce: true },
-  facebook: { base: "https://www.facebook.com/v21.0/dialog/oauth", scopes: ["public_profile", "email"], nonce: false },
-  discord: { base: "https://discord.com/api/v10/oauth2/authorize", scopes: ["identify", "email"], nonce: false },
-  github: { base: "https://github.com/login/oauth/authorize", scopes: ["read:user", "user:email"], nonce: false },
-  apple: { base: "https://appleid.apple.com/auth/authorize", scopes: ["name", "email"], nonce: true, responseMode: "form_post" },
+// Pinned per provider, independently of src/providers.ts: the tests hold the
+// contract documented in fixtures/provider-catalog.json and docs/providers.md.
+const EXPECTED: Record<
+  ProviderName,
+  { base: string; scopes: string[]; nonce: boolean; pkce: boolean; responseMode?: string; extras?: Record<string, string> }
+> = {
+  google: {
+    base: "https://accounts.google.com/o/oauth2/v2/auth",
+    scopes: ["openid", "profile", "email"],
+    nonce: true,
+    pkce: true,
+    extras: { access_type: "offline", prompt: "consent" },
+  },
+  facebook: { base: "https://www.facebook.com/v27.0/dialog/oauth", scopes: ["openid", "public_profile", "email"], nonce: true, pkce: true },
+  discord: { base: "https://discord.com/oauth2/authorize", scopes: ["identify", "email"], nonce: false, pkce: true },
+  github: { base: "https://github.com/login/oauth/authorize", scopes: ["read:user", "user:email", "offline_access"], nonce: false, pkce: true },
+  apple: { base: "https://appleid.apple.com/auth/authorize", scopes: ["openid", "name", "email"], nonce: true, pkce: false, responseMode: "form_post" },
   microsoft: {
     base: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
     scopes: ["openid", "profile", "email", "offline_access", "User.Read"],
     nonce: true,
+    pkce: true,
   },
-  x: { base: "https://twitter.com/i/oauth2/authorize", scopes: ["users.read", "tweet.read", "offline_access"], nonce: false },
-  oidc: { base: `${MOCK}/oidc/authorize`, scopes: ["openid", "profile", "email", "offline_access"], nonce: true },
-  mock: { base: `${MOCK}/mock/authorize`, scopes: ["openid", "profile", "email", "offline_access"], nonce: true },
+  x: { base: "https://x.com/i/oauth2/authorize", scopes: ["users.read", "tweet.read", "offline.access"], nonce: false, pkce: true },
+  oidc: { base: `${MOCK}/oidc/authorize`, scopes: ["openid", "profile", "email", "offline_access"], nonce: true, pkce: true },
+  mock: { base: `${MOCK}/mock/authorize`, scopes: ["openid", "profile", "email", "offline_access"], nonce: true, pkce: true },
 };
 
 interface Keys {
@@ -136,6 +147,9 @@ function hostOptions(handlers: HostHandlers) {
   return {
     handlers: {
       "auth.authorize": async ({ url }: { url: string }) => ({ callbackUrl: handlers.onAuthorize(url) }),
+      // Verbatim passthrough: the fake stores exactly what save gives it and
+      // returns exactly that on load, so the string contract is exercised by
+      // the production save/load, not by the fake.
       "auth.store.save": async ({ key, value }: { key: string; value: unknown }) => {
         handlers.store.set(key, value);
         return null;
@@ -152,7 +166,7 @@ function hostOptions(handlers: HostHandlers) {
 // The exact authorize URL the app must send, built the same way the provider sees it.
 function expectedAuthorizeUrl(
   provider: ProviderName,
-  values: { state: string; nonce?: string; challenge: string },
+  values: { state: string; nonce?: string; challenge?: string },
 ): string {
   const spec = EXPECTED[provider];
   const params = new URLSearchParams();
@@ -163,15 +177,18 @@ function expectedAuthorizeUrl(
   params.set("state", values.state);
   if (spec.nonce && values.nonce) params.set("nonce", values.nonce);
   if (spec.responseMode) params.set("response_mode", spec.responseMode);
-  params.set("code_challenge", values.challenge);
-  params.set("code_challenge_method", "S256");
+  if (spec.pkce && values.challenge) {
+    params.set("code_challenge", values.challenge);
+    params.set("code_challenge_method", "S256");
+  }
+  for (const [key, value] of Object.entries(spec.extras ?? {})) params.set(key, value);
   return `${spec.base}?${params.toString()}`;
 }
 
 // Same URL with stand-ins for the random values, escaped, as an anchored pattern.
 function authorizePattern(provider: ProviderName): RegExp {
   const spec = EXPECTED[provider];
-  const template = expectedAuthorizeUrl(provider, { state: "STATE22", nonce: spec.nonce ? "NONCE22" : undefined, challenge: "CHALLENGE43" });
+  const template = expectedAuthorizeUrl(provider, { state: "STATE22", nonce: spec.nonce ? "NONCE22" : undefined, challenge: spec.pkce ? "CHALLENGE43" : undefined });
   const escaped = template.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = escaped
     .replaceAll("CHALLENGE43", "[A-Za-z0-9_-]{43}")
@@ -225,18 +242,26 @@ test("each provider's authorize URL carries pkce, state, scopes and the redirect
   PROVIDERS.forEach((provider, index) => {
     const url = urls[index] ?? "";
     expect(url).toMatch(authorizePattern(provider));
+    const spec = EXPECTED[provider];
     const params = new URL(url).searchParams;
     expect(params.get("client_id")).toBe(CLIENT_ID);
     expect(params.get("redirect_uri")).toBe(REDIRECT);
-    expect(params.get("scope")).toBe(EXPECTED[provider].scopes.join(" "));
-    expect(params.get("code_challenge_method")).toBe("S256");
+    expect(params.get("scope")).toBe(spec.scopes.join(" "));
+    if (spec.pkce) {
+      expect(params.get("code_challenge_method")).toBe("S256");
+      expect(params.get("code_challenge")).toHaveLength(43);
+    } else {
+      expect(params.get("code_challenge_method")).toBeNull();
+      expect(params.get("code_challenge")).toBeNull();
+    }
+    for (const [key, value] of Object.entries(spec.extras ?? {})) expect(params.get(key)).toBe(value);
     const parts = authorizeParts(url);
     expect(parts.state).not.toBe(parts.nonce);
     expect(url).toBe(
       expectedAuthorizeUrl(provider, {
         state: parts.state,
         nonce: parts.nonce ?? undefined,
-        challenge: parts.challenge,
+        challenge: spec.pkce ? parts.challenge : undefined,
       }),
     );
   });
@@ -472,8 +497,10 @@ test("a host drives the authorize surface and keeps the session in its secure st
   const data = (call?.data ?? {}) as { url?: string; scheme?: string };
   expect(data.scheme).toBe("nsh-auth-demo");
   expect(data.url ?? "").toMatch(authorizePattern("mock"));
-  const saved = hostStore.get(SESSION_KEY) as { accessToken?: string } | undefined;
-  expect(saved?.accessToken).toBe("mock-access");
+  // The Android host requires the stored value to be a JSON string (requireString).
+  expect(typeof hostStore.get(SESSION_KEY)).toBe("string");
+  const saved = JSON.parse((hostStore.get(SESSION_KEY) as string) ?? "null") as { accessToken?: string };
+  expect(saved.accessToken).toBe("mock-access");
   await app.press("id:sign-out");
   await app.waitFor("text:status idle");
   expect(hostStore.has(SESSION_KEY)).toBe(false);
@@ -556,10 +583,12 @@ test("github's exchange goes through the broker and never carries a secret", asy
 });
 
 test("a session in the host's store restores on the next start", async () => {
+  // Seeded exactly as the real host keeps it: a JSON string under the key,
+  // so the restore exercises serialize → string → parse.
   const hostStore = new Map<string, unknown>([
     [
       SESSION_KEY,
-      { provider: "mock", accessToken: "restored-access", refreshToken: "restored-refresh", expiresAt: 3_600_000, scope: "openid profile email offline_access" },
+      JSON.stringify({ provider: "mock", accessToken: "restored-access", refreshToken: "restored-refresh", expiresAt: 3_600_000, scope: "openid profile email offline_access" }),
     ],
   ]);
   const app = await open("../App.tsx", { clock: { time: 0 }, host: hostOptions({ store: hostStore, onAuthorize: (url) => url }) });

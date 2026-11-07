@@ -35,20 +35,26 @@ function RealmSwitchProbe() {
   );
 }
 
-function PreviewApp() {
-  const pressed = signal<ProviderId | null>(null);
+// The query-backed profile card, mounted only off-web: nsh-query crashes the
+// 0.4.0 web runtime (its lifecycle import is missing there).
+function PreviewProfile() {
   const profile = createProfileQuery({
     baseUrl: MOCK_BASE_URL,
     provider: () => "mock",
     token: () => "preview-token",
   });
+  return <ProfileView query={profile} />;
+}
+
+function PreviewApp() {
+  const pressed = signal<ProviderId | null>(null);
   return (
     <View class="flex-1 bg-background">
-      <View class="gap-2 border-b border-border p-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <View class="gap-2 border-b border-border p-4">
         <Text class="text-xl font-semibold text-foreground">UI preview</Text>
         <Text class="text-sm text-muted-foreground">Fake data; exercises no sign-in flow.</Text>
       </View>
-      <Scroll testID="content-scroll" class="flex-1" contentClass="gap-4 p-4 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+      <Scroll testID="content-scroll" class="flex-1" contentClass="gap-4 p-4 pb-6">
         <ErrorBanner code="access_denied" message="The mock user denied the request." />
         <EmailForm />
         <View class="gap-2">
@@ -68,7 +74,7 @@ function PreviewApp() {
         </View>
         <ClaimsTable claims={PREVIEW_CLAIMS} accessTokenTail="d tok" refreshTokenPresent />
         <CallbackPasteBack />
-        <ProfileView query={profile} />
+        <PreviewProfile />
         <RealmSwitchProbe />
       </Scroll>
     </View>

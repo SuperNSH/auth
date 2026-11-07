@@ -165,6 +165,37 @@ The email form saves a contact address shown on the account screen. It does
 not reach the OAuth flow: `signIn(provider)` takes no options, so a
 `login_hint` is not sent (see the upstream notes below).
 
+## Web runtime notes
+
+Three nsh 0.4.0 web-runtime gaps shape the web build, each reproduced by probe
+in this directory:
+
+1. `env()` inside arbitrary class math (`pt-[calc(env(safe-area-inset-top)+16px)]`)
+   crashes the web runtime. The demo therefore uses fixed padding on every
+   surface (`p-4` headers, `pb-6` content); native surfaces have no notch
+   compensation in this demo.
+2. `platform` crashes a web app on import — even unread, and try/catch around
+   the read does not contain it. No runtime platform detection exists in this
+   demo.
+3. `lifecycle` is typed in `.nsh/types` but missing from the web runtime, and
+   nsh-query's `createQuery` calls `untracked(lifecycle)` — so nsh-query can
+   never load on web (upstream: nsh 0.4.0 + nsh-query). A dynamic `import()`
+   of the module dies with the app too.
+
+Because imports (not just uses) are fatal, the per-surface switch is the
+entry file: `App.tsx` (native, nsh-query-backed account screen) and
+`App.web.tsx` (web, account screen with a note in the profile card's place —
+identity comes from the ID-token claims; refresh and sign-out work). The web
+phase builds and bundles the web entry:
+
+```sh
+cd examples/demo
+nsh build App.web.tsx --release --out .nsh/out-web
+```
+
+`preview.tsx` and `preview.test.tsx` statically import nsh-query, so they are
+native/headless fixtures — run them without `--target web`.
+
 ## Tests
 
 - `preview.test.tsx` — the demo's own UI (provider table, email form,

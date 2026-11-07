@@ -25,7 +25,29 @@ From the **Android emulator** the same server is reachable as
 loopback). From an iOS simulator or macOS app use the `MOCK_URL` as printed;
 the server binds `127.0.0.1` only, so a physical device cannot reach it.
 
+**The issuer follows the host you used.** The id_token `iss`, the discovery
+document's `issuer`, the Microsoft callback `iss` and the picture URLs are
+derived from each request's `Host` header, not from the startup URL. A client
+that reaches the mock as `http://10.0.2.2:<port>` gets
+`iss = http://10.0.2.2:<port>/<realm>`; a client using `http://127.0.0.1:<port>`
+gets the loopback issuer from the same server. Why: a client validates
+`iss` against its own configured base URL, and clients behind host aliases —
+emulators, tunnels — would otherwise fail ID-token verification against an
+issuer they never used. Requests without a `Host` header (HTTP/1.0) fall back
+to the loopback base.
+
 Tests: `cd tools/mock-oauth && bun test`.
+
+## CORS
+
+Every response — all providers, discovery, JWKS, userinfo, control endpoints,
+errors, and OPTIONS preflights (204 on any path) — carries
+`Access-Control-Allow-Origin: *` plus `Allow-Methods`/`Allow-Headers` covering
+the token exchange. Why `*` is right here: the mock binds `127.0.0.1` only,
+holds no real credentials, and a web demo served on a different loopback port
+(e.g. `127.0.0.1:8790`) cannot complete the token exchange or fetch the JWKS
+from a browser without it. `tools/broker` deliberately does **not** send CORS
+headers — it serves an app owner who holds a client secret, not browser code.
 
 ## Provider route table
 
@@ -116,4 +138,6 @@ Graph error `message`; Microsoft uses real AADSTS codes (`70008` expired,
 - All tokens, codes and ids are fake and prefixed `nsh-sandbox-` (GitHub-style
   `gho_nshsandbox…`/`ghr_nshsandbox…`, Facebook-style `EAAGnshsandbox…`).
 - Every response carries an `X-Nsh-Auth-Sandbox` header; issuer strings are
-  the loopback mock URL; user email is `sandbox.user@nsh-auth.invalid`.
+  always the mock's own URL as addressed by the caller (loopback by default,
+  per-request `Host`-derived — see above); user email is
+  `sandbox.user@nsh-auth.invalid`.

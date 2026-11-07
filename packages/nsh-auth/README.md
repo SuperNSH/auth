@@ -39,7 +39,8 @@ no secret ever travels in a request from the app.
    Tabs on Android caught the redirect. The whole loop finishes by itself, and
    tokens live in the host's secure store through `auth.store.save` /
    `auth.store.load` / `auth.store.clear` (Keychain, Keystore, DPAPI or Secret
-   Service behind it). Names must be listed under `capabilities.host`.
+   Service behind it); the session crosses as a JSON string, which `load`
+   parses. Names must be listed under `capabilities.host`.
 2. **The web** (`platform.os === "web"`). `openUrl` opens the authorize page in
    a new tab. **The redirect cannot come back by itself in nsh 0.4.0**: the web
    runtime has no `window`, no `location`, no inbound-URL channel. The page

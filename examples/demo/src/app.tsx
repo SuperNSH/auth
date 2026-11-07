@@ -1,31 +1,47 @@
-// The root: auth init (the config must be final before createAuth runs), then
-// one screen per auth state. Page logic lives in the screens; the package's
-// signals drive the switch.
+// The app root factory. The native entry (App.tsx) mounts the nsh-query-backed
+// account screen; the web entry (App.web.tsx) mounts its web variant —
+// nsh-query's lifecycle import crashes the 0.4.0 web runtime, so the two
+// entries are the per-surface switch and there is no runtime platform check.
 import { cleanup, effect, host, Text, View } from "nsh";
-import { authBusy, authConfig, authReady, handleRedirect, initAuth, refreshSession, session, signIn, signOut } from "./auth";
-import { AccountScreen } from "./screens/account-screen";
+import type { JSX } from "nsh";
+import {
+  authBusy,
+  authConfig,
+  authReady,
+  handleRedirect,
+  initAuth,
+  refreshSession,
+  session,
+  signIn,
+  signOut,
+} from "./auth";
 import { SignInScreen } from "./screens/sign-in-screen";
 
-export function App() {
-  // Runs once: reads the host's config (async), then builds the auth instance.
-  effect(() => {
-    void initAuth();
-  });
-  return (
-    <If
-      when={authReady()}
-      else={
-        <View class="flex-1 items-center justify-center bg-background">
-          <Text class="text-sm text-muted-foreground">Loading…</Text>
-        </View>
-      }
-    >
-      {() => <AuthRoot />}
-    </If>
-  );
+type AccountScreenComponent = (props: { onSignOut: () => void }) => JSX.Element;
+
+/** Builds the root around an account screen variant; App.tsx and App.web.tsx call this. */
+export function createAppRoot(AccountScreen: AccountScreenComponent) {
+  return function AppRoot() {
+    // Runs once: reads the host's config (async), then builds the auth instance.
+    effect(() => {
+      void initAuth();
+    });
+    return (
+      <If
+        when={authReady()}
+        else={
+          <View class="flex-1 items-center justify-center bg-background">
+            <Text class="text-sm text-muted-foreground">Loading…</Text>
+          </View>
+        }
+      >
+        {() => <AuthRoot AccountScreen={AccountScreen} />}
+      </If>
+    );
+  };
 }
 
-function AuthRoot() {
+function AuthRoot(props: { AccountScreen: AccountScreenComponent }) {
   // The web host's event is the return leg there (a page bridge forwards the
   // redirect); the iOS and Android hosts return the callback from auth.authorize
   // itself, so this listener stays quiet on them. Rendering-time registration
@@ -52,10 +68,11 @@ function AuthRoot() {
     if (start) void signIn(start).catch(() => {});
   });
 
+  const Screen = props.AccountScreen;
   return (
     <View class="flex-1 bg-background">
       <If when={session()} else={<SignInScreen busy={authBusy()} onStart={(provider) => void signIn(provider).catch(() => {})} />}>
-        {() => <AccountScreen onSignOut={() => void signOut().catch(() => {})} />}
+        {() => <Screen onSignOut={() => void signOut().catch(() => {})} />}
       </If>
     </View>
   );

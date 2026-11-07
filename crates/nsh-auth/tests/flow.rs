@@ -167,9 +167,16 @@ async fn github_exchange_goes_through_the_broker_with_no_secret() {
         .auth
         .authorize_request(ProviderId::Github)
         .expect("authorize");
+    // GitHub takes PKCE S256 on the authorize leg; the secret it also needs
+    // never leaves the broker.
     assert!(
-        !common::has_pair(&request.url, "code_challenge"),
-        "github takes no pkce"
+        common::has_pair(&request.url, "code_challenge"),
+        "github takes pkce"
+    );
+    assert_eq!(
+        query_pair(&request.url, "code_challenge_method"),
+        "S256",
+        "github"
     );
     let state = query_pair(&request.url, "state");
 
@@ -198,6 +205,10 @@ async fn github_exchange_goes_through_the_broker_with_no_secret() {
     assert!(
         body.contains("gh-code"),
         "broker body carries the code: {body}"
+    );
+    assert!(
+        body.contains("code_verifier"),
+        "the pkce verifier travels through the broker: {body}"
     );
     assert!(
         !body.to_ascii_lowercase().contains("secret"),

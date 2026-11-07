@@ -23,17 +23,17 @@ fn cases() -> Vec<Expected> {
             provider: ProviderId::Google,
             host: "accounts.google.com",
             path: "/o/oauth2/v2/auth",
-            scope: "openid email profile",
+            scope: "openid profile email",
             pkce: true,
             nonce: true,
         },
         Expected {
             provider: ProviderId::Facebook,
             host: "www.facebook.com",
-            path: "/v26.0/dialog/oauth",
-            scope: "public_profile,email",
-            pkce: false,
-            nonce: false,
+            path: "/v27.0/dialog/oauth",
+            scope: "openid public_profile email",
+            pkce: true,
+            nonce: true,
         },
         Expected {
             provider: ProviderId::Discord,
@@ -48,14 +48,14 @@ fn cases() -> Vec<Expected> {
             host: "github.com",
             path: "/login/oauth/authorize",
             scope: "read:user user:email",
-            pkce: false,
+            pkce: true,
             nonce: false,
         },
         Expected {
             provider: ProviderId::Apple,
             host: "appleid.apple.com",
             path: "/auth/authorize",
-            scope: "name email",
+            scope: "openid name email",
             pkce: false,
             nonce: true,
         },
@@ -63,13 +63,13 @@ fn cases() -> Vec<Expected> {
             provider: ProviderId::Microsoft,
             host: "login.microsoftonline.com",
             path: "/common/oauth2/v2.0/authorize",
-            scope: "openid email profile offline_access",
+            scope: "openid profile email offline_access User.Read",
             pkce: true,
             nonce: true,
         },
         Expected {
             provider: ProviderId::X,
-            host: "twitter.com",
+            host: "x.com",
             path: "/i/oauth2/authorize",
             scope: "users.read tweet.read offline.access",
             pkce: true,
@@ -80,7 +80,7 @@ fn cases() -> Vec<Expected> {
             provider: ProviderId::GenericOidc,
             host: "idp.example.test",
             path: "/authorize",
-            scope: "openid email profile",
+            scope: "openid profile email offline_access",
             pkce: true,
             nonce: true,
         },
@@ -88,7 +88,7 @@ fn cases() -> Vec<Expected> {
             provider: ProviderId::Mock,
             host: "mock.localhost.test",
             path: "/authorize",
-            scope: "openid email profile",
+            scope: "openid profile email offline_access",
             pkce: true,
             nonce: true,
         },
@@ -170,7 +170,16 @@ fn authorize_url_for_every_provider() {
         }
 
         if case.provider == ProviderId::Apple {
-            assert_eq!(query_pair(&request.url, "response_mode"), "query", "apple");
+            assert_eq!(
+                query_pair(&request.url, "response_mode"),
+                "form_post",
+                "apple"
+            );
+        }
+        if case.provider == ProviderId::Google {
+            // Without these Google issues no refresh token at all.
+            assert_eq!(query_pair(&request.url, "access_type"), "offline", "google");
+            assert_eq!(query_pair(&request.url, "prompt"), "consent", "google");
         }
         assert_eq!(
             request.redirect,
@@ -178,6 +187,32 @@ fn authorize_url_for_every_provider() {
             "{name}: redirect kind"
         );
     }
+}
+
+#[test]
+fn moved_endpoints_match_the_documented_catalog() {
+    // Pins the endpoint moves the authorize-URL test cannot see: the
+    // Facebook version + userinfo fields and the x.com host family.
+    let facebook = AuthConfig::for_provider(ProviderId::Facebook);
+    assert_eq!(
+        facebook.userinfo_url.as_deref(),
+        Some("https://graph.facebook.com/v27.0/me?fields=id,name,email,picture")
+    );
+    assert_eq!(
+        facebook.token_url,
+        "https://graph.facebook.com/v27.0/oauth/access_token"
+    );
+    let x = AuthConfig::for_provider(ProviderId::X);
+    assert_eq!(x.auth_url, "https://x.com/i/oauth2/authorize");
+    assert_eq!(x.token_url, "https://api.x.com/2/oauth2/token");
+    assert_eq!(
+        x.userinfo_url.as_deref(),
+        Some("https://api.x.com/2/users/me")
+    );
+    assert_eq!(
+        x.revoke_url.as_deref(),
+        Some("https://api.x.com/2/oauth2/revoke")
+    );
 }
 
 #[test]

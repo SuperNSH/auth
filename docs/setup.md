@@ -66,21 +66,28 @@ Quirks and endpoint table: [docs/providers.md](docs/providers.md) (providers are
 ## Facebook
 
 **Console:** [developers.facebook.com](https://developers.facebook.com) → *My Apps* → *Create App*
-(consumer type) → add the *Facebook Login* product → *Settings*.
+(Authentication use case) → add the *Facebook Login* product → *Facebook Login → Settings*.
 
-**What to register:** an app id (public) and note the *App secret* (never leaves the server, and
-the manual login flow with PKCE does not need it). For the web surface, set *Valid OAuth Redirect
-URIs*.
+**What to register:** an app id (public) and the *App secret* — the secret never goes in the app.
+nsh-auth uses Facebook's **OIDC code flow with PKCE** for public clients: the exchange sends
+`code_verifier`, which makes `client_secret` optional, so the app path runs secretless. Facebook's
+classic manual flow (secret required, no PKCE) also exists; if you use that shape, the secret
+belongs only in your broker's environment. Pin the Graph API version — `{version}` in the URLs is
+provider config, not a constant.
 
-**Redirect URIs to enter:**
+**Redirect URIs to enter:** Facebook enforces HTTPS and exact-string Strict Mode on *Valid OAuth
+Redirect URIs* (under *Facebook Login → Settings*):
 
 | Surface | Enter |
 |---|---|
-| Web | `http://localhost:<port>/auth/callback` |
-| iOS / Android | `fb<APP_ID>://authorize` — Facebook's fixed custom-scheme shape for the manual login flow |
+| Web / desktop | Your HTTPS callback, e.g. `https://your.app/callback/facebook` — exact string match |
+| iOS / Android | No custom-scheme redirect is documented for a hand-built flow: use the optional native SDK adapter or an HTTPS relay through the broker — see [docs/providers.md](docs/providers.md) |
 
-**Where the client id goes:** the provider definition in your app's provider list. Facebook's
-graph-api quirks (app-link redirect, SDK behavior) are the optional native-adapter territory; see
+(The demo's `http://localhost` callback works only because Facebook tolerates unregistered
+localhost in Development mode — a dashboard behavior, not part of the documented contract.)
+
+**Where the client id goes:** the provider definition in your app's provider list; the Graph API
+version sits alongside it. Endpoints, quirks and button rules:
 [docs/providers.md](docs/providers.md).
 
 ## Discord

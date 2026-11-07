@@ -41,7 +41,8 @@ export async function exchangeCode(options: ExchangeOptions): Promise<TokenRespo
       await postJson(`${options.brokerUrl}/token`, {
         provider: provider.id,
         code: options.code,
-        codeVerifier: options.codeVerifier,
+        // PKCE-less providers (Apple) take no verifier through the broker.
+        ...(provider.usePkce ? { codeVerifier: options.codeVerifier } : {}),
         redirectUri: options.redirectUri,
       }),
       options.nowMs,
@@ -50,12 +51,12 @@ export async function exchangeCode(options: ExchangeOptions): Promise<TokenRespo
   }
   if (!provider.tokenUrl) throw new AuthError("unknown", `${provider.id} has no token endpoint`);
   if (provider.tokenMethod === "GET") {
-    // Facebook's manual flow: the code exchange is a GET with the verifier in the query.
+    // Facebook's OIDC flow: the code exchange is a GET with the verifier in the query.
     const url = new URL(provider.tokenUrl);
     url.searchParams.set("client_id", options.clientId);
     url.searchParams.set("redirect_uri", options.redirectUri);
     url.searchParams.set("code", options.code);
-    url.searchParams.set("code_verifier", options.codeVerifier);
+    if (provider.usePkce) url.searchParams.set("code_verifier", options.codeVerifier);
     return fromDirect(await getJson(url.toString()), options.nowMs, options.fallbackScope);
   }
   const form = new URLSearchParams();
@@ -63,7 +64,7 @@ export async function exchangeCode(options: ExchangeOptions): Promise<TokenRespo
   form.set("code", options.code);
   form.set("redirect_uri", options.redirectUri);
   form.set("client_id", options.clientId);
-  form.set("code_verifier", options.codeVerifier);
+  if (provider.usePkce) form.set("code_verifier", options.codeVerifier);
   return fromDirect(await postForm(provider.tokenUrl, form), options.nowMs, options.fallbackScope);
 }
 

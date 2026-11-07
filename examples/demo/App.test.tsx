@@ -5,7 +5,7 @@
 // app.host.send feeds the redirect event where a flow needs it.
 import { expect, open, test } from "nsh/test";
 import type { App, StubRequest, StubResponse } from "nsh/test";
-import { CLIENT_ID, MOCK_BASE_URL, REDIRECT_URI, SCOPES } from "./src/dev/fixtures";
+import { CLIENT_ID, MOCK_BASE_URL, MOCK_BASE_URL_STORAGE_KEY, REDIRECT_URI, SCOPES } from "./src/dev/fixtures";
 
 type Network = NonNullable<NonNullable<Parameters<typeof open>[1]>["network"]>;
 
@@ -121,7 +121,10 @@ function hostHandlers(onAuthorize: (url: string) => string, store: Map<string, u
   return {
     "auth.authorize": async ({ url }: { url: string }) => ({ callbackUrl: onAuthorize(url) }),
     "auth.store.save": async ({ key, value }: { key: string; value: unknown }) => {
-      store.set(key, value);
+      // Real hosts store text (Android's contract); the harness delivers the
+      // nested session value the same way, so parse before asserting.
+      const parsed = typeof value === "string" ? JSON.parse(value) : value;
+      store.set(key, parsed);
       return null;
     },
     "auth.store.load": async ({ key }: { key: string }) => ({ value: store.get(key) ?? null }),
@@ -135,11 +138,13 @@ function hostHandlers(onAuthorize: (url: string) => string, store: Map<string, u
 async function openWithHost(
   network: Network,
   extra?: { params?: Record<string, unknown>; onAuthorize?: (url: string) => string; withConfig?: boolean },
+  storage?: Record<string, string>,
 ): Promise<{ app: App; store: Map<string, unknown> }> {
   const store = new Map<string, unknown>();
   const app = await open("./App.tsx", {
     clock: { time: 0 },
     network,
+    storage,
     host: {
       params: extra?.params ?? {},
       handlers: {
@@ -219,6 +224,7 @@ test("mock sign-in: authorize URL, exchange, session screen", async () => {
   expect(app.shows("text:Access token: …irst")).toBe(true);
   expect(app.shows("text:Refresh token: stored")).toBe(true);
   const saved = store.get(SESSION_KEY) as { accessToken?: string } | undefined;
+  console.log("STORE-VALUE", JSON.stringify(saved));
   expect(saved?.accessToken).toBe("at-first");
 });
 
@@ -363,6 +369,34 @@ test("the saved contact email shows as the account's contact", async () => {
   await app.waitFor("text:Contact: user@example.com");
 });
 
+test("a bare relaunch reuses the persisted mock base", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  // No launch extras and no auth.config answer: only the Storage layer knows
+  // the emulator base a previous device-phase run resolved.
+  const { app } = await openWithHost(
+    mockRoutes(keys, EMULATOR_MOCK),
+    {
+      onAuthorize: (url) => {
+        scenario.nonce = authorizeParts(url).nonce ?? "";
+        return `${REDIRECT_URI}?code=${scenario.code}&state=${authorizeParts(url).state}`;
+      },
+    },
+    { [MOCK_BASE_URL_STORAGE_KEY]: EMULATOR_MOCK },
+  );
+  // A bare relaunch has no autoStart: the user presses the provider button.
+  await app.waitFor("role:button[Sign in with Mock]");
+  await app.press("role:button[Sign in with Mock]");
+  const call = app.host.calls().find((entry) => entry.name === "auth.authorize");
+  const url = ((call?.data ?? {}) as { url?: string }).url ?? "";
+  expect(`${new URL(url).origin}/mock/authorize`).toBe(`${EMULATOR_MOCK}/mock/authorize`);
+  await app.waitFor("text:Status: authenticated");
+  const userinfo = app.requests().find((entry) => entry.url === `${EMULATOR_MOCK}/mock/userinfo`);
+  expect(userinfo?.url).toBe(`${EMULATOR_MOCK}/mock/userinfo`);
+  // The resolved base persists for later bare relaunches (plain Storage).
+  expect(app.storage()[MOCK_BASE_URL_STORAGE_KEY]).toBe(EMULATOR_MOCK);
+});
+
 test("host params and auth.config drive mockBaseUrl and autoStart", async () => {
   const keys = await rsaKeys();
   scenario.reset();
@@ -382,6 +416,8 @@ test("host params and auth.config drive mockBaseUrl and autoStart", async () => 
   expect(app.shows("text:Sandbox User")).toBe(true);
   const userinfo = app.requests().find((entry) => entry.url === `${EMULATOR_MOCK}/mock/userinfo`);
   expect(userinfo?.url).toBe(`${EMULATOR_MOCK}/mock/userinfo`);
+  // The resolved base persists for later bare relaunches (plain Storage).
+  expect(app.storage()[MOCK_BASE_URL_STORAGE_KEY]).toBe(EMULATOR_MOCK);
 });
 
 /** Signs in through the embedded host path and lands on the account screen. */

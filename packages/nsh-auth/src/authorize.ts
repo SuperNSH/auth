@@ -5,7 +5,8 @@ export interface AuthorizeOptions {
   clientId: string;
   redirectUri: string;
   scopes: string[];
-  codeChallenge: string;
+  /** S256 challenge; omitted for providers without PKCE (Apple). */
+  codeChallenge?: string;
   state: string;
   nonce?: string;
 }
@@ -20,7 +21,10 @@ export function buildAuthorizeUrl(options: AuthorizeOptions): string {
   params.set("state", options.state);
   if (provider.wantsNonce && options.nonce) params.set("nonce", options.nonce);
   if (provider.responseMode) params.set("response_mode", provider.responseMode);
-  params.set("code_challenge", options.codeChallenge);
-  params.set("code_challenge_method", "S256");
+  if (provider.usePkce && options.codeChallenge) {
+    params.set("code_challenge", options.codeChallenge);
+    params.set("code_challenge_method", "S256");
+  }
+  for (const [key, value] of Object.entries(provider.authorizeExtras ?? {})) params.set(key, value);
   return `${provider.authorizeUrl}?${params.toString()}`;
 }

@@ -54,16 +54,15 @@ class AuthHostModule(private val activity: Activity) {
     fun registeredRedirectUri(): String = "$REGISTERED_SCHEME://$REGISTERED_REDIRECT_HOST"
 
     /**
-     * onCreate only: reads the launcher intent's config extras (a random app's
-     * explicit intent must not reconfigure sign-in) and completes a pending
-     * authorize on a cold-start redirect.
+     * onCreate only: reads the cold-launch intent's config extras (a warm
+     * instance's onNewIntent never reconfigures sign-in) and completes a
+     * pending authorize on a cold-start redirect. No action gate: `am start -n`
+     * sends no action, and the extras are launch arguments, not a redirect.
      */
     fun handleLaunchIntent(intent: Intent?) {
         if (intent == null) return
-        if (intent.action == Intent.ACTION_MAIN) {
-            intent.getStringExtra(EXTRA_PROVIDER)?.let { config = config.copy(autoStart = it) }
-            intent.getStringExtra(EXTRA_MOCK_BASE_URL)?.let { config = config.copy(mockBaseUrl = normalizeMockUrl(it)) }
-        }
+        intent.getStringExtra(EXTRA_PROVIDER)?.let { config = config.copy(autoStart = it) }
+        intent.getStringExtra(EXTRA_MOCK_BASE_URL)?.let { config = config.copy(mockBaseUrl = normalizeMockUrl(it)) }
         completeRedirect(intent)
     }
 

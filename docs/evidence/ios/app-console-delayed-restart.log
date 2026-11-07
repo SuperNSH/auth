@@ -1,0 +1,1229 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "process == "NshAuthSandbox""
+Timestamp               Ty Process[PID:TID]
+2026-11-07 10:08:34.727 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit.tracing:UITraceManager] UITraceInitialize: registering notify listener
+2026-11-07 10:08:34.727 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit.tracing:UITraceManager] handle_trace_notification: received notify (state=0)
+2026-11-07 10:08:34.730 Df NshAuthSandbox[46031:a4881f] (libMobileGestalt.dylib) No persisted cache on this platform.
+2026-11-07 10:08:34.731 Df NshAuthSandbox[46031:a48838] [com.apple.xpc:connection] [0x10380d5e0] activating connection: mach=true listener=false peer=false name=com.apple.cfprefsd.daemon
+2026-11-07 10:08:34.731 Df NshAuthSandbox[46031:a4883a] [com.apple.xpc:connection] [0x10380ec20] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-07 10:08:34.733 A  NshAuthSandbox[46031:a48839] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason added: 10; deactivation reasons: 0 -> 1024; animating application lifecycle event: 0
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a48838] [com.apple.UIKit:BackgroundTask] Creating new assertion because there is no existing background assertion.
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a48838] [com.apple.UIKit:BackgroundTask] Creating new background assertion
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4881f] [com.apple.runningboard:connection] Initializing connection
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a48838] [com.apple.UIKit:BackgroundTask] Created new background assertion <BKSProcessAssertion: 0x103808f60>
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4881f] [com.apple.runningboard:process] Removing all cached process handles
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4883c] [com.apple.runningboard:connection] Sending handshake request attempt #1 to server
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4883c] [com.apple.runningboard:connection] Creating connection to com.apple.runningboard
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4883c] [com.apple.xpc:connection] [0x1045c0280] activating connection: mach=true listener=false peer=false name=com.apple.runningboard
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4881f] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.open
+2026-11-07 10:08:34.735 Df NshAuthSandbox[46031:a4881f] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.workspace-service
+2026-11-07 10:08:34.736 A  NshAuthSandbox[46031:a48839] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a4883c] [com.apple.runningboard:connection] Handshake succeeded
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a4883c] [com.apple.runningboard:connection] Identity resolved as app<dev.nshauth.sandbox((null))>
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a48838] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103808f60>
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a48838] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1044b0ac0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 122639 (elapsed = 0).
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UIApplicationSceneKeyboardSettings on FBSSceneSettings
+2026-11-07 10:08:34.737 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] FBSWorkspace registering source: com.apple.frontboard.systemappservices
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] FBSWorkspace connected to endpoint : <BSServiceConnectionEndpoint: 0x10452cd00; target: com.apple.frontboard.systemappservices; service: com.apple.frontboard.workspace-service>
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1044d9cc0 com.apple.frontboard.systemappservices> attempting immediate handshake from activate
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1044d9cc0 com.apple.frontboard.systemappservices> sent handshake
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneOcclusionSettings> on FBSSceneSettings
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a4881f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10452d020>
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneInterfaceProtectionSettings> on FBSSceneSettings
+2026-11-07 10:08:34.738 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneDestructionClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.739 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferencesHostSettingsExtension on FBSSceneSettings
+2026-11-07 10:08:34.739 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneSafeAreaSettingsExtension on FBSSceneSettings
+2026-11-07 10:08:34.740 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneBarPositionSettingsExtension on FBSSceneSettings
+2026-11-07 10:08:34.740 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferenceClientSettingsExtension on FBSSceneClientSettings
+2026-11-07 10:08:34.740 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIHomeAffordanceHostSceneSettings> on FBSSceneSettings
+2026-11-07 10:08:34.740 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISystemShellSceneHostingEnvironmentSettings on FBSSceneSettings
+2026-11-07 10:08:34.741 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRenderingEnvironmentSettings on FBSSceneSettings
+2026-11-07 10:08:34.741 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRenderingEnvironmentClientSettings on FBSSceneClientSettings
+2026-11-07 10:08:34.741 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneTransitioningHostSettings> on FBSSceneSettings
+2026-11-07 10:08:34.741 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneActivationInteractionSettings> on FBSSceneSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneFocusSystemSettings> on FBSSceneSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationSettingsExtension on FBSSceneSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationClientSettingsExtension on FBSSceneClientSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRegionSettings on FBSSceneSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneWindowingControlClientSettings on FBSSceneClientSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UICompanionSceneInterestClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.742 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIResourceConditionsSceneSettings> on FBSSceneSettings
+2026-11-07 10:08:34.743 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UIKeyboardInputScenePairingSettings on FBSSceneSettings
+2026-11-07 10:08:34.743 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingContentSizePreferenceClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.743 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneHostingTraitCollectionPropagationSettings on FBSSceneSettings
+2026-11-07 10:08:34.743 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationSettings> on FBSSceneSettings
+2026-11-07 10:08:34.745 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.753 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneSettings
+2026-11-07 10:08:34.753 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.753 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingViewControllerPreferencePropagationClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.754 Df NshAuthSandbox[46031:a48838] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneZoomTransitionSettings> on FBSSceneSettings
+2026-11-07 10:08:34.754 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneSettingsCore on FBSSceneSettings
+2026-11-07 10:08:34.755 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneClientSettingsCore on FBSSceneClientSettings
+2026-11-07 10:08:34.779 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneSettings setting counterpart class: UIApplicationSceneSettings
+2026-11-07 10:08:34.785 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneClientSettings setting counterpart class: UIApplicationSceneClientSettings
+2026-11-07 10:08:34.785 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneTransitionContextCore on FBSSceneTransitionContext
+2026-11-07 10:08:34.883 A  NshAuthSandbox[46031:a4881f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-07 10:08:34.896 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Registering for test daemon availability notify post.
+2026-11-07 10:08:34.896 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-07 10:08:34.896 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-07 10:08:34.896 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-07 10:08:34.897 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason added: 11; deactivation reasons: 1024 -> 3072; animating application lifecycle event: 0
+2026-11-07 10:08:34.898 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x1045c08c0> for initial
+2026-11-07 10:08:34.899 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x1045c08c0> for CADisplay KVO
+2026-11-07 10:08:34.899 Df NshAuthSandbox[46031:a4881f] [com.apple.Accessibility:AXSupportCommon] Read CategoryName: per-app = 1, category name = (null)
+2026-11-07 10:08:34.900 Df NshAuthSandbox[46031:a4881f] [com.apple.Accessibility:AXSupportCommon] Read CategoryName: per-app = 0, category name = (null)
+2026-11-07 10:08:34.900 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason removed: 10; deactivation reasons: 3072 -> 2048; animating application lifecycle event: 0
+2026-11-07 10:08:34.903 Df NshAuthSandbox[46031:a4881f] [com.apple.app_launch_measurement:ApplicationLaunch] alm_acquire_pageins_recording_assertion: acquired pageins recording assertion!
+2026-11-07 10:08:34.904 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason added: 5; deactivation reasons: 2048 -> 2080; animating application lifecycle event: 1
+2026-11-07 10:08:34.905 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Should send trait collection or coordinate space update, interface style 1 -> 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.906 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.906 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:HomeAffordanceObservation] Initializing: <_UIHomeAffordanceSceneNotifier: 0x104d27f00>; with scene: <UIWindowScene: 0x104c5d680>
+2026-11-07 10:08:34.906 Df NshAuthSandbox[46031:a4881f] [com.apple.BacklightServices:scenes] 0x104d4ec40 setDelegate:<0x104d70ba0 _UIBacklightEnvironment> hasDelegate:YES for environment:sceneID:dev.nshauth.sandbox-default
+2026-11-07 10:08:34.906 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.906 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] Initialized with scene: <UIWindowScene: 0x104c5d680>; behavior: <_UIEventDeferringBehavior_iOS: 0x104d2c660>; availableForProcess: 1, systemShellManagesKeyboardFocus: 1
+2026-11-07 10:08:34.907 Df NshAuthSandbox[46031:a4881f] [com.apple.GenerativeModels:availability] UserDefaults(com.apple.gms.availability, 501
+2026-11-07 10:08:34.914 Df NshAuthSandbox[46031:a4881f] [com.apple.GenerativeModels:availability] registering darwin observer for name: com.apple.gms.availability.notification
+2026-11-07 10:08:34.914 Df NshAuthSandbox[46031:a4881f] [com.apple.GenerativeModels:availability] registering darwin observer for name: com.apple.os-eligibility-domain.change.greymatter
+2026-11-07 10:08:34.914 Df NshAuthSandbox[46031:a4881f] [com.apple.GenerativeModels:availability] registering darwin observer for name: com.apple.language.changed
+2026-11-07 10:08:34.915 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.915 Df NshAuthSandbox[46031:a4881f] [com.apple.xpc:connection] [0x1045c1400] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-07 10:08:34.915 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policy observer <BKSHIDEventDeliveryPolicyObserver: 0x104db68b0; process scope; policy: UNKNOWN> added
+2026-11-07 10:08:34.915 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] set observing:YES
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a48839] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] - connection activation
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x104db68b0; process scope; <target; generation: 251; finalStringToken>> was:(null)
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] 0x104db68b0 _UIKeyWindowSceneObserver-0x104dbc060 setToken:com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to LastOneWins
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Scene target of keyboard event deferring environment did change: target=1; ancestor=0; scene: UIWindowScene: 0x104c5d680; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a48839] [com.apple.BackBoard:EventDelivery] will update observations for 0 observers
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] Scene target of event deferring environments did update: scene: 0x104c5d680; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x104c5d680; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Stack[KeyWindow] 0x104dbc660: Taking no further action for migration from LastOneWins -> SystemShellManaged as there are no scenes
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to SystemShellManaged
+2026-11-07 10:08:34.916 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Key window needs update: 0; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x104c5d680; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x0; reason: UIWindowScene: 0x104c5d680: Window scene became target of keyboard environment
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policy observer <BKSHIDEventDeliveryPolicyObserver: 0x104db6f40; process scope; policy: UNKNOWN> added
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] set observing:YES
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x104db6f40; process scope; <target; generation: 251; finalStringToken>> was:(null)
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a48839] [com.apple.BackBoard:EventDelivery] will update observations for 0 observers
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] 0x104db6f40  setToken:com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.917 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardFocusAssistant] Event deferring policy changed: finalScene:N->Y (token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardSceneDelegate] Scene gained keyboard focus (scene: <UIWindowScene: 0x104c5d680>, responder: (nil), wantsKB: N)
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardArbiterClientLog] isWritingToolsHandlingKeyboardTracking:Y (WT ready:Y, Arbiter ready:Y)
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardArbiterClientLog] -[_UIRemoteKeyboards prepareToMoveKeyboard:withIAV:isIAVRelevant:showing:notifyRemote:forScene:] position: {{0, 0}, {0, 0}} visible: 0; notifyRemote: 1; isMinimized: NO
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.918 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardScene] Requesting keyboard scene for (FBSceneManager):sceneID:dev.nshauth.sandbox-default
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.xpc:connection] [0x1045c3980] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] FBSWorkspace registering source: com.apple.UIKit.KeyboardManagement.hosted
+2026-11-07 10:08:34.919 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:Common] FBSWorkspace connected to endpoint : <BSServiceConnectionEndpoint: 0x104d2dd80; target: NL:com.apple.UIKit.KeyboardManagement.hosted; service: com.apple.frontboard.workspace-service>
+2026-11-07 10:08:34.923 A  NshAuthSandbox[46031:a48839] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:34.925 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1044db020 com.apple.UIKit.KeyboardManagement.hosted> attempting delayed handshake from activation handler
+2026-11-07 10:08:34.925 Df NshAuthSandbox[46031:a4883c] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1044db020 com.apple.UIKit.KeyboardManagement.hosted> sent handshake
+2026-11-07 10:08:34.925 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:connection] [0x1045c3ac0] activating connection: mach=true listener=false peer=false name=com.apple.fontservicesd
+2026-11-07 10:08:34.928 Df NshAuthSandbox[46031:a48839] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIKeyboardInputSceneSettings> on FBSSceneSettings
+2026-11-07 10:08:34.928 Df NshAuthSandbox[46031:a48839] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIKeyboardInputSceneClientSettings> on FBSSceneClientSettings
+2026-11-07 10:08:34.940 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Orientation] <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5) Scene updated orientation preferences: none -> ( Pu )
+2026-11-07 10:08:34.941 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Key window API is scene-level: YES
+2026-11-07 10:08:34.941 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] UIWindowScene: 0x104c5d680: Window became key in scene: UIWindow: 0x1045f0000; contextId: 0x85E1B70: reason: UIWindowScene: 0x104c5d680: Window requested to become key in scene: 0x1045f0000
+2026-11-07 10:08:34.941 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Key window needs update: 1; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x104c5d680; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x1045f0000; reason: UIWindowScene: 0x104c5d680: Window requested to become key in scene: 0x1045f0000
+2026-11-07 10:08:34.941 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Window did become application key: UIWindow: 0x1045f0000; contextId: 0x85E1B70; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.941 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] Begin local event deferring requested for token: 0x1045bee80; environments: 1; reason: UIWindowScene: 0x104c5d680: Begin event deferring in keyboardFocus for window: 0x1045f0000
+2026-11-07 10:08:34.942 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] [keyboardFocus] Start observing context for local target window: 0x1045f0000; contextId: 0x85E1B70
+2026-11-07 10:08:34.942 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] [keyboardFocus] Began tracking context for local target window: 0x1045f0000; contextId: 0x85E1B70
+2026-11-07 10:08:34.942 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] will update observations for 2 observers
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:dev.nshauth.sandbox-default  persistentID: E2171FFD-E104-405E-9B62-BFF61B3474D5
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] policyStatus:<0x104db6f40; _UIKeyboardFocusAssistant-0x1045bedc0; fb/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default; <ancestor; generation: 252; finalStringToken>> was:<target; generation: 251; finalStringToken>
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] policyDidChange: 0x104db6f40 -> <_UIKeyboardFocusAssistant: 0x1045bedc0> now:<ancestor; generation: 252; finalStringToken>
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] policyStatus:<0x104db68b0; _UIKeyWindowSceneObserver-0x104dbc060; fb/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default; <ancestor; generation: 252; finalStringToken>> was:<target; generation: 251; finalStringToken>
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] policyDidChange: 0x104db68b0 -> <_UIKeyWindowSceneObserver: 0x104dbc060> now:<ancestor; generation: 252; finalStringToken>
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4883d] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] policy-per (
+    <0x104db6f40; _UIKeyboardFocu…ant-0x1045bedc0; fb/FBSceneManag…sandbox-default; <ancestor; generation: 252; finalStringToken>>,
+    <0x104db68b0; _UIKeyWindowSce…ver-0x104dbc060; fb/FBSceneManag…sandbox-default; <ancestor; generation: 252; finalStringToken>>
+)
+2026-11-07 10:08:34.943 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 5; deactivation reasons: 2080
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason added: 12; deactivation reasons: 2080 -> 6176; animating application lifecycle event: 1
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneIntelligenceSupportSettings> on FBSSceneSettings
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a48839] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:session] [0x10471b480] Session created.
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:session] [0x10471b480] Session created from connection [0x104e3ad00]
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:connection] [0x104e3ad00] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:session] [0x10471b480] Session activated
+2026-11-07 10:08:34.944 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:SceneExtension] Ingesting properties from UIApplicationSceneSettings...
+2026-11-07 10:08:34.945 Df NshAuthSandbox[46031:a48839] [com.apple.UIIntelligenceSupport:xpc] Connection established with agent PID: 38132
+2026-11-07 10:08:34.945 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIApplicationSceneSettings[derived]> on FBSSceneSettings
+2026-11-07 10:08:34.946 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <_UIScenePostSettingsUpdateResponseComponent: 0x10443cfc0>: Scheduling <_UIScenePostSettingsUpdateWindowLayout: 0x10463c5f0>
+2026-11-07 10:08:34.946 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <_UIScenePostSettingsUpdateResponseComponent: 0x10443cfc0>: Reducing <_UIScenePostSettingsUpdateWindowLayout: 0x10463cf40> into <_UIScenePostSettingsUpdateWindowLayout: 0x10463c5f0>
+2026-11-07 10:08:34.946 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.947 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.949 Df NshAuthSandbox[46031:a4881f] [com.apple.network:] networkd_settings_read_from_file_locked initialized networkd settings by reading plist directly
+2026-11-07 10:08:34.949 Df NshAuthSandbox[46031:a4881f] [com.apple.network:] networkd_settings_read_from_file_locked initialized networkd settings by reading plist directly
+2026-11-07 10:08:34.952 Df NshAuthSandbox[46031:a48839] [com.apple.xpc:connection] [0x104eb4f00] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:1 [1753258E-D05A-411E-B908-4A9BBD6B140A] (reporting strategy default)>
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:2 [9AF694CB-553D-4DDE-BA5A-DD05162A36E1] (reporting strategy default)>
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] Set activity <nw_activity 50:1 [1753258E-D05A-411E-B908-4A9BBD6B140A] (reporting strategy default)> as the global parent
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 1
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:BackgroundTask] Ending task with identifier 1 and description: <_UIBackgroundTaskInfo: 0x1044b0ac0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 122639 (elapsed = 0), _expireHandler: (null)
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103808f60> (used by background task with identifier 1: <_UIBackgroundTaskInfo: 0x1044b0ac0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 122639 (elapsed = 0))
+2026-11-07 10:08:34.963 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x103808f60> for task identifier: 1
+2026-11-07 10:08:34.964 A  NshAuthSandbox[46031:a4883b] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:34.965 A  NshAuthSandbox[46031:a4881f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-07 10:08:34.965 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardFocusAssistant] Event deferring policy changed: finalScene:Y->Y (token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:34.965 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1046a7380] Scene target of event deferring environments did update: scene: 0x104c5d680; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-11-07 10:08:34.965 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x104c5d680; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:34.967 A  NshAuthSandbox[46031:a4884e] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:34.969 E  NshAuthSandbox[46031:a4881f] [com.apple.BoardServices:XPCErrors] non-launching port is incompatible with service identifier "com.apple.PointerUI.pointeruid.default-service"
+2026-11-07 10:08:34.973 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:dev.nshauth.sandbox-default  persistentID: E2171FFD-E104-405E-9B62-BFF61B3474D5
+2026-11-07 10:08:34.973 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.976 Df NshAuthSandbox[46031:a4881f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension SBUISecureRenderingSettingsExtension on FBSSceneSettings
+2026-11-07 10:08:34.983 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.981 Df NshAuthSandbox[46031:a48839] [com.apple.BackBoard:EventDelivery] will update observations for 2 observers
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a48839] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] policy-per (
+    <0x104db6f40; _UIKeyboardFocu…ant-0x1045bedc0; fb/FBSceneManag…sandbox-default; <ancestor; generation: 229; finalStringToken>>,
+    <0x104db68b0; _UIKeyWindowSce…ver-0x104dbc060; fb/FBSceneManag…sandbox-default; <ancestor; generation: 229; finalStringToken>>
+)
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:dev.nshauth.sandbox-default  persistentID: E2171FFD-E104-405E-9B62-BFF61B3474D5
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a4881f] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-11-07 10:08:34.984 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-11-07 10:08:34.986 Df NshAuthSandbox[46031:a4881f] [com.apple.KeyboardArbiter:Client] applicationDidBecomeActive (force:N)
+2026-11-07 10:08:34.991 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <_UIScenePostSettingsUpdateResponseComponent: 0x10443cfc0>: Scheduling <_UIScenePostSettingsUpdateWindowLayout: 0x10463ccb0>
+2026-11-07 10:08:34.991 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104c5d680> (E2171FFD-E104-405E-9B62-BFF61B3474D5)
+2026-11-07 10:08:34.991 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:DisplayLink] Legacy remapping target changed from '(null)' to 'C4158EE7-3CD4-4273-BD4B-B5A4040AA36A'
+2026-11-07 10:08:34.998 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:Display] [FBSDisplaySource 1-1] silently connecting raw configuration: <FBSDisplayConfiguration: 0x104538300; Main; mode: "402x874@3x 60Hz p3 SDR">
+2026-11-07 10:08:35.010 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x104eb4280> for initial
+2026-11-07 10:08:35.011 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x104eb4280> for CADisplay KVO
+2026-11-07 10:08:35.011 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.013 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Should send trait collection or coordinate space update, interface style 1 -> 1, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.020 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.020 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:HomeAffordanceObservation] Initializing: <_UIHomeAffordanceSceneNotifier: 0x104d26a70>; with scene: <_UIKeyboardInputScene: 0x104c5ed00>
+2026-11-07 10:08:35.020 Df NshAuthSandbox[46031:a4881f] [com.apple.BacklightServices:scenes] 0x104c9d650 setDelegate:<0x104c9d5f0 _UIBacklightEnvironment> hasDelegate:YES for environment:KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:EventDeferring] [0x1058c5d80] Initialized with scene: <_UIKeyboardInputScene: 0x104c5ed00>; behavior: <_UIEventDeferringBehavior_iOS: 0x1058ba4c0>; availableForProcess: 1, systemShellManagesKeyboardFocus: 1
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policy observer <BKSHIDEventDeliveryPolicyObserver: 0x104d24070; process scope; policy: UNKNOWN> added
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] set observing:YES
+2026-11-07 10:08:35.021 Df NshAuthSandbox[46031:a4884e] [com.apple.BackBoard:EventDelivery] will update observations for 0 observers
+2026-11-07 10:08:35.023 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x104d24070; process scope; <target; generation: 252>> was:(null)
+2026-11-07 10:08:35.023 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] [BKSHIDEventObserver] 0x104d24070 _UIKeyWindowSceneObserver-0x104c9d6b0 setToken:com.apple.UIKit.KeyboardManagement.hosted/com.apple.InputUI.keyboard:KeyboardInputScene-com.apple.frontboard.systemappservices%2FFBSceneManager%3AsceneID%253Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.023 Df NshAuthSandbox[46031:a4881f] [com.apple.BackBoard:EventDelivery] policyStatus:<0x104d24070; _UIKeyWindowSceneObserver-0x104c9d6b0; com.apple.UIKit.KeyboardManagement.hosted/com.apple.InputUI.keyboard:KeyboardInputScene-com.apple.frontboard.systemappservices%2FFBSceneManager%3AsceneID%253Adev.nshauth.sandbox-default; <none; generation: 0>> was:<target; generation: 252>
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.027 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.029 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.029 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.032 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.033 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.034 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:dev.nshauth.sandbox-default  persistentID: E2171FFD-E104-405E-9B62-BFF61B3474D5
+2026-11-07 10:08:35.038 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.038 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardScene] Notifying observers of geometry update -> app scene 1: {{0, 0}, {402, 874}}, keyboard scene: 1: {{0, 0}, {402, 874}}
+2026-11-07 10:08:35.038 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.039 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:ScenePostSettingsUpdateResponse] <_UIScenePostSettingsUpdateResponseComponent: 0x104c9e430>: Scheduling <_UIScenePostSettingsUpdateWindowLayout: 0x10463c0f0>
+2026-11-07 10:08:35.040 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.043 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 0, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.073 A  NshAuthSandbox[46031:a4884e] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:35.115 Df NshAuthSandbox[46031:a4881f] [com.apple.KeyboardArbiter:Client] applicationWillResume note:UIApplicationWillEnterForegroundNotification
+2026-11-07 10:08:35.116 Df NshAuthSandbox[46031:a4881f] [com.apple.KeyboardArbiter:Client] startConnection
+2026-11-07 10:08:35.118 A  NshAuthSandbox[46031:a4881f] (Security) SecItemCopyMatching_ios
+2026-11-07 10:08:35.118 Df NshAuthSandbox[46031:a4881f] [com.apple.securityd:secitemratelimit] Not internal release, disabling SIRL
+2026-11-07 10:08:35.119 Df NshAuthSandbox[46031:a4881f] [com.apple.securityd:thread-local-client-debug] SecSecurityClientGet new thread!
+2026-11-07 10:08:35.119 Df NshAuthSandbox[46031:a4881f] [com.apple.securityd:keychain] System Keychain Always Supported set via feature flag to disabled
+2026-11-07 10:08:35.120 Df NshAuthSandbox[46031:a4881f] [com.apple.xpc:connection] [0x104eb57c0] activating connection: mach=true listener=false peer=false name=com.apple.securityd
+2026-11-07 10:08:35.128 Df NshAuthSandbox[46031:a48849] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> resuming, timeouts(60.0, 604800.0) qos(0x21) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+2026-11-07 10:08:35.129 A  NshAuthSandbox[46031:a48849] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-11-07 10:08:35.139 A  NshAuthSandbox[46031:a4885b] (libsystem_containermanager.dylib) container_system_group_path_for_identifier
+2026-11-07 10:08:35.139 A  NshAuthSandbox[46031:a48862] (Security) SecTrustReportNetworkingAnalytics
+2026-11-07 10:08:35.141 Df NshAuthSandbox[46031:a48862] [com.apple.xpc:connection] [0x104eb61c0] activating connection: mach=true listener=false peer=false name=com.apple.trustd
+2026-11-07 10:08:35.144 Df NshAuthSandbox[46031:a4885b] [com.apple.containermanager:xpc] Requesting container lookup; class = 13, identifier = com.apple.nsurlsessiond, group_identifier = systemgroup.com.apple.nsurlstoragedresources, create = 1, temp = 0, euid = 501, uid = 501
+2026-11-07 10:08:35.143 Df NshAuthSandbox[46031:a48862] [com.apple.securityd:SecError] SecTrustReportNetworkingAnalytics failed with error: -4
+2026-11-07 10:08:35.146 A  NshAuthSandbox[46031:a4885b] (libsystem_containermanager.dylib) container_query_t
+2026-11-07 10:08:35.146 Df NshAuthSandbox[46031:a4885b] [com.apple.containermanager:xpc] Query; euid = 501, uid = 501, class = 13, identifier = [com.apple.nsurlsessiond](1), gidentifier = [systemgroup.com.apple.nsurlstoragedresources](1), flags = 900000003
+2026-11-07 10:08:35.149 A  NshAuthSandbox[46031:a4885b] (libsystem_containermanager.dylib) container_copy_object
+2026-11-07 10:08:35.149 Df NshAuthSandbox[46031:a4885b] [com.apple.containermanager:unspecified] container_system_group_path_for_identifier: success
+2026-11-07 10:08:35.153 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Initializing NSHTTPCookieStorage singleton
+2026-11-07 10:08:35.155 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Initializing CFHTTPCookieStorage singleton
+2026-11-07 10:08:35.158 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Creating default cookie storage with process/bundle identifier
+2026-11-07 10:08:35.159 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Initializing AlternativeServices Storage singleton
+2026-11-07 10:08:35.159 Df NshAuthSandbox[46031:a4885b] [com.apple.FileURL:default] kExcludedFromBackupXattrName set on path: /Users/hmziq/Library/Developer/CoreSimulator/Devices/DEE48BA7-1919-47BC-A04A-887B6D2AB046/data/Containers/Data/Application/FB388C38-E833-41A9-9B83-44D946073380/Library/HTTPStorages/dev.nshauth.sandbox
+2026-11-07 10:08:35.164 Df NshAuthSandbox[46031:a48865] [com.apple.CFNetwork:Default] Garbage collection for alternative services
+2026-11-07 10:08:35.167 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Connection 1: starting, TC(0x0)
+2026-11-07 10:08:35.167 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 351C3F18-57A5-4CF9-BB72-1EB5A4B8423F IPv4#fdf9b3f5:8755 tcp, url: http://127.0.0.1:8755/mock/userinfo, definite, attribution: developer, context: com.apple.CFNetwork.NSURLSession.{4E0F7806-D78D-44B2-8F98-72DCB4855A4F}{(null)}{Y}{2}{0x0} (private), proc: 5D014C1E-3F5E-3253-AF39-C0773433F633, delegated upid: 0] start
+2026-11-07 10:08:35.170 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 IPv4#fdf9b3f5:8755 initial parent-flow ((null))] event: path:start @0.000s
+2026-11-07 10:08:35.171 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 IPv4#fdf9b3f5:8755 waiting parent-flow (satisfied (Path is satisfied), interface: lo0)] event: path:satisfied @0.000s, uuid: 596973DA-5695-47E6-AEB5-7F922D33D545
+2026-11-07 10:08:35.172 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:dev.nshauth.sandbox-default  persistentID: E2171FFD-E104-405E-9B62-BFF61B3474D5
+2026-11-07 10:08:35.173 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Scene did update interface style to 1, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.173 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:InterfaceStyle] Push traits update to screen for new style 1, <_UIKeyboardInputScene: 0x104c5ed00> (KeyboardInputScene-com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default)
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardScene] Keyboard scene for com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default successfully connected: com.apple.UIKit.KeyboardManagement.hosted/com.apple.InputUI.keyboard:KeyboardInputScene-com.apple.frontboard.systemappservices%2FFBSceneManager%3AsceneID%253Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardScene] reloadInputViews for keyboard scene com.apple.UIKit.KeyboardManagement.hosted/com.apple.InputUI.keyboard:KeyboardInputScene-com.apple.frontboard.systemappservices%2FFBSceneManager%3AsceneID%253Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardSceneDelegate] forceReloadInputViews
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardSceneDelegate] Try reloading input views for responder:(nil) requiresKB:N force:Y scene-identity:com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4881f] [com.apple.UIKit:KeyboardSceneDelegate] Reloading input views for key-window scene responder:(nil) requiresKB:N force:Y scene-identity:com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Adev.nshauth.sandbox-default
+2026-11-07 10:08:35.178 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 IPv4#fdf9b3f5:8755 in_progress socket-flow (satisfied (Path is satisfied), interface: lo0)] event: flow:start_connect @0.008s
+2026-11-07 10:08:35.180 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C1] reporting state preparing
+2026-11-07 10:08:35.180 Df NshAuthSandbox[46031:a4881f] [com.apple.KeyboardArbiter:Client] startConnection callback handleKeyboardChange:N (hasFocus:Y hasActiveInput:N expectingInitialState:Y disabled:N hasInfo:N isWritingTOols:N)
+2026-11-07 10:08:35.183 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> setting up Connection 1
+2026-11-07 10:08:35.184 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_socket_handle_socket_event [C1:2] Socket received CONNECTED event
+2026-11-07 10:08:35.184 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_flow_connected [C1 IPv4#fdf9b3f5:8755 in_progress socket-flow (satisfied (Path is satisfied), interface: lo0)] Transport protocol connected (socket)
+2026-11-07 10:08:35.184 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 IPv4#fdf9b3f5:8755 in_progress socket-flow (satisfied (Path is satisfied), interface: lo0)] event: flow:finish_transport @0.013s
+2026-11-07 10:08:35.184 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_flow_connected [C1 IPv4#fdf9b3f5:8755 in_progress socket-flow (satisfied (Path is satisfied), interface: lo0)] Output protocol connected (CFNetworkConnection-950081381)
+2026-11-07 10:08:35.184 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1 IPv4#fdf9b3f5:8755 ready socket-flow (satisfied (Path is satisfied), interface: lo0)] event: flow:finish_connect @0.013s
+2026-11-07 10:08:35.186 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C1] reporting state ready
+2026-11-07 10:08:35.186 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Connection 1: connected successfully
+2026-11-07 10:08:35.189 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Connection 1: ready C(N) E(N)
+2026-11-07 10:08:35.189 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> now using Connection 1
+2026-11-07 10:08:35.190 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> sent request, body N 0
+2026-11-07 10:08:35.192 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> received response, status 200 content C
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> response ended
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> done using Connection 1
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1] event: client:connection_idle @0.024s
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_protocol_socket_notify [C1:2] nw_protocol_notification_type_connection_idle is true
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] [C1] event: client:connection_idle @0.024s
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.network:connection] nw_protocol_socket_notify [C1:2] nw_protocol_notification_type_connection_idle is true
+2026-11-07 10:08:35.195 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Summary] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> summary for task success {transaction_duration_ms=56, response_status=200, connection=1, protocol="http/1.1", domain_lookup_duration_ms=0, connect_duration_ms=5, secure_connection_duration_ms=0, private_relay=false, request_start_ms=50, request_duration_ms=0, response_start_ms=52, response_duration_ms=3, request_bytes=292, request_throughput_kbps=21628, response_bytes=454, response_throughput_kbps=1092, cache_hit=false}
+2026-11-07 10:08:35.196 Df NshAuthSandbox[46031:a4885b] [com.apple.CoreAnalytics:client] No XPC connection in Simulator
+2026-11-07 10:08:35.197 Df NshAuthSandbox[46031:a4885b] [com.apple.CFNetwork:Default] Task <AF88FBF5-45BB-4ED7-8962-4C24DA62B2EA>.<1> finished successfully
+2026-11-07 10:08:35.215 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] <nw_activity 50:1 [1753258E-D05A-411E-B908-4A9BBD6B140A] (global parent) (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 2570ms
+2026-11-07 10:08:35.217 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] <nw_activity 50:2 [9AF694CB-553D-4DDE-BA5A-DD05162A36E1] (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 2572ms
+2026-11-07 10:08:35.217 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] Unsetting the global parent activity <nw_activity 50:1 [1753258E-D05A-411E-B908-4A9BBD6B140A] (global parent) (reporting strategy default) complete (reason success)>
+2026-11-07 10:08:35.217 Df NshAuthSandbox[46031:a4881f] [com.apple.network:activity] Unset the global parent activity
+2026-11-07 10:08:35.217 Df NshAuthSandbox[46031:a4881f] [com.apple.app_launch_measurement:ApplicationLaunch] alm_release_pageins_recording_assertion: releasing pageins recording assertion
+2026-11-07 10:08:35.243 Df NshAuthSandbox[46031:a4881f] [com.apple.Accessibility:AXCommon] Read Per-App on Init: Smart invert = (null)
+2026-11-07 10:08:35.368 Df NshAuthSandbox[46031:a4881f] [com.apple.Accessibility:AXCommon] Loading PDFKit
+2026-11-07 10:08:35.897 A  NshAuthSandbox[46031:a4883a] (RunningBoardServices) didChangeInheritances
+2026-11-07 10:08:40.885 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Got availability notification from test daemon.
+2026-11-07 10:08:40.885 Df NshAuthSandbox[46031:a48862] [com.apple.xpc:connection] [0x104eb5cc0] activating connection: mach=true listener=false peer=false name=com.apple.dt.xctestd.target
+2026-11-07 10:08:40.886 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received request for endpoint.
+2026-11-07 10:08:40.886 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Using default automation support library path
+2026-11-07 10:08:40.886 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Attempting to load /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework.
+2026-11-07 10:08:40.913 Df NshAuthSandbox[46031:a48865] [com.apple.dt.automationmode:Default] XAM shared observer connecting to com.apple.dt.automationmode.reader
+2026-11-07 10:08:40.913 Df NshAuthSandbox[46031:a48865] [com.apple.xpc:connection] [0x104eb5900] activating connection: mach=true listener=false peer=false name=com.apple.dt.automationmode.reader
+2026-11-07 10:08:40.914 Df NshAuthSandbox[46031:a48865] [com.apple.xpc:connection] [0x104eb5900] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-11-07 10:08:40.914 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Sending anonymous endpoint.
+2026-11-07 10:08:40.914 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Setting up target listener.
+2026-11-07 10:08:40.914 Df NshAuthSandbox[46031:a48865] [com.apple.xpc:connection] [0x104eb5900] activating connection: mach=false listener=true peer=false name=(anonymous)
+2026-11-07 10:08:40.914 Df NshAuthSandbox[46031:a48865] [com.apple.xpc:connection] [0x104eb5900] Connection returned listener port: 0x5033
+2026-11-07 10:08:40.915 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received client to target connection.
+2026-11-07 10:08:40.915 Df NshAuthSandbox[46031:a48865] [com.apple.dt.automationmode:Default] Returning 1 for enabled state
+2026-11-07 10:08:40.915 Df NshAuthSandbox[46031:a48865] [com.apple.xpc:connection] [0x104eb5180] activating connection: mach=false listener=false peer=true name=com.apple.xpc.anonymous.0x104eb5900.peer[42904].0x104eb5180
+2026-11-07 10:08:40.915 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received request to exchange capabilities, remote interface capabilities are: <XCTCapabilities: 0x10463c450>: {
+    "query runtime issue reporting" = 1;
+    "query runtime issue reporting/automation type mismatch" = 1;
+}
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Evaluating query:
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 46031 for query
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-07 10:08:40.916 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-07 10:08:40.918 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got main window <AXUIElementRef 0x105b14f60> {pid=46031} {uid=[ID:4 hash:0x1045f0000]}
+2026-11-07 10:08:40.918 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Capturing hierarchy with attributes XC_kAXXCAttributeElementType, XC_kAXXCAttributeElementBaseType, XC_kAXXCAttributeParent, XC_kAXXCAttributeIdentifier, XC_kAXXCAttributeAutomationType, XC_kAXXCAttributeTraits
+2026-11-07 10:08:40.918 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Capturing hierarchy with parameters {
+    attributes =     (
+        5003,
+        5004,
+        5002,
+        5019,
+        5058,
+        2004
+    );
+    maxArrayCount = 2147483647;
+    maxChildren = 2147483647;
+    maxDepth = 2147483647;
+    snapshotKeyHonorModalViews = 0;
+    traverseFromParentsToChildren = 1;
+}
+2026-11-07 10:08:40.918 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Snapshot attributes 5003, 5004, 5002, 5019, 5058, 2004
+2026-11-07 10:08:40.919 Df NshAuthSandbox[46031:a4881f] (libMobileGestalt.dylib) Property isp[camera-front] found {length = 4, bytes = 0x01000000}
+2026-11-07 10:08:40.919 A  NshAuthSandbox[46031:a4881f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-07 10:08:40.927 A  NshAuthSandbox[46031:a4881f] (libsystem_containermanager.dylib) container_system_group_path_for_identifier
+2026-11-07 10:08:40.927 Df NshAuthSandbox[46031:a4881f] [com.apple.containermanager:xpc] Requesting container lookup; class = 13, identifier = (null), group_identifier = systemgroup.com.apple.configurationprofiles, create = 1, temp = 0, euid = 501, uid = 501
+2026-11-07 10:08:40.927 A  NshAuthSandbox[46031:a4881f] (libsystem_containermanager.dylib) container_query_t
+2026-11-07 10:08:40.927 Df NshAuthSandbox[46031:a4881f] [com.apple.containermanager:xpc] Query; euid = 501, uid = 501, class = 13, identifier = [(null)](0), gidentifier = [systemgroup.com.apple.configurationprofiles](1), flags = 900000003
+2026-11-07 10:08:40.928 A  NshAuthSandbox[46031:a4881f] (libsystem_containermanager.dylib) container_copy_object
+2026-11-07 10:08:40.928 Df NshAuthSandbox[46031:a4881f] [com.apple.containermanager:unspecified] container_system_group_path_for_identifier: success
+2026-11-07 10:08:40.928 Df NshAuthSandbox[46031:a4881f] [com.apple.ManagedConfiguration:MC] Got system group container path from MCM for systemgroup.com.apple.configurationprofiles: /Users/hmziq/Library/Developer/CoreSimulator/Devices/DEE48BA7-1919-47BC-A04A-887B6D2AB046/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles
+2026-11-07 10:08:40.939 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got snapshot for <AXUIElementRef 0x105b14d80> {pid=46031} {uid=[ID:1 hash:0x0]}
+2026-11-07 10:08:40.940 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got app orientation 0
+2026-11-07 10:08:40.940 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Captured accessibility snapshot data in 0.02s
+2026-11-07 10:08:40.940 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Found main window: Window
+2026-11-07 10:08:40.940 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 46031
+)} (error: (null))
+2026-11-07 10:08:40.940 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x104ce96e0> (error: (null))
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received attributes request for element: App element pid: 46031. Attributes: (
+    "XC_kAXXCAttributeLabel"
+)
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeLabel for App element pid: 46031
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:40.941 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Replying with attribute values: {
+    "XC_kAXXCAttributeLabel" = "nsh-auth sandbox";
+}
+2026-11-07 10:08:41.192 Df NshAuthSandbox[46031:a48865] [com.apple.network:connection] nw_socket_handle_socket_event [C1:2] Socket received READ_CLOSE event
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.CFNetwork:Default] Connection 1: read-side closed
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.CFNetwork:Default] Connection 1: cleaning up
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.network:connection] [C1 351C3F18-57A5-4CF9-BB72-1EB5A4B8423F IPv4#fdf9b3f5:8755 tcp, url: http://127.0.0.1:8755/mock/userinfo, definite, attribution: developer] cancel
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.network:connection] [C1 351C3F18-57A5-4CF9-BB72-1EB5A4B8423F IPv4#fdf9b3f5:8755 tcp, url: http://127.0.0.1:8755/mock/userinfo, definite, attribution: developer] cancelled
+	[C1 596973DA-5695-47E6-AEB5-7F922D33D545 127.0.0.1:59474<->IPv4#fdf9b3f5:8755]
+	Connected Path: satisfied (Path is satisfied), interface: lo0
+	Privacy Stance: Not Eligible
+	Duration: 6.022s, TCP @0.008s took 0.005s
+	bytes in/out: 456/292, packets in/out: 2/1, rtt: 0.001s, retransmitted bytes: 0, out-of-order bytes: 0
+	ecn packets sent/acked/marked/lost: 0/0/0/0
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C1] reporting state cancelled
+2026-11-07 10:08:41.193 Df NshAuthSandbox[46031:a48865] [com.apple.CFNetwork:Default] Connection 1: done
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a48865] [com.apple.dt.xctest:Default] Received request to fetch matches for query:
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Evaluating query:
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Getting snapshot for App element pid: 46031 for query
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Query requires iOS snapshot attributes .
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-07 10:08:41.295 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-07 10:08:41.296 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got main window <AXUIElementRef 0x105b15b00> {pid=46031} {uid=[ID:4 hash:0x1045f0000]}
+2026-11-07 10:08:41.296 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Capturing hierarchy with attributes XC_kAXXCAttributeElementType, XC_kAXXCAttributeElementBaseType, XC_kAXXCAttributeParent, XC_kAXXCAttributeIdentifier, XC_kAXXCAttributeAutomationType, XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.296 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Capturing hierarchy with parameters {
+    attributes =     (
+        5003,
+        5004,
+        5002,
+        5019,
+        5058,
+        2004
+    );
+    maxArrayCount = 2147483647;
+    maxChildren = 2147483647;
+    maxDepth = 2147483647;
+    snapshotKeyHonorModalViews = 0;
+    traverseFromParentsToChildren = 1;
+}
+2026-11-07 10:08:41.296 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Snapshot attributes 5003, 5004, 5002, 5019, 5058, 2004
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got snapshot for <AXUIElementRef 0x105b15bf0> {pid=46031} {uid=[ID:1 hash:0x0]}
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got app orientation 0
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Captured accessibility snapshot data in 0.01s
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Found main window: Window
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Query  found matching snapshots: {(
+    Application, pid: 46031
+)} (error: (null))
+2026-11-07 10:08:41.305 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Replying to query  with results: <XCTElementQueryResults: 0x104ce85d0> (error: (null))
+2026-11-07 10:08:41.325 A  NshAuthSandbox[46031:a4883a] (libsystem_trace.dylib) Activity for state dumps
+2026-11-07 10:08:41.325 F  NshAuthSandbox[46031:a4883a] [com.apple.Foundation:general] NSPredicate: -[NSPredicate copy] called on a predicate that has _evaluationBlocked set. The resulting copy will drop _evaluationBlocked.
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4883a] [com.apple.dt.xctest:Default] Received request to fetch matches for query: ↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match)
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Evaluating query:
+ ↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match)
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Getting root element snapshot
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Returning faulting root node. Data source will be attached when needed on MT.
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Decomposed transformers into first match sequences:
+↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match)
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] XCTElementQuery: set data source for rootElementSnapshot to <XCTAutomationSession: 0x104d80b60>
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Beginning first match sequence for input App element pid: 46031 with transformers 
+↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match)
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Current tree:
+0x104e3a1c0 <App element pid: 46031>
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for App element pid: 46031
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] App element pid: 46031 (App element pid: 46031) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4368302080.4"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input App element pid: 46031 and transformer `Descendants matching type Any`
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4368302080.4 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4368302080.4
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4368302080.4 (AX element pid: 46031, elementOrHash.elementID: 4368302080.4) faulted in {
+    "XC_kAXXCAttributeTraits" = 0;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.326 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4368302080.4
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4368302080.4 (AX element pid: 46031, elementOrHash.elementID: 4368302080.4) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4375090176.5"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4375090176.5 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4375090176.5
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375090176.5 (AX element pid: 46031, elementOrHash.elementID: 4375090176.5) faulted in {
+    "XC_kAXXCAttributeTraits" = 0;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4375090176.5
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375090176.5 (AX element pid: 46031, elementOrHash.elementID: 4375090176.5) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4375044224.6"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4375044224.6 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4375044224.6
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375044224.6 (AX element pid: 46031, elementOrHash.elementID: 4375044224.6) faulted in {
+    "XC_kAXXCAttributeTraits" = 0;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4375044224.6
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375044224.6 (AX element pid: 46031, elementOrHash.elementID: 4375044224.6) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4369564992.7"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4369564992.7 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4369564992.7
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564992.7 (AX element pid: 46031, elementOrHash.elementID: 4369564992.7) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4369564992.7
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564992.7 (AX element pid: 46031, elementOrHash.elementID: 4369564992.7) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4369564544.8",
+        "AX element pid: 46031, elementOrHash.elementID: 4375042304.9"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4369564544.8 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.327 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4369564544.8
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564544.8 (AX element pid: 46031, elementOrHash.elementID: 4369564544.8) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4375042304.9 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4375042304.9
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375042304.9 (AX element pid: 46031, elementOrHash.elementID: 4375042304.9) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4369564544.8
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564544.8 (AX element pid: 46031, elementOrHash.elementID: 4369564544.8) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4375042304.9
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4375042304.9 (AX element pid: 46031, elementOrHash.elementID: 4375042304.9) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4369564096.10"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4369564096.10 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4369564096.10
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564096.10 (AX element pid: 46031, elementOrHash.elementID: 4369564096.10) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4369564096.10
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369564096.10 (AX element pid: 46031, elementOrHash.elementID: 4369564096.10) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4353786400.11"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4353786400.11 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4353786400.11
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4353786400.11 (AX element pid: 46031, elementOrHash.elementID: 4353786400.11) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4353786400.11
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4353786400.11 (AX element pid: 46031, elementOrHash.elementID: 4353786400.11) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4369582720.12"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4369582720.12 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4369582720.12
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369582720.12 (AX element pid: 46031, elementOrHash.elementID: 4369582720.12) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4369582720.12
+2026-11-07 10:08:41.328 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369582720.12 (AX element pid: 46031, elementOrHash.elementID: 4369582720.12) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389166080.13"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389166080.13 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389166080.13
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389166080.13 (AX element pid: 46031, elementOrHash.elementID: 4389166080.13) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389166080.13
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389166080.13 (AX element pid: 46031, elementOrHash.elementID: 4389166080.13) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389165184.14",
+        "AX element pid: 46031, elementOrHash.elementID: 4389166976.15"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389165184.14 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389165184.14
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389165184.14 (AX element pid: 46031, elementOrHash.elementID: 4389165184.14) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389166976.15 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389166976.15
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389166976.15 (AX element pid: 46031, elementOrHash.elementID: 4389166976.15) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389165184.14
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389165184.14 (AX element pid: 46031, elementOrHash.elementID: 4389165184.14) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389152768.16",
+        "AX element pid: 46031, elementOrHash.elementID: 4389151488.17"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389152768.16 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389152768.16
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389152768.16 (AX element pid: 46031, elementOrHash.elementID: 4389152768.16) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389151488.17 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389151488.17
+2026-11-07 10:08:41.329 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389151488.17 (AX element pid: 46031, elementOrHash.elementID: 4389151488.17) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389166976.15
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389166976.15 (AX element pid: 46031, elementOrHash.elementID: 4389166976.15) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389167872.18",
+        "AX element pid: 46031, elementOrHash.elementID: 4389168768.19",
+        "AX element pid: 46031, elementOrHash.elementID: 4389784192.20"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389167872.18 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389167872.18
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389167872.18 (AX element pid: 46031, elementOrHash.elementID: 4389167872.18) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389168768.19 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389168768.19
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389168768.19 (AX element pid: 46031, elementOrHash.elementID: 4389168768.19) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389784192.20 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389784192.20
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389784192.20 (AX element pid: 46031, elementOrHash.elementID: 4389784192.20) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389152768.16
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389152768.16 (AX element pid: 46031, elementOrHash.elementID: 4389152768.16) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389151488.17
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389151488.17 (AX element pid: 46031, elementOrHash.elementID: 4389151488.17) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389167872.18
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389167872.18 (AX element pid: 46031, elementOrHash.elementID: 4389167872.18) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389154048.21",
+        "AX element pid: 46031, elementOrHash.elementID: 4389787776.22"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389154048.21 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389154048.21
+2026-11-07 10:08:41.330 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389154048.21 (AX element pid: 46031, elementOrHash.elementID: 4389154048.21) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389787776.22 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389787776.22
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389787776.22 (AX element pid: 46031, elementOrHash.elementID: 4389787776.22) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389168768.19
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389168768.19 (AX element pid: 46031, elementOrHash.elementID: 4389168768.19) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389156608.23",
+        "AX element pid: 46031, elementOrHash.elementID: 4389169664.24",
+        "AX element pid: 46031, elementOrHash.elementID: 4389783296.25"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389156608.23 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389156608.23
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389156608.23 (AX element pid: 46031, elementOrHash.elementID: 4389156608.23) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389169664.24 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389169664.24
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389169664.24 (AX element pid: 46031, elementOrHash.elementID: 4389169664.24) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389783296.25 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389783296.25
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389783296.25 (AX element pid: 46031, elementOrHash.elementID: 4389783296.25) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389784192.20
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389784192.20 (AX element pid: 46031, elementOrHash.elementID: 4389784192.20) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389785088.26",
+        "AX element pid: 46031, elementOrHash.elementID: 4389785984.27"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389785088.26 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.331 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389785088.26
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389785088.26 (AX element pid: 46031, elementOrHash.elementID: 4389785088.26) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934593;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389785984.27 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389785984.27
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389785984.27 (AX element pid: 46031, elementOrHash.elementID: 4389785984.27) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934593;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389154048.21
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389154048.21 (AX element pid: 46031, elementOrHash.elementID: 4389154048.21) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389787776.22
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389787776.22 (AX element pid: 46031, elementOrHash.elementID: 4389787776.22) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389806848.28",
+        "AX element pid: 46031, elementOrHash.elementID: 4389808128.29",
+        "AX element pid: 46031, elementOrHash.elementID: 4389809408.30"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389806848.28 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389806848.28
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389806848.28 (AX element pid: 46031, elementOrHash.elementID: 4389806848.28) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389808128.29 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389808128.29
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389808128.29 (AX element pid: 46031, elementOrHash.elementID: 4389808128.29) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389809408.30 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389809408.30
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389809408.30 (AX element pid: 46031, elementOrHash.elementID: 4389809408.30) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389156608.23
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389156608.23 (AX element pid: 46031, elementOrHash.elementID: 4389156608.23) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.332 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389169664.24
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389169664.24 (AX element pid: 46031, elementOrHash.elementID: 4389169664.24) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389170560.31",
+        "AX element pid: 46031, elementOrHash.elementID: 4389171456.32",
+        "AX element pid: 46031, elementOrHash.elementID: 4389172352.33",
+        "AX element pid: 46031, elementOrHash.elementID: 4389173248.34",
+        "AX element pid: 46031, elementOrHash.elementID: 4389174144.35",
+        "AX element pid: 46031, elementOrHash.elementID: 4369580928.36",
+        "AX element pid: 46031, elementOrHash.elementID: 4389781504.37",
+        "AX element pid: 46031, elementOrHash.elementID: 4389782400.38"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389170560.31 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389170560.31
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389170560.31 (AX element pid: 46031, elementOrHash.elementID: 4389170560.31) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389171456.32 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389171456.32
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389171456.32 (AX element pid: 46031, elementOrHash.elementID: 4389171456.32) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389172352.33 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389172352.33
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389172352.33 (AX element pid: 46031, elementOrHash.elementID: 4389172352.33) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389173248.34 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389173248.34
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389173248.34 (AX element pid: 46031, elementOrHash.elementID: 4389173248.34) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.333 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389174144.35 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389174144.35
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389174144.35 (AX element pid: 46031, elementOrHash.elementID: 4389174144.35) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4369580928.36 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4369580928.36
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369580928.36 (AX element pid: 46031, elementOrHash.elementID: 4369580928.36) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389781504.37 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389781504.37
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389781504.37 (AX element pid: 46031, elementOrHash.elementID: 4389781504.37) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389782400.38 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389782400.38
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389782400.38 (AX element pid: 46031, elementOrHash.elementID: 4389782400.38) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934592;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389783296.25
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389783296.25 (AX element pid: 46031, elementOrHash.elementID: 4389783296.25) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389801728.39",
+        "AX element pid: 46031, elementOrHash.elementID: 4389803008.40"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389801728.39 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389801728.39
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389801728.39 (AX element pid: 46031, elementOrHash.elementID: 4389801728.39) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389803008.40 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.334 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389803008.40
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389803008.40 (AX element pid: 46031, elementOrHash.elementID: 4389803008.40) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389785088.26
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389785088.26 (AX element pid: 46031, elementOrHash.elementID: 4389785088.26) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389785984.27
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389785984.27 (AX element pid: 46031, elementOrHash.elementID: 4389785984.27) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389806848.28
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389806848.28 (AX element pid: 46031, elementOrHash.elementID: 4389806848.28) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389808128.29
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389808128.29 (AX element pid: 46031, elementOrHash.elementID: 4389808128.29) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389809408.30
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389809408.30 (AX element pid: 46031, elementOrHash.elementID: 4389809408.30) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389170560.31
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389170560.31 (AX element pid: 46031, elementOrHash.elementID: 4389170560.31) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4368386560.41",
+        "AX element pid: 46031, elementOrHash.elementID: 4389748736.42"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4368386560.41 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4368386560.41
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4368386560.41 (AX element pid: 46031, elementOrHash.elementID: 4368386560.41) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389748736.42 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389748736.42
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389748736.42 (AX element pid: 46031, elementOrHash.elementID: 4389748736.42) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.335 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389171456.32
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389171456.32 (AX element pid: 46031, elementOrHash.elementID: 4389171456.32) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389750016.43",
+        "AX element pid: 46031, elementOrHash.elementID: 4389751296.44"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389750016.43 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389750016.43
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389750016.43 (AX element pid: 46031, elementOrHash.elementID: 4389750016.43) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389751296.44 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389751296.44
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389751296.44 (AX element pid: 46031, elementOrHash.elementID: 4389751296.44) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389172352.33
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389172352.33 (AX element pid: 46031, elementOrHash.elementID: 4389172352.33) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389752576.45",
+        "AX element pid: 46031, elementOrHash.elementID: 4389753856.46"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389752576.45 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389752576.45
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389752576.45 (AX element pid: 46031, elementOrHash.elementID: 4389752576.45) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389753856.46 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389753856.46
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389753856.46 (AX element pid: 46031, elementOrHash.elementID: 4389753856.46) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389173248.34
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389173248.34 (AX element pid: 46031, elementOrHash.elementID: 4389173248.34) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389755136.47",
+        "AX element pid: 46031, elementOrHash.elementID: 4389756416.48"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389755136.47 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389755136.47
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389755136.47 (AX element pid: 46031, elementOrHash.elementID: 4389755136.47) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.336 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389756416.48 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389756416.48
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389756416.48 (AX element pid: 46031, elementOrHash.elementID: 4389756416.48) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389174144.35
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389174144.35 (AX element pid: 46031, elementOrHash.elementID: 4389174144.35) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389757696.49",
+        "AX element pid: 46031, elementOrHash.elementID: 4389758976.50"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389757696.49 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389757696.49
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389757696.49 (AX element pid: 46031, elementOrHash.elementID: 4389757696.49) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389758976.50 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389758976.50
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389758976.50 (AX element pid: 46031, elementOrHash.elementID: 4389758976.50) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4369580928.36
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4369580928.36 (AX element pid: 46031, elementOrHash.elementID: 4369580928.36) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389760256.51",
+        "AX element pid: 46031, elementOrHash.elementID: 4389761536.52"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389760256.51 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389760256.51
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389760256.51 (AX element pid: 46031, elementOrHash.elementID: 4389760256.51) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389761536.52 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389761536.52
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389761536.52 (AX element pid: 46031, elementOrHash.elementID: 4389761536.52) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.337 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389781504.37
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389781504.37 (AX element pid: 46031, elementOrHash.elementID: 4389781504.37) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389762816.53",
+        "AX element pid: 46031, elementOrHash.elementID: 4389797888.54"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389762816.53 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389762816.53
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389762816.53 (AX element pid: 46031, elementOrHash.elementID: 4389762816.53) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389797888.54 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389797888.54
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389797888.54 (AX element pid: 46031, elementOrHash.elementID: 4389797888.54) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389782400.38
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389782400.38 (AX element pid: 46031, elementOrHash.elementID: 4389782400.38) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+        "AX element pid: 46031, elementOrHash.elementID: 4389799168.55",
+        "AX element pid: 46031, elementOrHash.elementID: 4389800448.56"
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389799168.55 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389799168.55
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389799168.55 (AX element pid: 46031, elementOrHash.elementID: 4389799168.55) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] iteration with input AX element pid: 46031, elementOrHash.elementID: 4389800448.56 and transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeTraits for AX element pid: 46031, elementOrHash.elementID: 4389800448.56
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389800448.56 (AX element pid: 46031, elementOrHash.elementID: 4389800448.56) faulted in {
+    "XC_kAXXCAttributeTraits" = 8589934656;
+}: (no error) for traits using XC_kAXXCAttributeTraits
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Elements matching predicate 'hasKeyboardFocus == 1'`
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389801728.39
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389801728.39 (AX element pid: 46031, elementOrHash.elementID: 4389801728.39) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389803008.40
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389803008.40 (AX element pid: 46031, elementOrHash.elementID: 4389803008.40) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4368386560.41
+2026-11-07 10:08:41.338 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4368386560.41 (AX element pid: 46031, elementOrHash.elementID: 4368386560.41) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389748736.42
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389748736.42 (AX element pid: 46031, elementOrHash.elementID: 4389748736.42) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389750016.43
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389750016.43 (AX element pid: 46031, elementOrHash.elementID: 4389750016.43) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389751296.44
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389751296.44 (AX element pid: 46031, elementOrHash.elementID: 4389751296.44) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389752576.45
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389752576.45 (AX element pid: 46031, elementOrHash.elementID: 4389752576.45) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389753856.46
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389753856.46 (AX element pid: 46031, elementOrHash.elementID: 4389753856.46) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389755136.47
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389755136.47 (AX element pid: 46031, elementOrHash.elementID: 4389755136.47) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389756416.48
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389756416.48 (AX element pid: 46031, elementOrHash.elementID: 4389756416.48) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389757696.49
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389757696.49 (AX element pid: 46031, elementOrHash.elementID: 4389757696.49) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389758976.50
+2026-11-07 10:08:41.339 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389758976.50 (AX element pid: 46031, elementOrHash.elementID: 4389758976.50) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389760256.51
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389760256.51 (AX element pid: 46031, elementOrHash.elementID: 4389760256.51) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389761536.52
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389761536.52 (AX element pid: 46031, elementOrHash.elementID: 4389761536.52) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389762816.53
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389762816.53 (AX element pid: 46031, elementOrHash.elementID: 4389762816.53) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389797888.54
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389797888.54 (AX element pid: 46031, elementOrHash.elementID: 4389797888.54) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389799168.55
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389799168.55 (AX element pid: 46031, elementOrHash.elementID: 4389799168.55) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Fetching AX attributes XC_kAXXCAttributeChildren for AX element pid: 46031, elementOrHash.elementID: 4389800448.56
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] Got attributes, transferring to dictionary for return.
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] AX element pid: 46031, elementOrHash.elementID: 4389800448.56 (AX element pid: 46031, elementOrHash.elementID: 4389800448.56) faulted in {
+    "XC_kAXXCAttributeChildren" =     (
+    );
+}: (no error) for children using XC_kAXXCAttributeChildren
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found for transformer `Descendants matching type Any`
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] no match found and no further inputs/transformers to explore in the current sequence, returning nil
+2026-11-07 10:08:41.340 Df NshAuthSandbox[46031:a4881f] [com.apple.dt.xctest:Default] [First Match] unioned related elements {(
+)} from {(
+)}
+2026-11-07 10:08:41.341 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Current tree:
+0x104e3a1c0 <App element pid: 46031>
+  0x104e39040 <AX element pid: 46031, elementOrHash.elementID: 4368302080.4>
+    0x104e3b340 <AX element pid: 46031, elementOrHash.elementID: 4375090176.5>
+      0x104e3b200 <AX element pid: 46031, elementOrHash.elementID: 4375044224.6>
+        0x104e3b480 <AX element pid: 46031, elementOrHash.elementID: 4369564992.7>
+          0x104e38f00 <AX element pid: 46031, elementOrHash.elementID: 4369564544.8>
+          0x104e3a6c0 <AX element pid: 46031, elementOrHash.elementID: 4375042304.9>
+            0x104e39cc0 <AX element pid: 46031, elementOrHash.elementID: 4369564096.10>
+              0x104e38a00 <AX element pid: 46031, elementOrHash.elementID: 4353786400.11>
+                0x104e3af80 <AX element pid: 46031, elementOrHash.elementID: 4369582720.12>
+                  0x104e3a300 <AX element pid: 46031, elementOrHash.elementID: 4389166080.13>
+                    0x104e39a40 <AX element pid: 46031, elementOrHash.elementID: 4389165184.14>
+                      0x104e<…>
+2026-11-07 10:08:41.341 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Query ↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match) found matching snapshots: {(
+)} (error: (null))
+2026-11-07 10:08:41.341 Df NshAuthSandbox[46031:a48862] [com.apple.dt.xctest:Default] Replying to query ↪︎ Descendants matching type Any
+    ↪︎ Elements matching predicate 'hasKeyboardFocus == 1' (First Match) with results: <XCTElementQueryResults: 0x104ceb660> (error: (null))
+Child process terminated with signal 15: Terminated

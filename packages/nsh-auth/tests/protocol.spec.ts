@@ -152,7 +152,7 @@ describe("authorize URLs", () => {
     );
   });
 
-  test("facebook and github drop the nonce, apple posts a form", () => {
+  test("nonce and pkce land per the documented table", () => {
     const common = {
       clientId: "sandbox-client",
       redirectUri: "nsh-auth-demo://callback",
@@ -161,14 +161,25 @@ describe("authorize URLs", () => {
       state: "s".repeat(22),
       nonce: "n".repeat(22),
     };
+    // Facebook's OIDC flow: S256 challenge and a required nonce.
     const facebook = buildAuthorizeUrl({ ...common, provider: providerConfig("facebook") });
-    expect(facebook).not.toContain("nonce=");
-    expect(facebook).toContain("https://www.facebook.com/v21.0/dialog/oauth?");
+    expect(facebook).toContain("https://www.facebook.com/v27.0/dialog/oauth?");
+    expect(facebook).toContain("nonce=");
+    expect(facebook).toContain("code_challenge_method=S256");
+    // Apple authenticates with the client_secret JWT: no PKCE on the authorize leg.
     const apple = buildAuthorizeUrl({ ...common, provider: providerConfig("apple") });
     expect(apple).toContain("response_mode=form_post");
+    expect(apple).toContain("nonce=");
+    expect(apple).not.toContain("code_challenge");
+    // GitHub: S256 challenge, no nonce (plain OAuth, not OIDC).
     const github = buildAuthorizeUrl({ ...common, provider: providerConfig("github") });
     expect(github).toContain("https://github.com/login/oauth/authorize?");
+    expect(github).toContain("code_challenge_method=S256");
     expect(github).not.toContain("nonce=");
+    // Google's refresh token rides on the documented extras.
+    const google = buildAuthorizeUrl({ ...common, provider: providerConfig("google") });
+    expect(google).toContain("access_type=offline");
+    expect(google).toContain("prompt=consent");
   });
 });
 
@@ -314,6 +325,23 @@ describe("the broker", () => {
       fallbackScope: "s",
     }).catch((error: AuthError) => error);
     expect(refused.code).toBe("broker_error");
+  });
+
+  test("apple's broker exchange carries no verifier — the catalog has no PKCE for it", async () => {
+    hits.length = 0;
+    await exchangeCode({
+      config: providerConfig("apple"),
+      clientId: "sandbox-client",
+      redirectUri: "nsh-auth-demo://callback",
+      code: "apple-code",
+      codeVerifier: "v".repeat(43),
+      brokerUrl: `${base}/broker`,
+      nowMs: ZERO_CLOCK.nowMs,
+      fallbackScope: "openid name email",
+    });
+    const payload = JSON.parse(hits.find((entry) => entry.path === "/broker/token")?.body ?? "{}") as Record<string, unknown>;
+    expect(payload.provider).toBe("apple");
+    expect(payload.codeVerifier).toBeUndefined();
   });
 
   test("refresh and revoke go through it too", async () => {

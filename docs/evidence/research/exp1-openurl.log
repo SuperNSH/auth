@@ -1,0 +1,78 @@
+# Experiment 1: openUrl + openedUrls (nsh 0.4.0 e626a8d)
+Date: 2026-11-07T01:54:52Z
+
+## nsh.json
+{
+  "name": "research-app",
+  "id": "com.example.researchapp",
+  "version": "1.0.0",
+  "build": 1,
+  "capabilities": {
+    "openUrl": { "schemes": ["https"] }
+  }
+}
+## App.tsx
+import { mount, openUrl, signal, Text, View } from "nsh";
+
+function App() {
+  const status = signal("idle");
+  return (
+    <View class="flex-1 items-center justify-center gap-4 bg-background">
+      <Text class="text-3xl font-semibold text-foreground">{status()}</Text>
+      <View
+        onPress={async () => {
+          const result = await openUrl("https://example.com/");
+          status.update(() => (result.opened ? "opened" : "not-opened"));
+        }}
+        role="button"
+        class="rounded-(--radius) bg-primary px-5 py-3 active:bg-primary/90"
+      >
+        <Text class="text-lg text-primary-foreground">Sign in</Text>
+      </View>
+    </View>
+  );
+}
+
+mount(App);
+## App.test.tsx
+// Research probe: does headless nsh record openUrl without opening anything?
+import { expect, open, test } from "nsh/test";
+
+test("openUrl is recorded, not opened", async () => {
+  const app = await open("./App.tsx");
+  await app.press("role:button[Sign in]");
+  await app.waitFor("opened");
+  expect(app.openedUrls()).toEqual(["https://example.com/"]);
+});
+
+## nsh --version
+nsh 0.4.0 (e626a8d)
+
+## nsh check
+(exit 0)
+
+## nsh build
+✓ built App.tsx into .nsh/out (1.1 KB js, 3.2 KB bytecode, 3ms)
+(exit 0)
+
+## nsh test
+✓ bundled App.tsx (1116 B in 1.6 ms)
+✓ App.test.tsx › openUrl is recorded, not opened (209ms)
+✓ 1 test: 1 passed, 0 failed (213ms)
+(exit 0)
+
+## Exact generated types (0.4.0)
+### .nsh/types/nsh/index.d.ts
+/** What `openUrl` did. */
+export interface OpenUrlResult {
+  /** Whether an app opened the URL (`false` when none handles it). */
+  opened: boolean;
+}
+/** Opens `url` outside the app: a web page in the browser, a `mailto:` link in the mail app, a `tel:` link in the phone app, any scheme another app registered. The embedding app may take it first and route it its own way. Resolves with `{ opened }`: whether it opened (`false` when no app handles it). Rejects with a `TypeError` for a URL it never opens (not absolute, `javascript:`, `data:`, `file:`, ...), and with `ERR_ACCESS_DENIED` when the `openUrl` capability does not grant its scheme. */
+export declare function openUrl(url: string): Promise<OpenUrlResult>;
+### .nsh/types/nsh/test.d.ts
+  /** The URLs the app opened (`openUrl` of `nsh/device`, a `TextView`'s links), in order: recorded, never opened, and reported opened to the app. */
+  openedUrls(): (string)[];
+
+## Result
+Headless test recorded https://example.com/ in app.openedUrls() and passed; nothing opened.

@@ -1,0 +1,79 @@
+# iOS simulator storage + no-plaintext-token check — 2026-11-07
+Device: simulator "nsh-auth" UDID DEE48BA7-1919-47BC-A04A-887B6D2AB046 (iPhone 18 Pro, iOS 27.0)
+App: dev.nshauth.sandbox (NshAuthSandbox.app, Debug-iphonesimulator, built 08:47)
+
+## Storage restart (criterion 6, restart half) — FAILED on this build
+1. Signed in via mock loop (04:15Z and twice more); "Status: authenticated",
+   access-token tails seen on screen: ...h9Y7, ...Iw-T, ...HehQ.
+2. xcrun simctl terminate dev.nshauth.sandbox; relaunch WITHOUT --provider
+   (once ~6 min after sign-in, once ~10 s after sign-in; mock access tokens
+   are expires_in=3600, so not expiry).
+3. Result both times: Sign-in screen ("Sandbox demo: fake client ids..."),
+   no session restored. Screenshot: docs/evidence/mock/ios-restart.png.
+Root cause read from the built bundle (examples/host-ios/nsh/bundle.js) and
+current source: native/ios AuthHostModule stores the session as a JSON STRING
+(canonicalValue); packages/nsh-auth/src/host.ts load() returns that string
+unparsed, so auth.ts sees expiresAt === undefined, drops and clears it.
+
+## No plaintext token (criterion 6, no-leak half)
+Data container: xcrun simctl get_app_container DEE48BA7-1919-47BC-A04A-887B6D2AB046 dev.nshauth.sandbox data
+  /Users/hmziq/Library/Developer/CoreSimulator/Devices/DEE48BA7-1919-47BC-A04A-887B6D2AB046/data/Containers/Data/Application/7312127F-437C-49DF-B3D7-F5EF69614175
+
+grep -r -a over the whole container for tails (HehQ / Iw-T / h9Y7) and
+prefixes (nsh-sandbox-mock-at-, nsh-sandbox-mock-rt-, nsh-sandbox-):
+  ONLY file with hits: Library/Caches/dev.nshauth.sandbox/Cache.db-wal
+  (URLSession shared URLCache of the app).
+  Contains 3 distinct full access tokens and 3 distinct full
+  refresh tokens in plaintext, e.g. the token-endpoint response JSON
+  (access_token/refresh_token) and the userinfo request header
+  "Bearer nsh-sandbox-mock-at-..." (tails ...h9Y7, ...Iw-T, ...HehQ).
+  => "not in any plain file" is VIOLATED by the URL cache WAL. Values are
+  fake sandbox tokens of tools/mock-oauth; redacted here to tails.
+  nsh Storage module files: no hits anywhere else in the container.
+  Keychain (device-level Library/Keychains, NOT inside the app container and
+  so outside this grep's reach) is where the app itself keeps the session;
+  its items are not plaintext-greppable by design.
+
+## No token in console output — PASS
+log stream --predicate 'process == "NshAuthSandbox"' captured across a full
+mock sign-in (app-console-loop2.log, 1717 lines) and across a restart that
+attempted restore (app-console-first-restart.log). grep for
+nsh-sandbox-mock-(at|rt)- and the token tails: 0 hits in both. The only
+noise is XCTest/accessibility chatter from the mobilecli agent.
+
+# FOLLOW-UP 2026-11-07 ~10:07 — rebuilt app (gate green, build at 10:01), both fixes in
+App uninstalled first (drops the old container with the leaked Cache.db-wal
+and the stale Keychain item) and the fresh .app installed, so a clean-slate
+leak test: any hit would be a new leak.
+
+## Storage restart — PASS now (immediate AND delayed)
+- Mock loop vs the repo mock on 127.0.0.1:8755 (sibling instance, PID 20806,
+  started 09:54:08, same tools/mock-oauth/main.mjs --port 8755; left running).
+  Session: "Status: authenticated", access-token tail ...CbhL.
+  Screenshot refreshed: docs/evidence/mock/ios-loop.png (10:05).
+- IMMEDIATE restart (terminate, ~10 s after sign-in, relaunch without args):
+  Account screen, "Status: authenticated", SAME tail ...CbhL, refresh token
+  stored => the Keychain session restored, not a fresh sign-in.
+  Screenshot: docs/evidence/mock/ios-restart.png (10:06) — replaces the old
+  fail capture. Verified by accessibility snapshot, OCR of the PNG, and an
+  independent vision-model read; all three agree.
+- DELAYED restart (~4.5 min after sign-in, under a log-stream capture):
+  same restored session, same tail ...CbhL.
+- Fix confirmed in the built bundle (examples/host-ios/nsh/bundle.js):
+  HostStore.load now does JSON.parse(e.value) on string values.
+
+## No plaintext token — PASS now
+- Container (fresh, post-uninstall): .../Data/Application/FB388C38-E833-41A9-9B83-44D946073380
+- grep -r -a over the WHOLE container (Library/Caches included) for:
+  CbhL / nsh-sandbox-mock-at- / nsh-sandbox-mock-rt- / nsh-sandbox- and the
+  old tails HehQ, h9Y7, Iw-T => 0 hits in every case, both right after
+  sign-in and again after the delayed restore (which refetches userinfo with
+  a Bearer header). Container stays at 7 files / 76K.
+- Library/Caches/dev.nshauth.sandbox/ is EMPTY: the zero-capacity
+  URLCache.shared means no Cache.db(-wal) is created at all. Previous leak
+  path gone.
+- Console: log stream --predicate 'process == "NshAuthSandbox"' across the
+  delayed relaunch + restore (1229 lines, /tmp/app-console-delayed.log):
+  grep for nsh-sandbox-mock-(at|rt)- and CbhL => 0 hits.
+- Keychain remains outside the container grep's reach (device-level
+  Library/Keychains) — that is where the session lives, by design.

@@ -4,9 +4,9 @@
 //! provider's JWKS, revocation and a session store, published as signals.
 //!
 //! Pure protocol and state: no UI, no platform bindings, no client secret
-//! anywhere. A confidential provider (GitHub, Facebook's code exchange,
-//! Apple's secret JWT) is reached through `AuthConfig::broker_url`, which
-//! names the app owner's broker process; the secret lives there. The
+//! anywhere. A confidential provider (GitHub, Apple's secret JWT, Facebook's
+//! classic manual-flow shape) is reached through `AuthConfig::broker_url`,
+//! which names the app owner's broker process; the secret lives there. The
 //! embedding host opens the authorize URL, catches the redirect (loopback
 //! listener, custom scheme or web redirect) and holds secure storage.
 //!

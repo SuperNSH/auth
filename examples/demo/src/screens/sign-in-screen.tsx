@@ -1,5 +1,6 @@
-// The sign-in screen: the contact email form, then one button per provider, and
-// the paste-back fallback where no host can return the redirect.
+// The sign-in screen: the contact email form, then one button per provider.
+// Fixed padding on every surface: the env() safe-area handle crashes the
+// 0.4.0 web runtime, and there is no safe platform detection to gate it.
 import { Scroll, Text, View, host } from "nsh";
 import { PROVIDERS, type ProviderId } from "../providers";
 import { AuthErrorBanner } from "../components/auth-error-banner";
@@ -11,7 +12,7 @@ export function SignInScreen(props: { busy: boolean; onStart: (provider: Provide
   return (
     <View class="flex-1 bg-background">
       <ScreenHeader />
-      <Scroll class="flex-1" contentClass="gap-4 p-4 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+      <Scroll class="flex-1" contentClass="gap-4 p-4 pb-6">
         <AuthErrorBanner />
         <If when={props.busy}>
           <Text class="text-sm text-muted-foreground" testID="auth-waiting">
@@ -40,7 +41,7 @@ export function SignInScreen(props: { busy: boolean; onStart: (provider: Provide
 
 function ScreenHeader() {
   return (
-    <View class="gap-2 border-b border-border p-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+    <View class="gap-2 border-b border-border p-4">
       <Text class="text-xl font-semibold text-foreground">Sign in</Text>
       <Text class="text-sm text-muted-foreground">
         Sandbox demo: fake client ids, local mock only. No real provider is signed in to.

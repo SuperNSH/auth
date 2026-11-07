@@ -1,0 +1,221 @@
+nsh-auth Android emulator device verification - 2026-11-07
+AVD: nsh-auth (android-37.0 google_apis_playstore arm64-v8a, pixel_8), emulator-5556, headless (-no-window -no-audio -no-boot-anim)
+APK: examples/host-android/app/build/outputs/apk/debug/app-debug.apk (installed 08:52 via adb -s emulator-5556 install -r; Success)
+Mock: tools/mock-oauth on 127.0.0.1:8755 (default port), reached from the emulator via `adb -s emulator-5556 reverse tcp:8755 tcp:8755` (loopback->host alias), because this APK build ignores the mockBaseUrl launch extra (see below) and always targets http://127.0.0.1:8755.
+
+TRIGGER PROOFS (criterion 4) - PASS, stopped at the provider's own first page, no credential typed:
+- google:    Custom Tab on accounts.google.com showing Google's own "Error 400 (Bad Request)!!1" page for client id nsh-auth-sandbox.apps.googleusercontent.com. docs/evidence/google/android-emulator.png
+- facebook:  Custom Tab on m.facebook.com, Facebook-branded page: "Invalid app ID - The provided app ID does not look like a valid app ID." docs/evidence/facebook/android-emulator.png
+- discord:   Custom Tab on discord.com, /api/v10/oauth2/authorize JSON error body; address bar text shows the full authorize URL with response_type=code, client_id=nsh-auth-sandbox-client, redirect_uri=nsh.auth.sandbox://callback, scope=identify email, state=R3BcosC-fqzyJ57D9p5EIQ, code_challenge=KOIiL6l0LSPigFj6qftW7luuDkwEwYigApr5DA-7Bvg, code_challenge_method=S256. docs/evidence/discord/android-emulator.png
+- github:    Custom Tab on github.com, GitHub's own "Sign in to GitHub" page (GitHub defers OAuth client validation until after login; its own domain IS the pass, stop at first page). docs/evidence/github/android-emulator.png
+Note: Chrome 145 first-run ("Stay signed out" chosen) preceded the first Custom Tab; no account was added anywhere.
+
+REDIRECT-LOOP LEG (criterion 5, Android leg) - authorize+callback MECHANISM PROVEN, full loop BLOCKED at token exchange:
+- Tapping "Sign in with Mock" opens the Custom Tab at http://127.0.0.1:8755/mock/authorize (via adb reverse), the mock auto-approves and 302s to nsh.auth.sandbox://callback?code=...&state=..., Android routes it through the manifest intent filter back into MainActivity, the demo parses and validates it and attempts the token exchange. Server side confirms: mock /__control showed codes incrementing (6 codes outstanding after the runs; the 1 refreshToken/1 accessToken pair belongs to the concurrent iOS-simulator run against this same server, whose own 8755 start crashed EADDRINUSE - see docs/evidence/ios/mock-server.log).
+- The token exchange then fails inside the app with: "request failed: TypeError: Network request failed: fetch POST http://127.0.0.1:8755/mock/token is not granted: add `127.0.0.1` to capabilities.network in nsh.json". Screen saved: docs/evidence/mock/android-loop-blocked.png
+- ROOT CAUSE (verified in the installed APK and still present in the tree): the embedding host calls nsh.setGrantedCapabilities(HOST_GRANT) with only {"host":[...channel names...]}. Per nsh-core 0.4.0 src/access.rs (line ~1142: f(&self.declared) && self.granted.as_ref().is_none_or(f)) the grant is a CEILING, so every network fetch is denied regardless of the demo's nsh.json hosts ["127.0.0.1","localhost","10.0.2.2"]. The iOS host does it right: examples/host-ios/Sources/AppDelegate.swift grants {"host":["auth.*"],"network":{"hosts":["127.0.0.1","localhost"]}} with a comment saying exactly this. examples/host-android/app/src/main/kotlin/dev/nshauth/sandbox/MainActivity.kt HOST_GRANT lacks the network entry - mock loop/storage proofs on Android stay blocked until it is added and the host rebuilt.
+- Second defect in the INSTALLED APK only (stale bundle): launch extras are ignored - with --es mockBaseUrl http://10.0.2.2:9999 the app still fetched http://127.0.0.1:8755/mock/token and nothing ever connected to a listener on 9999; --es provider never auto-started a flow either. The current tree's AuthHostModule.kt normalizeMockUrl (loopback->10.0.2.2 on emulators) and host.params wiring are newer than the baked bundle; a rebuild per the final whole-tree smoke should cover this part, but NOT the missing network grant above.
+
+STORAGE PROOF (criterion 6, Android) - BLOCKED by the same ceiling (no session can ever be established):
+- After force-stop and plain relaunch the app shows the sign-in screen, no session restored: docs/evidence/mock/android-restart.png
+- run-as dev.nshauth.sandbox: files/ is EMPTY - no nsh-auth-store.json at all (nothing was ever saved, sign-in never completed).
+- grep -r -l nsh-sandbox /data/data/dev.nshauth.sandbox (run-as) -> rc 1, zero hits: no mock token/code value in any app file.
+- logcat -d --pid=<app pid> (33 lines) and full 97,832-line buffer grep for nsh-sandbox-|nsh.auth.sandbox://callback?|access_token|refresh_token -> ZERO hits. No token, code or state in logs.
+
+Commands (every adb call used -s emulator-5556; no adb kill-server, no other serial touched):
+  $HOME/Library/Android/sdk/emulator/emulator -avd nsh-auth -port 5556 -no-window -no-audio -no-boot-anim
+  adb -s emulator-5556 install -r examples/host-android/app/build/outputs/apk/debug/app-debug.apk
+  adb -s emulator-5556 shell am start -n dev.nshauth.sandbox/.MainActivity --es provider <google|facebook|discord|github|mock> [--es mockBaseUrl ...]
+  adb -s emulator-5556 shell am force-stop dev.nshauth.sandbox   (ours only, between providers)
+  adb -s emulator-5556 shell input tap <x> <y>                    (demo provider buttons)
+  adb -s emulator-5556 exec-out screencap -p > docs/evidence/<provider>/android-emulator.png
+  adb -s emulator-5556 reverse tcp:8755 tcp:8755
+  adb -s emulator-5556 shell uiautomator dump /sdcard/ui.xml      (semantic text/domain evidence)
+
+================================================================================
+FOLLOW-UP SESSION - 2026-11-07 09:46+ (fresh APK with HOST_GRANT network fix)
+================================================================================
+Fresh APK app-debug.apk (built 09:46) verified in its dex:
+  { "host": ["auth.authorize","auth.store.save","auth.store.load","auth.store.clear","auth.config"],
+    "network": { "hosts": ["127.0.0.1","localhost","10.0.2.2"] } }
+Installed with adb -s emulator-5556 install -r (Success). The network fetch now clears
+the capability ceiling: the token exchange reaches the mock (server counters advance:
+codes/refreshTokens/accessTokens increment on every attempt).
+
+MOCK LOOP (criterion 5) - still FAIL, new deterministic blocker past the network fix:
+  The flow runs authorize -> Custom Tab -> mock auto-approve -> nsh.auth.sandbox://callback
+  intent-filter return -> token exchange SUCCESS (server-side) -> then the app FATALY CRASHES:
+    java.lang.IllegalStateException: auth.store.save requires {"value": string}
+      at dev.nshauth.sandbox.MainActivity.requireString(MainActivity.kt:102)
+      at dev.nshauth.sandbox.MainActivity.installAuthHandlers$lambda$12(MainActivity.kt:71)
+  Reproduced 3x (pids 4229 @09:58:10, 4339 @09:59:19, 4617 @10:01:53). Crash dialog
+  screenshot: docs/evidence/mock/android-loop-crash.png ("nsh-auth sandbox keeps stopping").
+  ROOT CAUSE: packages/nsh-auth/src/host.ts line 35 calls
+      host.call("auth.store.save", { key: this.key, value: session })
+  passing the session OBJECT, while the Android host contract (examples/host-android
+  README: "{key, value} (strings)") is enforced by MainActivity.requireString, which
+  throws IllegalStateException on the main thread -> process death before session.set()
+  renders or persists anything. The iOS host is lenient (native/ios AuthHostModule.swift
+  canonicalValue accepts "a string or a JSON object or array"), which is why the iOS loop
+  passed and masked this. The load side (host.ts:20-21) already expects "the value as a
+  JSON string" - save must JSON.stringify. Fix belongs in the ts package (or the Android
+  host must relax like iOS); outside this task's evidence-only mandate.
+
+  Mechanism evidence captured in system logcat (fresh buffer, 1,204 lines):
+    - ActivityTaskManager START dat=http://127.0.0.1:8755/mock/authorize?response_type=code&client_id=nsh-auth-sandbox-client&redirect_uri=nsh.auth.sandbox%3A%2F%2Fcallback&scope=openid+profile+email+offline_access&state=rv6YIkBYmMxcpVnxUXvbxQ&nonce=ssXK67ITgePQaxK9voOx7A&code_challenge=-WaCPQLw7zBURWWEdRcSDJFAMD2YDQuhPSUszMXPHkw&code_challenge_method=S256 from uid 10231 (our app)
+    - ActivityTaskManager START {act=VIEW cat=[BROWSABLE] dat=nsh.auth.sandbox://callback/... } from uid 10165 (Chrome) -> dev.nshauth.sandbox/.MainActivity LAUNCH_SINGLE_TASK (the intent-filter return leg)
+    - FATAL EXCEPTION 30 ms later.
+  Notes: (a) the emulator was found shut down (snapshot saved, not by this session) at
+  ~09:50 and rebooted; the mock also died once and was restarted on 8755; adb reverse
+  tcp:8755 re-applied after each. (b) --es provider/--es mockBaseUrl extras still did
+  not steer the app (no autoStart; authorize used the default 127.0.0.1:8755 base, not
+  the rewritten 10.0.2.2), so the demo's Mock button was pressed - the README's
+  documented equivalent.
+
+STORAGE PROOF (criterion 6) - FAIL, blocked by the same crash: no session ever exists to
+  restore (session.set runs only after store.save). After force-stop + plain relaunch the
+  app shows the sign-in screen; docs/evidence/mock/android-restart.png (replaced) shows
+  that state. files/ contains no nsh-auth-store.json (the crash precedes the store write).
+
+NO-PLAIN-TOKEN - checks run, but vacuous because sign-in never completes:
+  - run-as grep -r -l nsh-sandbox /data/data/dev.nshauth.sandbox -> rc 1, zero hits
+    (no token, code, or sandbox value in any app file; the Keystore ciphertext file is
+    never even created because store.save crashes first).
+  - Full fresh logcat (1,204 lines): zero hits for nsh-sandbox-|access_token|refresh_token;
+    the callback URI appears only as the system's truncated "dat=nsh.auth.sandbox://callback/..."
+    (the code is cut off by Android's own logging ellipsis). The authorize URL with state/
+    nonce/code_challenge appears in system_server ActivityTaskManager BAL lines - public
+    authorize-URL values logged by Android itself, not by our app; our pid's lines contain
+    no token, code or state.
+
+================================================================================
+THIRD SESSION - 2026-11-07 10:09+ (fresh APK: auth.store.save string fix) - ALL THREE ANDROID PROOFS PASS
+================================================================================
+Fresh APK app-debug.apk (built 10:09) verified: embedded assets/nsh/bundle.js contains
+`value:JSON.stringify(e)` for auth.store.save. Installed (Success). adb reverse tcp:8755
+re-applied after the reinstall (reinstalls drop it).
+
+MOCK LOOP (criterion 5) - PASS:
+  Cold start (force-stop -> am start --es provider mock --es mockBaseUrl http://127.0.0.1:8755),
+  pressed the demo's "Sign in with Mock" button (autoStart did not fire - see diagnostics).
+  Custom Tab -> mock authorize (auto-approve) -> nsh.auth.sandbox://callback BROWSABLE intent
+  return -> token exchange -> auth.store.save now receives a string -> session screen:
+    Account / "Status: authenticated" / "Signed in as Sandbox User" /
+    sandbox.user@nsh-auth.invalid / sub nsh-sandbox-mock-user-0001 / ID-token claims
+    (iss http://127.0.0.1:8755/mock, aud nsh-auth-sandbox-client, nonce, exp, iat) /
+    "Access token: ...ZiTF". Mock /__control: codes:1 refresh:1 access:1 for this flow.
+  Screenshot (OCR-verified): docs/evidence/mock/android-loop.png
+
+STORAGE / RESTART (criterion 6) - PASS:
+  am force-stop (pid gone) -> plain am start WITHOUT extras -> session restored from the
+  Keystore-backed store: "Account" / "Status: authenticated" / same sandbox user and the
+  same access-token tail (...ZiTF). Screenshot (OCR-verified):
+  docs/evidence/mock/android-restart.png
+  Sealed file present: files/nsh-auth-store.json, 1584 bytes, mode 600 (created 10:16).
+
+NO-PLAIN-TOKEN (criterion 6) - PASS:
+  - run-as grep -r -l nsh-sandbox /data/data/dev.nshauth.sandbox -> rc 1, ZERO hits: no
+    plaintext token, code or id anywhere in app storage.
+  - files/nsh-auth-store.json content is AES/GCM sealed:
+    {"nsh-auth:session":{"iv":"dNBzcSsJFQw+FyQa","ct":"t+RntE90PDXv/ldtwRT5xqtUTaxo5..."}} -
+    the session (including the access token) exists ONLY inside this ciphertext; the token
+    value appears nowhere in plaintext (the grep above covers the ciphertext file too, and
+    the plaintext token string does not occur in it - only iv+ct).
+  - logcat -d --pid=<app pid> (34 lines): ZERO hits for nsh-sandbox|access_token|
+    refresh_token|code=|state=. Full 2,399-line buffer: ZERO "nsh-sandbox-" strings. The
+    callback URI appears only as Android's own truncated "dat=nsh.auth.sandbox://callback/..."
+    (code cut off by the system's ellipsis); state=/code_challenge= appear only in the
+    authorize URL echoed by system_server ActivityTaskManager BAL lines (public authorize-
+    URL values logged by Android, not by our app).
+  (Sign-out was exercised afterwards for diagnostics: it clears the store file to 2 bytes.)
+
+DIAGNOSTICS (non-blocking, honest):
+  (a) extrasColdStart: on a guaranteed cold start (force-stop -> am start --es provider mock
+      --es mockBaseUrl http://127.0.0.1:8755, no input), NO authorize opened automatically:
+      focus stayed on MainActivity for 20 s, logcat (cleared just before) shows ZERO chrome/
+      customtab ActivityTaskManager START lines and no launch from uid 10231; screen = sign-in.
+      autoStart does not fire in this build; the Mock button (README's documented trigger) works.
+  (b) rewrite10: with the reverse tunnel REMOVED, the app's authorize Custom Tab targets raw
+      http://127.0.0.1:8755/mock/authorize (seen in the tab's error page and the system log's
+      dat=/capturedLink) and fails: "This site can't be reached - 127.0.0.1 refused to
+      connect", no callback intent in logcat. The loopback->10.0.2.2 rewrite never fires for
+      the demo's URLs (same raw 127.0.0.1 base appears even when the extra is passed on a
+      cold start). The 10.0.2.2 path itself works - a direct probe from the emulator shell
+      (toybox nc 10.0.2.2 8755, GET /__control) returns HTTP 200 with the
+      X-Nsh-Auth-Sandbox header. So: emulator->Mac networking is fine; the app simply never
+      uses 10.0.2.2. A host-side fix (apply the rewrite to the demo's effective base / pass
+      the param through) routes through the coordinator; the adb reverse tunnel is the
+      working bridge meanwhile.
+      (Note: mock counters advanced by +1 full flow during the diagnostics that my flow's
+      logcat cannot account for - concurrent traffic from the iOS-sibling verifier shares
+      this mock server; my no-tunnel flow demonstrably never reached it.)
+
+Session note: PNGs verified by Read + tesseract OCR (content matches the live uiautomator
+dumps taken at capture time); the vision MCP was unavailable again this session (429/4xx
+and non-transmitting calls), so no VLM confirmation was possible.
+
+================================================================================
+FOURTH SESSION (FINAL) - 2026-11-07 10:37+ - FULLY AUTOMATIC ANDROID LOOP PASSES
+================================================================================
+Mock: our earlier instance (node pid 20806, started by this verification effort) stopped;
+fresh tools/mock-oauth started on default port 8755, banner confirmed (MOCK_URL=http://
+127.0.0.1:8755, Android emulator: 10.0.2.2:8755). APK: 10:29 gate build installed (Success).
+adb reverse tunnel REMOVED for the whole proof - the emulator reached the Mac mock only via
+its native 10.0.2.2 alias.
+
+AUTO LOOP (criterion 5, strongest form) - PASS, zero touches:
+  am force-stop -> am start -n dev.nshauth.sandbox/.MainActivity --es provider mock
+  --es mockBaseUrl http://127.0.0.1:8755 -> NO further input. The loop ran by itself inside
+  ~2 s (faster than a 2 s focus poll could catch the Custom Tab). System logcat, verbatim
+  chain with attributions:
+    1. cmp=dev.nshauth.sandbox/.MainActivity          from uid 2000 (com.android.shell)     [my am start, has extras]
+    2. dat=http://10.0.2.2:8755/... -> com.android.chrome/...IntentDispatcher
+                                                       from uid 10231 (dev.nshauth.sandbox) [app auto-launched authorize - REWRITTEN base]
+    3. ...customtabs.CustomTabActivity                from uid 10165 (com.android.chrome)   [the tab]
+    4. cat=[BROWSABLE] dat=nsh.auth.sandbox://callback/... -> dev.nshauth.sandbox/.MainActivity
+                                                       from uid 10165 (com.android.chrome)   [intent-filter return]
+  Result: Account screen, "Status: authenticated", "Signed in as Sandbox User"
+  (sandbox.user@nsh-auth.invalid, sub nsh-sandbox-mock-user-0001), ID-token claims with
+  iss http://10.0.2.2:8755/mock (Host-derived issuer from the fresh mock, MATCHING the
+  rewritten base - validation passed), aud nsh-auth-sandbox-client, nonce 1E5zzkRn5QyPU5yawirCCg,
+  "Access token: ...5WkP". autoStart + rewrite both fire in the 10:29 build.
+  Screenshot (Read + OCR verified; vision MCP unavailable again):
+  docs/evidence/mock/android-auto-loop.png
+
+STORAGE RE-CONFIRM (criterion 6, post-mock-change) - PASS:
+  am force-stop (pid gone) -> plain relaunch, no extras: Account / "Status: authenticated",
+  same session (same access-token tail ...5WkP), stored claims restored (iss
+  http://10.0.2.2:8755/mock), sealed files/nsh-auth-store.json 1577 bytes (10:37).
+  Honest detail: the live profile re-fetch on the bare relaunch shows
+  "Profile failed: TypeError: Network request failed: Failed to connect to /127.0.0.1:8755" -
+  with no launch extra the demo's mockBaseUrl falls back to the default 127.0.0.1 base and,
+  with no adb reverse tunnel, that host is unreachable from the emulator (the auto-loop's
+  profile fetch succeeded because the extra was present and rewritten to 10.0.2.2). The
+  session restore itself is complete and correct; the profile-card fetch base on plain
+  relaunch is a host/demo seam worth a look (non-blocking).
+  Screenshot (OCR verified): docs/evidence/mock/android-restart.png (replaced with this state)
+
+Mock counters at the end: codes:3 refresh:1 access:1 (includes concurrent iOS-sibling
+traffic on this shared server; exactly one exchange belongs to the auto-loop above).
+
+================================================================================
+FIFTH SESSION - 2026-11-07 11:31+ - CLEAN STORAGE-RESTART CAPTURE (persistence fix)
+================================================================================
+Fresh APK app-debug.apk (11:31, bundle.nshc 52,063 bytes; demo persists the Storage
+mockBaseUrl so a bare relaunch reuses the rewritten base) installed after rebooting the
+AVD (it had shut down between sessions again; mock on 8755 stayed up). No adb reverse
+tunnel anywhere in this session - 10.0.2.2 native only.
+
+  1. Cold start --es provider mock --es mockBaseUrl http://127.0.0.1:8755: autoStart
+     fired again by itself (no input) -> Account / Status: authenticated / Signed in as
+     Sandbox User, Profile card populated via 10.0.2.2 (Sandbox User,
+     sandbox.user@nsh-auth.invalid, nsh-sandbox-mock-user-0001), iss
+     http://10.0.2.2:8755/mock (Host-derived, matched), Access token tail ...9h2-,
+     zero failure lines. Mock counters advanced one exchange.
+  2. am force-stop (pid gone) -> plain am start, NO extras: Account / "Status:
+     authenticated", SAME token tail ...9h2-, Profile card POPULATED (the post-restore
+     userinfo fetch reached 10.0.2.2:8755 using the persisted base - no
+     "Failed to connect to /127.0.0.1:8755" line anywhere; grep for failed/Failed = 0),
+     stored claims iss http://10.0.2.2:8755/mock, aud nsh-auth-sandbox-client.
+  Screenshot REPLACED (Read + OCR verified, matches live dump; vision MCP unavailable):
+  docs/evidence/mock/android-restart.png

@@ -1,0 +1,8 @@
+== google ==
+https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=nsh-auth-sandbox-client&redirect_uri=http%3A%2F%2F127.0.0.1%3A59763%2Fcallback&scope=openid+profile+email&state=KkJRjogfrzbWEmEJ-9I_7FzRz_tKq5DliIZX7t1NLYI&nonce=gd5TlhWQu_-A_H18V1yYX3CnLIVKwmTwvvhTKKWhZxw&code_challenge=lbFP2wAhRi8yyMwcQsXydEtFSptJs35vRgdIDzNkyXY&code_challenge_method=S256&access_type=offline&prompt=consent
+== facebook ==
+https://www.facebook.com/v27.0/dialog/oauth?response_type=code&client_id=nsh-auth-sandbox-client&redirect_uri=http%3A%2F%2F127.0.0.1%3A59780%2Fcallback&scope=openid+public_profile+email&state=vWkOqLZwALUhRRlavBRgoQqugEowSCDKDpm_kNJ521w&nonce=MQQrBZVPpOEQI2a_Er-nzHmKS3C7KMTyr-rdXZsPgsY&code_challenge=It0ht04ZHW7VZcIUYj74VQ7nqdJm-xV8qi4GdpU_2po&code_challenge_method=S256
+== discord ==
+https://discord.com/oauth2/authorize?response_type=code&client_id=nsh-auth-sandbox-client&redirect_uri=http%3A%2F%2F127.0.0.1%3A59801%2Fcallback&scope=identify+email&state=3e3nqFCVUPBwx2GWgTIQnaoEIk-zvPDzixke6dR5qF0&code_challenge=NGjw5OIoZKZ11x9D4drqE3Cgt6Jf8q0K8QqMXzGS4kE&code_challenge_method=S256
+== github ==
+https://github.com/login/oauth/authorize?response_type=code&client_id=nsh-auth-sandbox-client&redirect_uri=http%3A%2F%2F127.0.0.1%3A59827%2Fcallback&scope=read%3Auser+user%3Aemail&state=3gsPfDBM7JkolYC2hzJJMEhuI13dItStqTfoMfLXARQ&code_challenge=D_MBm7brk9IBk9iD1KdLLfbZJK8uBCQWoomOZUVz6-E&code_challenge_method=S256

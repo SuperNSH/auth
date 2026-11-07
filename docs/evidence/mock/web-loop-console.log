@@ -1,0 +1,29 @@
+== mock-loop-web third attempt 2026-11-07T06:35:53Z ==
+dev server: cd examples/demo && nsh run --target web --port 8790 App.web.tsx  (build line: built App.web.tsx)
+mock: fresh instance pid 26086 on 8755 with ACAO:* (verified: GET jwks -> access-control-allow-origin: *; OPTIONS -> 204)
+
+== browser console (demo tab) ==
+[31m[error][0m Failed to load resource: the server responded with a status of 404 (Not Found)
+[31m[error][0m Failed to launch 'nsh.auth.sandbox://callback?code=nsh-sandbox-code-cYHApChKZ6fxhrFjSla3LrdZ&state=lCSYhd4r-qGpeFqBxI5tIA' because the scheme does not have a registered handler.
+[31m[error][0m [nsh] TypeError: Function.prototype.apply was called on undefined, which is undefined and not a function
+    at Object.value (http://127.0.0.1:8790/browser/values.js:313:44)
+    at value (http://127.0.0.1:8790/browser/runtime.js:29:30)
+    at http://127.0.0.1:8790/nsh.wasm:wasm-function[167]:0x208a5
+    at http://127.0.0.1:8790/nsh.wasm:wasm-function[2365]:0x763ee
+    at http://127.0.0.1:8790/nsh.wasm:wasm-function[6721]:0x18b7e8
+    at http://127.0.0.1:8790/nsh.wasm:wasm-function[7497]:0x1b9bde
+    at http://127.0.0.1:8790/browser/runtime.js:23:60
+    at Values.boundary (http://127.0.0.1:8790/browser/values.js:85:18)
+    at Object.nsh_browser_call (http://127.0.0.1:8790/browser/runtime.js:23:45)
+    at http://127.0.0.1:8790/browser/runtime.js:46:94
+[31m[error][0m Failed to load resource: the server responded with a status of 404 (Not Found)
+[31m[error][0m Failed to launch 'nsh.auth.sandbox://callback?code=nsh-sandbox-code-sEst32FYIQ5haI6CVQi3YDd1&state=kotdxYgiopuNmuzcyeufLw' because the scheme does not have a registered handler.
+
+== account screen (semantic snapshot) ==
+- document:
+  - text: "Account Status: authenticated Signed in as Sandbox User Profile Profile loading is native-only for now: nsh-query's lifecycle dependency is missing on the web runtime in nsh 0.4.0 (upstream). Your identity below comes from the ID token's claims; refresh and sign-out still work. ID token claims iss http://127.0.0.1:8755/mock aud nsh-auth-sandbox-client sub nsh-sandbox-mock-user-0001 nonce SeJLACMF5AJe6-FZhd22Ag exp 2026-11-07T07:35:11.000Z iat 2026-11-07T06:35:11.000Z name Sandbox User email sandbox.user@nsh-auth.invalid Access token: …xAon Refresh token: stored"
+  - button "Refresh session" [ref=e1]
+  - button "Sign out" [ref=e2]
+
+== mock /__control after loop ==
+{"sandbox":"nsh-auth sandbox","deny":false,"codes":5,"refreshTokens":3,"accessTokens":3,"families":3}

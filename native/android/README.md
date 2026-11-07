@@ -45,8 +45,8 @@ filter on the single-task `MainActivity` in
 the URI's scheme matches the pending one and its host and path are exactly the
 registered `callback` (empty or `/`) - any other URI routed by the filter is
 ignored, so a forged intent cannot finish the call. The launcher extras are
-read only from the cold-launch `ACTION_MAIN` intent in `onCreate`; explicit
-intents from other apps can never reconfigure sign-in.
+read only from the intent that creates the activity (`onCreate`); a warm
+instance's `onNewIntent` never reconfigures sign-in.
 `NshView` APIs follow the 0.4.0 embed example
 (`.refs/nsh-v0.4.0/examples/embed-android` and
 `crates/nsh-platform-android/java/com/longbridge/nsh/NshView.java`).

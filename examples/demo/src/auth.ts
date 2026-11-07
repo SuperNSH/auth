@@ -1,7 +1,7 @@
 // The demo's only import of the nsh-auth package: config, the auth instance and
 // the surface glue the package cannot know about. If the package's contract
 // drifts from the demo, the type errors land here alone.
-import { host, signal } from "nsh";
+import { host, signal, Storage } from "nsh";
 import {
   createAuth,
   type Auth,
@@ -9,7 +9,7 @@ import {
   type Session,
   type UserInfo,
 } from "nsh-auth";
-import { CLIENT_ID, MOCK_BASE_URL, REDIRECT_URI } from "./dev/fixtures";
+import { CLIENT_ID, MOCK_BASE_URL, MOCK_BASE_URL_STORAGE_KEY, REDIRECT_URI, SCOPES } from "./dev/fixtures";
 import type { ProviderId } from "./providers";
 
 export interface DemoAuthConfig {
@@ -33,6 +33,11 @@ function autoStartOf(autoStart: unknown, provider: unknown): ProviderId | null {
 // mockBaseUrl. The call runs last, so the host's answer wins where both exist.
 async function readHostOverrides(): Promise<Partial<DemoAuthConfig>> {
   const merged: Partial<DemoAuthConfig> = {};
+  // Layer 2, above the defaults: the base that actually served a previous
+  // sign-in. The emulator's 10.0.2.2 rewrite only arrives via launch extras,
+  // so a bare relaunch would otherwise profile-fetch the loopback base.
+  const persisted = await Storage.getItem(MOCK_BASE_URL_STORAGE_KEY);
+  if (persisted) merged.mockBaseUrl = persisted;
   const raw = (host.params as Record<string, unknown>).auth;
   const params = (typeof raw === "string" ? JSON.parse(raw) : raw) as Record<string, unknown> | undefined;
   if (params) {
@@ -97,6 +102,9 @@ export async function initAuth(): Promise<void> {
       mockBaseUrl: authConfig().mockBaseUrl,
     }),
   );
+  // The resolved base persists for later bare relaunches (a base URL is not
+  // sensitive; the session itself stays in the host's secure store).
+  void Storage.setItem(MOCK_BASE_URL_STORAGE_KEY, authConfig().mockBaseUrl).catch(() => {});
 }
 
 export const session = (): Session | null => requireAuth().session();

@@ -44,6 +44,24 @@ async function handle(req, res, ctx) {
   res.setHeader("X-Nsh-Auth-Sandbox", "nsh-auth sandbox (not a real provider)");
   const path = url.pathname;
 
+  // Wildcard CORS is safe on this mock: it binds 127.0.0.1 only, holds no real
+  // credentials, and web demos on a different loopback port must exchange
+  // tokens and read JWKS from the browser. tools/broker deliberately stays
+  // CORS-free.
+  res.setHeader("access-control-allow-origin", "*");
+  res.setHeader("access-control-allow-methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("access-control-allow-headers", "content-type, authorization, accept");
+  res.setHeader("access-control-max-age", "600");
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    return res.end();
+  }
+
+  // Issuer (id_token, discovery, MS callback) and picture URLs derive from the
+  // request's Host header: clients behind host aliases — the Android emulator's
+  // 10.0.2.2, tunnels — must see an issuer that matches their own base URL.
+  ctx.base = requestBase(req, ctx.base);
+
   if (path === "/") return indexPage(res);
   if (path === "/__control") return handleControl(req, res, ctx, url);
   if (path === "/__routes") return sandboxJson(res, 200, routesDoc());
@@ -72,6 +90,16 @@ async function handle(req, res, ctx) {
 }
 
 const expand = (route, tenant) => (route ? route.replace("{tenant}", tenant ?? "common") : null);
+
+// Trusts only authority-shaped Host headers (hostnames, IPv6 brackets, port);
+// anything odd falls back to the loopback base the server started on.
+function requestBase(req, fallback) {
+  const host = req.headers.host;
+  if (typeof host === "string" && /^[\w.\-]+(:\d{1,5})?$|^\[[0-9a-fA-F:]+\](:\d{1,5})?$/.test(host)) {
+    return `http://${host}`;
+  }
+  return fallback;
+}
 
 function matchProvider(path) {
   for (const prov of Object.values(providers)) {

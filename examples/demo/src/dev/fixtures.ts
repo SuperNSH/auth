@@ -6,6 +6,8 @@ export const MOCK_BASE_URL = "http://127.0.0.1:8755";
 export const CLIENT_ID = "nsh-auth-sandbox-client";
 /** The scheme both hosts register (native/ios, host-android): scheme nsh.auth.sandbox, path callback. */
 export const REDIRECT_URI = "nsh.auth.sandbox://callback";
+/** Storage key for the base that actually served a sign-in (survives bare relaunches). */
+export const MOCK_BASE_URL_STORAGE_KEY = "nsh-auth:mockBaseUrl";
 /** The mock provider's default scopes in src/providers.ts; tests assert the URL carries them. */
 export const SCOPES = ["openid", "profile", "email", "offline_access"];
 

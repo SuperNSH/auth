@@ -18,8 +18,9 @@
         "api.github.com",
         "appleid.apple.com",
         "login.microsoftonline.com",
-        "twitter.com",
-        "api.twitter.com",
+        "graph.microsoft.com",
+        "x.com",
+        "api.x.com",
         "broker.nsh-auth-sandbox.example"
       ]
     },

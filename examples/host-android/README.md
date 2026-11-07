@@ -97,9 +97,12 @@ adb -s <serial> shell am force-stop dev.nshauth.sandbox
 ## The mock loop (full sign-in against tools/mock-oauth)
 
 Run `tools/mock-oauth` on this Mac and note the port it prints (below: 8755).
-Then launch the app with the mock provider and its base URL:
+The launch extras only apply on a cold start, and a `singleTask` instance left
+running from an earlier proof ignores them, so force-stop first - every time
+the extras change:
 
 ```bash
+adb -s <serial> shell am force-stop dev.nshauth.sandbox
 adb -s <serial> shell am start -n dev.nshauth.sandbox/.MainActivity --es provider mock --es mockBaseUrl http://127.0.0.1:8755
 ```
 
@@ -131,6 +134,18 @@ with `ERR_ACCESS_DENIED`:
 ```json
 { "capabilities": { "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"] } }
 ```
+
+The host grants a ceiling of its own (`setGrantedCapabilities` in
+`MainActivity.kt`): a call must be both declared by the bundle and allowed by
+the host, so the host grant mirrors the demo's names and adds the mock network
+hosts its token exchange fetches need:
+
+```json
+{ "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear", "auth.config"], "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] } }
+```
+
+Keep the two lists in sync; a host that grants less than the bundle declares
+denies the call with `not granted` even though the app declared it.
 
 | Channel call | Args | Reply | Failure |
 |---|---|---|---|

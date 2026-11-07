@@ -13,7 +13,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        true
+        // An auth host must never persist provider responses to disk: the
+        // engine's URLSession cached token JSON into Cache.db-wal.
+        URLCache.shared = URLCache(memoryCapacity: 0, diskCapacity: 0)
+        return true
     }
 }
 

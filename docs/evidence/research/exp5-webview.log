@@ -1,0 +1,31 @@
+# Experiment 5: providers block embedded web views for sign-in (Google doc, read 2026-11-07)
+Source page (fetched): https://developers.google.com/identity/protocols/oauth2/native-app
+Verified wording, taken from the page text itself (curl + text extraction of the
+`disallowed_useragent` error entry):
+
+  "disallowed_useragent — The authorization endpoint is displayed inside an
+   embedded user-agent disallowed by Google's OAuth 2.0 Policies. iOS and macOS
+   developers may encounter this error when opening authorization requests in
+   WKWebView. Developers should instead use iOS libraries such as Google
+   Sign-In for iOS or AppAuth, ..."
+
+  Also from the same page: "Developers should allow general links to open in the
+  default link handler of the operating system, which includes both Universal
+  Links handlers or the default browser app. The SFSafariViewController library
+  is also a supported option." — SFSafariViewController is allowed because it
+  shares the browser's cookie store; WKWebView is not.
+
+Credential-exposure reason (RFC 8252 section 8.12, quoted from the fetched
+https://www.rfc-editor.org/rfc/rfc8252.txt): embedded user-agents have "the host
+app being able to copy user credentials and cookies as well as the user needing
+to authenticate from scratch in each app"; RFC 8252 also notes embedded
+user-agents let "good and bad actors alike" use them, so malicious apps are
+harder to detect.
+
+Conclusion: nsh-auth must never carry a provider's authorize page in a
+`webview` (nsh capability `webview`) — Google rejects it outright with
+disallowed_useragent, Facebook's manual flow expects a controlled webview only
+for its legacy desktop path, and any embedded browser hands the user's password
+and cookies to the embedding app. Launchers use the system browser surface:
+ASWebAuthenticationSession (iOS/macOS), Custom Tabs (Android), the default
+browser + loopback (desktop), redirect/popup (web).

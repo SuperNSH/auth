@@ -1,0 +1,26 @@
+# Experiment 2: inbound URLs / deep links on 0.4.0 vs main (nsh 0.4.0 e626a8d)
+Date: 2026-11-07 (UTC)
+
+## What was searched
+- /Users/hmziq/fo/.refs/nsh-v0.4.0 (the installed 0.4.0 exactly): `grep -rln -i "linking|deep_link|deeplink|universal link|on_open" crates --include="*.rs"` -> hits only in unrelated places (reactive.rs, description.rs, element/host.rs, bindgen.rs, web.rs, base link tests). `find -name "linking*.rs" -o -name "*deep_link*"` -> no hits.
+- /Users/hmziq/fo/.refs/nsh-main (unreleased): crates/nsh-platform-windows/src/linking.rs EXISTS, plus crates/nsh-core/src/url_scheme.rs, runtime/url_scheme.rs, nsh-platform-linux/src/links.rs.
+
+## Findings
+### 0.4.0 (installed)
+- No `Linking` module and no url-scheme event exist. `EventKind` in crates/nsh-core/src/ops.rs has no UrlScheme variant (macro-generated list checked).
+- `.nsh/types` (generated in this repo's scratch app): no `Linking`, no `onOpenUrl`, no url-scheme type. `grep -rn -i "linking|url.?scheme|onOpenUrl|onUrl" .nsh/types` minus openUrl -> no hits.
+- `nsh.json`/`nsh package` on 0.4.0 have no `schemes` key (grep in crates/nsh-package + crates/nsh-cli/src/package.rs -> none).
+- The inbound path that exists on 0.4.0 is the host channel. Generated `.nsh/types/nsh/index.d.ts`:
+  - `interface HostEvents { available(): boolean; on(event: string, listener: (payload: unknown) => void): () => void; }`
+  - `interface Host { available(); readonly params: HostParams; on<T>(name, listener): () => void; call(name, data, options): Promise<...>; ... }`
+  - Doc text for `Host.on`: "Events the embedding app sends while the app has no listener of their name are kept (up to 256, then the oldest go) and come right after the first listener is added".
+- examples/embed-ios/main.swift on v0.4.0 shows the host -> app direction: `app.send("message", ["text": ...])` on the iOS side, heard by the app with `host.on("message", ...)`; `app.handle("time") { _ in ... }` answers the app's `host.call`.
+
+### main (unreleased; the upstream skill follows this)
+- crates/nsh-core/src/url_scheme.rs: "Links that open the app (`nsh`'s `UrlScheme`): URLs of the schemes the app claims (`nsh.json` `"schemes": [...]`)... The platform reports every URL the system hands it as the root's EventKind::UrlScheme; the core keeps only those check_url accepts and holds them until the app listens, at most MAX_PENDING (16)."
+- crates/nsh-platform-windows/src/linking.rs: registers HKCU\Software\Classes\<scheme>, single instance via named mutex, second launch forwards the URL with WM_COPYDATA (tag 0x4E53_484C "NSHL").
+- crates/nsh-cli/src/apple.rs line 49: `("CFBundleURLTypes", Owner::Config("schemes"))` — nsh package writes the iOS/macOS Info.plist URL types from nsh.json "schemes"; main refuses an app-set CFBundleURLTypes ("`CFBundleURLTypes` is set by NSH from `schemes`").
+- crates/nsh-platform-linux/src/links.rs handles the same event on Linux.
+
+## Conclusion
+On 0.4.0 an app cannot hear a system-deep-link by itself: an EMBEDDING HOST must receive it (AppDelegate openURL / scene delegate on iOS, Activity onNewIntent on Android, Windows the app's own shell registration) and forward it over the host channel. The app listens with `host.on("auth.callback", ...)` (name is free; must be listed under capabilities.host for host.call only — on() needs no capability), and `host.params` covers the "launched with URL" case since host events are buffered (256) before the first listener.
