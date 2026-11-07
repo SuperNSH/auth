@@ -1,0 +1,16 @@
+{
+  "name": "nsh-auth Demo",
+  "id": "dev.nshauth.demo",
+  "version": "0.1.0",
+  "build": 1,
+  "theme": "theme.json",
+  "capabilities": {
+    "network": {
+      "hosts": ["127.0.0.1", "localhost", "10.0.2.2"]
+    },
+    "openUrl": {
+      "schemes": ["http", "https"]
+    },
+    "host": ["auth.*"]
+  }
+}

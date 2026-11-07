@@ -1,0 +1,11 @@
+{
+  "name": "@nsh-auth/broker",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "nsh-auth reference token broker for confidential OAuth clients. Loopback only, zero dependencies.",
+  "scripts": {
+    "start": "node main.mjs",
+    "test": "bun test"
+  }
+}

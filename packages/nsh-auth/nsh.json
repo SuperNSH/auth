@@ -1,0 +1,29 @@
+{
+  "name": "nsh-auth tests",
+  "id": "dev.nshauth.nsh-auth",
+  "version": "0.1.0",
+  "build": 1,
+  "capabilities": {
+    "network": {
+      "hosts": [
+        "127.0.0.1",
+        "accounts.google.com",
+        "oauth2.googleapis.com",
+        "openidconnect.googleapis.com",
+        "www.googleapis.com",
+        "www.facebook.com",
+        "graph.facebook.com",
+        "discord.com",
+        "github.com",
+        "api.github.com",
+        "appleid.apple.com",
+        "login.microsoftonline.com",
+        "twitter.com",
+        "api.twitter.com",
+        "broker.nsh-auth-sandbox.example"
+      ]
+    },
+    "openUrl": { "schemes": ["https", "http"] },
+    "host": ["auth.authorize", "auth.store.save", "auth.store.load", "auth.store.clear"]
+  }
+}

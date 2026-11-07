@@ -1,0 +1,40 @@
+{
+  "cssVars": {
+    "theme": {
+      "radius": "0.5rem",
+      "destructive-foreground": "#ffffff",
+      "provider-facebook": "#1877f2",
+      "provider-facebook-foreground": "#ffffff",
+      "provider-discord": "#5865f2",
+      "provider-discord-foreground": "#ffffff",
+      "provider-microsoft": "#0078d4",
+      "provider-microsoft-foreground": "#ffffff",
+      "provider-microsoft-red": "#f25022",
+      "provider-microsoft-green": "#7fba00",
+      "provider-microsoft-blue": "#00a4ef",
+      "provider-microsoft-yellow": "#ffb900"
+    },
+    "light": {
+      "provider-google": "#ffffff",
+      "provider-google-foreground": "#1f1f1f",
+      "provider-google-border": "#747775",
+      "provider-github": "#24292f",
+      "provider-github-foreground": "#ffffff",
+      "provider-apple": "#000000",
+      "provider-apple-foreground": "#ffffff",
+      "provider-x": "#000000",
+      "provider-x-foreground": "#ffffff"
+    },
+    "dark": {
+      "provider-google": "#131314",
+      "provider-google-foreground": "#e3e3e3",
+      "provider-google-border": "#8e918f",
+      "provider-github": "#e6edf3",
+      "provider-github-foreground": "#1f2328",
+      "provider-apple": "#ffffff",
+      "provider-apple-foreground": "#000000",
+      "provider-x": "#ffffff",
+      "provider-x-foreground": "#000000"
+    }
+  }
+}

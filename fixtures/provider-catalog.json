@@ -1,0 +1,588 @@
+{
+  "$comment": "Machine-readable per-provider reference backing docs/providers.md. Every client id and secret below is an obviously fake sandbox value; nothing was registered. Endpoint URLs were verified against provider docs and live discovery/metadata documents in November 2026; each provider lists its source pages.",
+  "providers": {
+    "google": {
+      "display_name": "Google",
+      "type": "oidc",
+      "endpoints": {
+        "discovery": "https://accounts.google.com/.well-known/openid-configuration",
+        "authorization": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token": "https://oauth2.googleapis.com/token",
+        "userinfo": "https://openidconnect.googleapis.com/v1/userinfo",
+        "revocation": "https://oauth2.googleapis.com/revoke",
+        "jwks": "https://www.googleapis.com/oauth2/v3/certs",
+        "end_session": null,
+        "notes": "Revocation: POST with token=<access-or-refresh-token>, empty 200. ID token iss=https://accounts.google.com, user key is sub, never email."
+      },
+      "scopes": {
+        "request": ["openid", "profile", "email"],
+        "authorize_extras": { "access_type": "offline", "prompt": "consent" },
+        "refresh_token_gate": "access_type=offline; refresh token issued only on first consent"
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": false,
+        "pkce": "required in practice, S256"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "Custom scheme: reversed client id (com.googleusercontent.apps.<prefix>) or own reverse-domain scheme containing a period. Loopback blocked for iOS client types.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "android": {
+          "rule": "No redirect: loopback and custom schemes are blocked for Android client types. Client is registered by package name + SHA-1; sanctioned path is the native SDK handing back a server auth code.",
+          "example": null
+        },
+        "desktop": {
+          "rule": "Loopback http://127.0.0.1:{random free port} (or [::1]); register http://127.0.0.1. localhost works but is warned against. Loopback stays supported for desktop client types.",
+          "example": "http://127.0.0.1:0/oauth2redirect"
+        },
+        "web": {
+          "rule": "Registered https redirect URI, exact match (redirect_uri_mismatch otherwise).",
+          "example": "https://demo.example.com/callback/google"
+        }
+      },
+      "quirks": [
+        "Embedded webviews are rejected with disallowed_useragent; use the system browser (SFSafariViewController is acceptable).",
+        "PKCE always; code_challenge_method defaults to plain if omitted, so send S256 explicitly.",
+        "client_secret optional for installed apps; never embed one.",
+        "Refresh token only on first consent, only with access_type=offline; caps per client/user, oldest silently invalidated.",
+        "Loopback IP flow blocked for iOS/Android/Chrome client types (all clients since 2022-10-21)."
+      ],
+      "registration": [
+        "console.cloud.google.com -> APIs & Services -> OAuth consent screen: app name, support email, scopes openid / .../auth/userinfo.profile / .../auth/userinfo.email.",
+        "Credentials -> Create credentials -> OAuth client ID, one client per surface: Web application (https redirect), Desktop app (http://127.0.0.1), iOS (bundle id, derives com.googleusercontent.apps scheme), Android (package + SHA-1).",
+        "Copy client id, e.g. fake nsh-auth-sandbox.apps.googleusercontent.com. Desktop/iOS clients have no secret; web secrets belong on the broker."
+      ],
+      "brand": {
+        "label": "Sign in with Google",
+        "alternates": ["Sign up with Google", "Continue with Google"],
+        "themes": {
+          "light": { "fill": "#FFFFFF", "stroke": "#747775", "text": "#1F1F1F" },
+          "dark": { "fill": "#131314", "stroke": "#8E918F", "text": "#E3E3E3" },
+          "neutral": { "fill": "#F2F2F2", "stroke": null, "text": "#1F1F1F" }
+        },
+        "font": "Google Sans Medium 14/20",
+        "shape": "rectangular or pill, keep aspect ratio",
+        "logo": "standard multicolor G, never recolored; padding 12/10/12 px (web/android), 16/12/16 (ios)",
+        "placement": "at least as prominent as other sign-in options",
+        "assets": "https://developers.google.com/static/identity/images/signin-assets.zip",
+        "source": "https://developers.google.com/identity/branding-guidelines"
+      },
+      "sources": [
+        "https://developers.google.com/identity/protocols/oauth2/openid-connect",
+        "https://developers.google.com/identity/protocols/oauth2/native-app",
+        "https://developers.google.com/identity/protocols/oauth2/resources/loopback-migration",
+        "https://developers.google.com/identity/branding-guidelines"
+      ]
+    },
+    "facebook": {
+      "display_name": "Facebook",
+      "type": "oauth2-with-oidc-variant",
+      "versioned": true,
+      "endpoints": {
+        "discovery": "https://www.facebook.com/.well-known/openid-configuration/",
+        "authorization": "https://www.facebook.com/{version}/dialog/oauth",
+        "token": "https://graph.facebook.com/{version}/oauth/access_token",
+        "userinfo": "https://graph.facebook.com/me?fields=id,name,email,picture",
+        "revocation": "DELETE https://graph.facebook.com/{version}/me/permissions",
+        "jwks": "https://www.facebook.com/.well-known/oauth/openid/jwks/",
+        "end_session": null,
+        "token_debug": "https://graph.facebook.com/debug_token?input_token=<token>&access_token=<app access token>",
+        "notes": "Version pin per release (docs sampled show v27.0). Discovery declares issuer https://www.facebook.com, RS256, implicit-only response types, no token endpoint. Access tokens are opaque; only the OIDC variant yields a JWT id_token."
+      },
+      "scopes": {
+        "request": ["openid", "public_profile", "email"],
+        "authorize_extras": { "state": "required", "nonce": "required in the OIDC code flow" },
+        "refresh_token_gate": "no documented refresh token; short-lived tokens, re-authenticate on expiry"
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": "required in the classic manual flow; optional in the OIDC code flow only when code_verifier is sent",
+        "pkce": "code_challenge required in OIDC flow; S256 recommended, plain is the default when omitted"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "No documented custom-scheme redirect for the manual flow; the sanctioned native path is the Facebook SDK (fb{app-id}:// internally) or an https relay. Desktop webview shape uses https://www.facebook.com/connect/login_success.html with response_type=token.",
+          "example": null
+        },
+        "android": {
+          "rule": "Same as iOS: SDK path or https relay; manual flow documents no custom scheme. Legacy Windows broker: ms-app://{package-security-identifier}.",
+          "example": null
+        },
+        "desktop": {
+          "rule": "https redirect or the login_success.html implicit shape; Valid OAuth Redirect URIs + Enforce HTTPS + Strict Mode apply.",
+          "example": "https://demo.example.com/callback/facebook"
+        },
+        "web": {
+          "rule": "Registered https redirect URI under Facebook Login -> Settings -> Valid OAuth Redirect URIs; Enforce HTTPS required; Strict Mode requires exact string match (state is the only ignored extra). Development mode tolerates unregistered localhost, a dashboard behavior not in the docs.",
+          "example": "https://demo.example.com/callback/facebook"
+        }
+      },
+      "quirks": [
+        "Two documented flow shapes: classic manual flow (client_secret required, server-to-server) vs OIDC code flow (client_secret optional with code_verifier). nsh-auth uses OIDC+PKCE for public clients, classic via the broker.",
+        "No RFC 7009 revocation endpoint; revoke grants via DELETE /{version}/me/permissions or the dashboard deauthorize callback.",
+        "URLs are versioned ({version}); version is provider config.",
+        "With Require App Secret enabled, Graph calls need appsecret_proof (HMAC-SHA256 of the token with the app secret).",
+        "Enforce HTTPS (all OAuth redirects) and Strict Mode (exact redirect match) are mandatory for all apps.",
+        "email is optional for users and may be absent even when granted."
+      ],
+      "registration": [
+        "developers.facebook.com -> My Apps -> Create App (Authentication).",
+        "Add the Facebook Login product; Facebook Login -> Settings -> Valid OAuth Redirect URIs, e.g. fake https://demo.example.com/callback/facebook; keep Enforce HTTPS and Strict Mode on.",
+        "App Settings -> Basic: App ID (fake 1234567890123456) and App Secret (fake nsh-sandbox-app-secret-not-real); secret goes to the broker.",
+        "Add the domain under Settings -> Basic -> App Domains; stay in Development mode while testing."
+      ],
+      "brand": {
+        "label": "Continue with Facebook",
+        "alternates": ["Log in with Facebook"],
+        "themes": { "primary": { "fill": "#5890FF", "text": "#FFFFFF", "note": "button blue per the UX page sentence 'Button colors are white and Facebook blue: 5890FF'" }, "brand_blue": "#1877F2", "alternate": "white button; black/white fallback" },
+        "font": "free choice, must stay legible; no published pixel minimums",
+        "logo": "approved f logo before the call to action, never recolored or altered; copy inside the button",
+        "placement": "large, rectangular, thumb-reachable, offered prominently",
+        "source": "https://developers.facebook.com/documentation/facebook-login/userexperience"
+      },
+      "sources": [
+        "https://developers.facebook.com/documentation/facebook-login/guides/advanced/manual-flow",
+        "https://developers.facebook.com/documentation/facebook-login/guides/advanced/oidc-token",
+        "https://developers.facebook.com/documentation/facebook-login/security",
+        "https://developers.facebook.com/blog/post/2018/06/08/enforce-https-facebook-login",
+        "https://developers.facebook.com/documentation/facebook-login/userexperience",
+        "https://www.facebook.com/.well-known/openid-configuration/"
+      ]
+    },
+    "discord": {
+      "display_name": "Discord",
+      "type": "oauth2-with-oidc-metadata",
+      "endpoints": {
+        "discovery": "https://discord.com/.well-known/openid-configuration",
+        "authorization": "https://discord.com/oauth2/authorize",
+        "token": "https://discord.com/api/oauth2/token",
+        "userinfo": "https://discord.com/api/users/@me",
+        "revocation": "https://discord.com/api/oauth2/token/revoke",
+        "jwks": "https://discord.com/api/oauth2/keys",
+        "end_session": null,
+        "oidc_userinfo": "https://discord.com/api/oauth2/userinfo",
+        "rfc8414_metadata": "https://discord.com/.well-known/oauth-authorization-server",
+        "notes": "Token endpoint is application/x-www-form-urlencoded ONLY. Response: access_token, token_type Bearer, expires_in 604800 (7 days), refresh_token, scope. Metadata: issuer https://discord.com, code_challenge_methods_supported [S256], token auth methods basic/post/none, iss parameter on all redirects."
+      },
+      "scopes": {
+        "request": ["identify", "email"],
+        "oidc_scope": "openid (ID token, RS256) exists per server metadata but is absent from the docs scopes table",
+        "refresh_token_gate": "refresh_token on the authorization_code grant; none for implicit or client_credentials"
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": "basic or form client_id/client_secret normally; metadata allows none for PKCE public clients",
+        "pkce": "S256 supported per RFC 8414 metadata but undocumented in prose docs"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "Register the redirect in the Developer Portal (OAuth2 -> Redirects); docs impose no scheme restriction and document no explicit custom-scheme rule. Confirm the scheme in the portal at registration.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "android": {
+          "rule": "Same as iOS: portal-registered redirect, no documented scheme restrictions.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "desktop": {
+          "rule": "No documented loopback rules; loopback is a possible portal-registered redirect, otherwise use a custom scheme.",
+          "example": "http://127.0.0.1:0/oauth2redirect"
+        },
+        "web": {
+          "rule": "Portal-registered https redirect URI, sent URL-encoded as redirect_uri.",
+          "example": "https://demo.example.com/callback/discord"
+        }
+      },
+      "quirks": [
+        "Every authorization redirect carries iss=https://discord.com (RFC 9207); validate before exchanging the code.",
+        "token/revoke revokes the entire authorization (all tokens for the grant) regardless of token_type_hint.",
+        "Token endpoint accepts x-www-form-urlencoded only; JSON is rejected.",
+        "expires_in is 604800 (7-day access tokens).",
+        "Implicit grant returns parameters in URL fragments, not query strings.",
+        "openid scope and PKCE are under-documented (metadata yes, prose no); prefer identify+email /users/@me as the identity source."
+      ],
+      "registration": [
+        "discord.com/developers/applications -> New Application.",
+        "OAuth2: copy Client ID (fake 1122334455667788990); Reset Secret for the Client Secret (fake nsh-sandbox-discord-secret), shown once.",
+        "OAuth2 -> Redirects: add per surface, e.g. fake https://demo.example.com/callback/discord and com.nshauth.sandbox:/oauth2redirect.",
+        "Public sign-in needs only the Client ID; the secret is for broker/confidential use."
+      ],
+      "brand": {
+        "label": "Continue with Discord",
+        "alternates": [],
+        "themes": { "primary": { "fill": "#5865F2", "text": "#FFFFFF" }, "palette": ["#5865F2", "#E0E3FF", "#000000"] },
+        "font": "no published requirement",
+        "logo": "do not edit, change, distort, recolor, or reconfigure; color/black/white variants only; digital use only",
+        "placement": "no official button spec; keep parity with the other provider buttons",
+        "source": "https://discord.com/branding"
+      },
+      "sources": [
+        "https://docs.discord.com/developers/topics/oauth2",
+        "https://discord.com/.well-known/oauth-authorization-server",
+        "https://discord.com/.well-known/openid-configuration",
+        "https://discord.com/branding"
+      ]
+    },
+    "github": {
+      "display_name": "GitHub",
+      "type": "oauth2",
+      "endpoints": {
+        "discovery": null,
+        "authorization": "https://github.com/login/oauth/authorize",
+        "token": "https://github.com/login/oauth/access_token",
+        "userinfo": "https://api.github.com/user",
+        "revocation": "DELETE https://api.github.com/applications/{client_id}/token",
+        "jwks": null,
+        "end_session": null,
+        "user_emails": "https://api.github.com/user/emails",
+        "token_check": "POST https://api.github.com/applications/{client_id}/token (body access_token)",
+        "token_reset": "PATCH https://api.github.com/applications/{client_id}/token (body access_token)",
+        "device_authorization": "https://github.com/login/device",
+        "notes": "No OIDC artifacts at all. Code expires after 10 minutes. Token endpoint returns form-encoded by default; send Accept: application/json for JSON. Check/reset/revoke are POST/PATCH/DELETE /applications/{client_id}/token with access_token in the request body, all Basic auth client_id:client_secret."
+      },
+      "scopes": {
+        "request": ["read:user", "user:email"],
+        "minimal_alternative": "no scope at all grants read-only public profile via /user",
+        "refresh_token_gate": "offline_access (or expiring-tokens enabled on the app): access token 8h, refresh token 6 months of disuse, rotation on use"
+      },
+      "client": {
+        "public_client_supported": false,
+        "client_secret_required_at_exchange": true,
+        "pkce": "S256 supported and strongly recommended; plain unsupported; does not remove the client_secret requirement"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "No documented custom-scheme callback. Mobile goes through the token broker (https callback on the owner's server that relays to the app) or the device flow (no redirect).",
+          "example": null
+        },
+        "android": {
+          "rule": "Same as iOS: broker or device flow; no documented custom-scheme callback.",
+          "example": null
+        },
+        "desktop": {
+          "rule": "Loopback supported: redirect_uri on http://127.0.0.1:{any port} or [::1] need not match the registered port; use 127.0.0.1/::1, not localhost.",
+          "example": "http://127.0.0.1:0/callback"
+        },
+        "web": {
+          "rule": "Registered https callback URL (up to 10 per app); host and port must match exactly, path may be a subdirectory, optional per-URL wildcard subdomain.",
+          "example": "https://broker.example.com/callback/github"
+        }
+      },
+      "quirks": [
+        "client_secret required on the code exchange (web application flow); only the device flow omits it -> token broker is mandatory for in-app sign-in.",
+        "Rotating refresh tokens: a used refresh token is invalidated and replaced; refreshing cannot widen scopes.",
+        "Token check/reset/revoke require Basic auth with the client secret, so they are broker-side operations.",
+        "Identity is the REST /user call; no ID token to verify; user id is the stable key.",
+        "GitHub recommends GitHub Apps over OAuth Apps for new integrations; nsh-auth ships the OAuth App flow as it fits user sign-in."
+      ],
+      "registration": [
+        "GitHub -> Settings -> Developer settings -> OAuth Apps -> New OAuth App.",
+        "Fill application name, homepage URL, and the Authorization callback URL (one per surface, up to 10), e.g. fake https://broker.example.com/callback/github.",
+        "Copy the Client ID (fake Ov23linshsandbox0000000) and generate the Client Secret (fake nsh-sandbox-gh-secret), shown once; it goes into broker config only.",
+        "Optional: enable Expire user authorization tokens for the refresh-token behavior."
+      ],
+      "brand": {
+        "label": "Sign in with GitHub",
+        "alternates": [],
+        "themes": {
+          "convention_dark": { "fill": "#24292F", "text": "#FFFFFF", "note": "convention, not a published spec" },
+          "alternate": "white fill with the black mark"
+        },
+        "font": "no published requirement",
+        "logo": "Invertocat in white, black, or (few cases) grey/green; never compress, distort, skew, stretch, or alter; keep contrast",
+        "placement": "do not imply GitHub endorsement; logo only for GitHub sign-in/integration",
+        "source": "https://brand.github.com/foundations/logo"
+      },
+      "sources": [
+        "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+        "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+        "https://docs.github.com/en/rest/apps/oauth-applications",
+        "https://brand.github.com/foundations/logo"
+      ]
+    },
+    "apple": {
+      "display_name": "Sign in with Apple",
+      "type": "oidc",
+      "endpoints": {
+        "discovery": "https://appleid.apple.com/.well-known/openid-configuration",
+        "authorization": "https://appleid.apple.com/auth/authorize",
+        "token": "https://appleid.apple.com/auth/token",
+        "userinfo": null,
+        "revocation": "https://appleid.apple.com/auth/revoke",
+        "jwks": "https://appleid.apple.com/auth/keys",
+        "end_session": null,
+        "notes": "Discovery: issuer https://appleid.apple.com, scopes openid/email/name, response_modes query/fragment/form_post, token auth client_secret_post, RS256. Grant types authorization_code and refresh_token. Code is single-use, 5-minute validity. Identity rides in the id_token; name/email also arrive as a user field on the first authorization POST."
+      },
+      "scopes": {
+        "request": ["openid", "name", "email"],
+        "refresh_token_gate": "refresh tokens issued at exchange via grant_type=refresh_token; no fixed expiry but invalidated out-of-band (password/email change)"
+      },
+      "client": {
+        "public_client_supported": false,
+        "client_secret_required_at_exchange": true,
+        "client_secret_format": "ES256 JWT made by the owner: header {alg: ES256, kid: Key ID}, payload {iss: Team ID, iat, exp <= iat+15777000, aud: https://appleid.apple.com, sub: client_id}, signed with the account .p8 key -> lives in the broker",
+        "pkce": "not applicable; client_secret JWT is the client authentication"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "Prefer ASAuthorizationController (system flow, no HTTP redirect). The web-based path still needs an https redirect_uri; Apple does not accept custom schemes or IPs/localhost.",
+          "example": null
+        },
+        "android": {
+          "rule": "https redirect_uri only (Services ID Return URL); the relay page must send the user back to the app; no custom scheme, IP, or localhost accepted.",
+          "example": "https://demo.example.com/callback/apple"
+        },
+        "desktop": {
+          "rule": "https redirect_uri registered as Return URL; ASWebAuthenticationSession can start the flow but the result arrives as a POST to the https relay.",
+          "example": "https://demo.example.com/callback/apple"
+        },
+        "web": {
+          "rule": "Registered https Return URL, domain-based, no fragment; response_mode=form_post whenever scopes are requested: code, id_token, state, and first-time user arrive as application/x-www-form-urlencoded POST body fields.",
+          "example": "https://demo.example.com/callback/apple"
+        }
+      },
+      "quirks": [
+        "client_secret is a self-made ES256 JWT (max exp 15777000 seconds, about six months) signed with the account .p8 key; the key is a credential and belongs in the broker.",
+        "form_post + POST-body identity: loopback and custom schemes cannot receive the response; only a real https endpoint can. Server must relay control back to the app.",
+        "name and email are delivered only on the first authorization (user POST field); persist at first sign-in.",
+        "user_cancelled_authorize is the only error Apple may POST back; treat as cancel.",
+        "Revocation (/auth/revoke with token, client_id, client_secret, token_type_hint) is required by App Store rules on account deletion.",
+        "Handle invalid_grant on refresh by re-running the authorization flow.",
+        "id_token RS256, iss https://appleid.apple.com, aud = client_id, sub = stable per-developer user id."
+      ],
+      "registration": [
+        "developer.apple.com -> Certificates, Identifiers & Profiles -> Identifiers: App ID with the Sign In with Apple capability (native flow).",
+        "Register a Services ID (fake com.nshauth.sandbox), enable Sign In with Apple, set the primary domain and Return URLs (fake https://demo.example.com/callback/apple).",
+        "Keys -> Create a Key with Sign In with Apple; download the .p8 and note the 10-char Key ID; note the Team ID (fake NSHSANDBX01). Services ID + Team ID + Key ID + .p8 are the broker inputs for minting client_secret JWTs."
+      ],
+      "brand": {
+        "label": "Sign in with Apple",
+        "alternates": ["Sign up with Apple", "Continue with Apple"],
+        "styles": ["black", "white", "white with outline"],
+        "minimums": { "width_pt": 140, "height_pt": 30, "margin": "1/10 of button height" },
+        "logo": "apple.logo SF Symbol, height = button height; title font = 43% of button height (44pt -> 19pt); logo-only button is 1:1, no crop",
+        "text_rules": "black or white only, no custom colors; capitalization preserved (first word + Apple capitalized)",
+        "shape": "corner radius adjustable: rounded (default), square, capsule",
+        "assets": "https://developer.apple.com/design/resources/",
+        "source": "https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple"
+      },
+      "sources": [
+        "https://appleid.apple.com/.well-known/openid-configuration",
+        "https://developer.apple.com/documentation/signinwithapplerestapi/request-an-authorization-to-the-sign-in-with-apple-server",
+        "https://developer.apple.com/documentation/signinwithapple/incorporating-sign-in-with-apple-into-other-platforms",
+        "https://developer.apple.com/documentation/accountorganizationaldatasharing/creating-a-client-secret",
+        "https://developer.apple.com/documentation/signinwithapplerestapi/generate-and-validate-tokens",
+        "https://developer.apple.com/help/account/capabilities/configure-sign-in-with-apple-for-the-web",
+        "https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple"
+      ]
+    },
+    "microsoft": {
+      "display_name": "Microsoft",
+      "type": "oidc",
+      "endpoints": {
+        "discovery": "https://login.microsoftonline.com/{tenant}/v2.0/.well-known/openid-configuration",
+        "authorization": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize",
+        "token": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+        "userinfo": "https://graph.microsoft.com/oidc/userinfo",
+        "revocation": null,
+        "jwks": "https://login.microsoftonline.com/{tenant}/discovery/v2.0/keys",
+        "end_session": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/logout",
+        "tenant_values": ["common", "organizations", "consumers", "<tenant-id-or-domain>"],
+        "notes": "No RFC 7009 revocation endpoint; sign-out is local token destruction plus the OIDC end-session request (post_logout_redirect_uri must be registered). Access tokens ~1h (expires_in 3599)."
+      },
+      "scopes": {
+        "request": ["openid", "profile", "email", "offline_access", "User.Read"],
+        "refresh_token_gate": "offline_access must be requested explicitly or no refresh token is issued",
+        "notes": "Scopes are resource-prefixed (User.Read = Graph); a mixed-resource token request collapses to the first resource."
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": "only for confidential web apps; native/SPA must not use secrets (private_key_jwt or certificate credentials are the confidential alternative)",
+        "pkce": "recommended for all client types; required for SPA; S256 and plain both accepted"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "iOS/macOS or Mobile-and-desktop platform type; custom schemes supported (msal{client-id}://auth is generated for the mobile platform).",
+          "example": "msal11111111-2222-3333-4444-555555555555://auth"
+        },
+        "android": {
+          "rule": "Android platform type with the package/scheme binding MSAL generates.",
+          "example": "msal11111111-2222-3333-4444-555555555555://auth"
+        },
+        "desktop": {
+          "rule": "Loopback per RFC 8252: http://localhost:{any port}, port ignored when matching; Microsoft recommends 127.0.0.1 over localhost. The portal text box rejects http://127.0.0.1 (add via manifest replyUrlsWithType); [::1] unsupported. Embedded-webview fallback: https://login.microsoftonline.com/common/oauth2/nativeclient. form_post recommended with localhost.",
+          "example": "http://127.0.0.1:0/callback"
+        },
+        "web": {
+          "rule": "https URI; SPA code+PKCE needs the URI registered as type SPA (web type fails CORS redemption). URIs case-sensitive, <= 256 chars, 256 total (100 with personal accounts in audience), no fragments/IDN/special chars ! $ ' ( ) , ;.",
+          "example": "https://demo.example.com/callback/microsoft"
+        }
+      },
+      "quirks": [
+        "Tenant scoping is in the URL path: common / organizations / consumers / tenant-id; guest cross-tenant sign-in must use the target tenant id.",
+        "offline_access explicit; refresh tokens are not revoked on use (rotate and discard); spa-type redirect URIs get 24h refresh tokens.",
+        "No revocation endpoint: sign-out = drop local tokens + OIDC logout request.",
+        "ID-token issuance must be enabled in the registration for response_type containing id_token (implicit/hybrid); the code flow returns the id_token from the token endpoint when openid was requested.",
+        "Graph access tokens are opaque/encrypted (especially for personal accounts): never parse tokens for APIs you do not own; use the ID token for identity.",
+        "response_mode: query for code-only, fragment/form_post when an id_token rides along; form_post recommended for reliability and localhost."
+      ],
+      "registration": [
+        "entra.microsoft.com -> Microsoft Entra ID -> App registrations -> New registration; pick the account audience (e.g. any organizational directory + personal Microsoft accounts).",
+        "Copy the Application (client) ID (fake 11111111-2222-3333-4444-555555555555).",
+        "Authentication -> Add a platform per surface: Web (https redirect), Single-page application (same URI, SPA type), Mobile and desktop applications / Android / iOS (custom scheme).",
+        "Authentication -> Advanced settings: enable Allow public client flows = Yes for the secretless native flow.",
+        "Confidential/broker deployments add a credential under Certificates & secrets."
+      ],
+      "brand": {
+        "label": "Sign in with Microsoft",
+        "alternates": ["Sign in"],
+        "themes": { "note": "light and dark schemes; use the official downloadable button SVGs and redlines as the reference; no hex values published on the guidelines page" },
+        "font": "follow the redlines with the official assets; embed the official SVG symbol in the hand-built button",
+        "logo": "four-square Microsoft symbol exactly as published; do not alter; its pairing with the wording is what represents the platform",
+        "copy_rules": ["never say Azure AD, Microsoft 365 ID, enterprise account, or corporate account in UI copy", "use work or school account for Entra accounts", "provide sign-out / account switching"],
+        "source": "https://learn.microsoft.com/en-us/entra/identity-platform/howto-add-branding-in-apps"
+      },
+      "sources": [
+        "https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc",
+        "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow",
+        "https://learn.microsoft.com/en-us/entra/identity-platform/reply-url",
+        "https://learn.microsoft.com/en-us/entra/identity-platform/howto-add-branding-in-apps"
+      ]
+    },
+    "x": {
+      "display_name": "X (Twitter)",
+      "type": "oauth2",
+      "endpoints": {
+        "discovery": null,
+        "authorization": "https://x.com/i/oauth2/authorize",
+        "token": "https://api.x.com/2/oauth2/token",
+        "userinfo": "https://api.x.com/2/users/me",
+        "revocation": "https://api.x.com/2/oauth2/revoke",
+        "jwks": null,
+        "end_session": null,
+        "notes": "Not OIDC: no id_token, JWKS, or discovery. Authorize params: response_type=code, client_id, redirect_uri (exact match), scope, state <= 500 chars, code_challenge, code_challenge_method S256|plain. Token endpoint form-encoded; public clients send client_id in the body, confidential use a Basic header. Code expires in 30 seconds; access tokens live 2 hours without offline.access."
+      },
+      "scopes": {
+        "request": ["users.read", "tweet.read"],
+        "email_scope": "users.email (gated by app access level)",
+        "refresh_token_gate": "offline.access: no refresh token without it"
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": "public clients (Native App / SPA app types) get no secret and use PKCE only; confidential clients (Web App / Automated App) use a Basic header",
+        "pkce": "required for public clients, present on all documented examples; S256 preferred over plain"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "Native App is a public client type; callback URLs are allowlisted in the console with exact match incl. trailing slashes, max 10. Custom schemes are not documented either way; register and verify, or use an https relay.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "android": {
+          "rule": "Same as iOS.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "desktop": {
+          "rule": "Allowlisted http://127.0.0.1 callback; docs recommend 127.0.0.1 over localhost for local development.",
+          "example": "http://127.0.0.1:0/callback"
+        },
+        "web": {
+          "rule": "Allowlisted https callback URL; javascript:, data:, file:, ftp:, mailto:, telnet: and similar schemes are disallowed.",
+          "example": "https://demo.example.com/callback/x"
+        }
+      },
+      "quirks": [
+        "PKCE-only for public clients; the flow is literally named Authorization Code Flow with PKCE.",
+        "No OIDC: identity is the REST /2/users/me call over TLS; no ID token to verify.",
+        "Refresh tokens gated by offline.access; rotate at the same token endpoint (grant_type=refresh_token).",
+        "30-second authorization code lifetime: exchange immediately.",
+        "Public vs confidential is fixed by app type chosen in the console; credentials are shown once.",
+        "Revoke takes token (+ client_id or Basic header)."
+      ],
+      "registration": [
+        "console.x.com -> create a Project and an App.",
+        "Settings -> User authentication settings -> Set up: enable OAuth 2.0, choose app type Native App (public) or Web App (confidential), set Read or Read-and-write, enter Callback URI(s) (fake https://demo.example.com/callback/x) and a Website URL.",
+        "Copy the OAuth 2.0 Client ID (fake bnNoLXNhbmRib3gtbm90LXJlYWwwMDAwMDAwMDoxOmNp, decodes to nsh-sandbox-not-real00000000:1:ci) and Client Secret for confidential apps; shown once."
+      ],
+      "brand": {
+        "label": "Continue with X",
+        "alternates": [],
+        "themes": { "primary": { "fill": "#000000", "text": "#FFFFFF" }, "alternate": "white fill with black mark" },
+        "font": "no published requirement",
+        "logo": "the X logo may not be altered; black/white treatments; details live in the toolkit's trademark/brand guidelines",
+        "placement": "mark only to indicate X sign-in; do not imply endorsement",
+        "source": "https://about.x.com/en/who-we-are/brand-toolkit"
+      },
+      "sources": [
+        "https://docs.x.com/fundamentals/authentication/oauth-2-0/user-access-token",
+        "https://docs.x.com/resources/fundamentals/authentication/oauth-2-0/authorization-code",
+        "https://docs.x.com/fundamentals/developer-apps",
+        "https://about.x.com/en/who-we-are/brand-toolkit"
+      ]
+    },
+    "oidc_template": {
+      "display_name": "Generic OIDC / OAuth 2.0",
+      "type": "template",
+      "endpoints": {
+        "discovery": "https://{issuer-host}/.well-known/openid-configuration",
+        "discovery_oauth2": "https://{issuer-host}/.well-known/oauth-authorization-server",
+        "authorization": "{authorization_endpoint from discovery}",
+        "token": "{token_endpoint from discovery}",
+        "userinfo": "{userinfo_endpoint from discovery, optional}",
+        "revocation": "{revocation_endpoint from discovery, optional}",
+        "jwks": "{jwks_uri from discovery}",
+        "end_session": "{end_session_endpoint from discovery, optional}",
+        "notes": "Read behavior from metadata: code_challenge_methods_supported, token_endpoint_auth_methods_supported (none = public clients OK), id_token_signing_alg_values_supported, scopes_supported, authorization_response_iss_parameter_supported, issuer."
+      },
+      "scopes": {
+        "request": ["openid", "profile", "email"],
+        "refresh_token_gate": "offline_access when the provider gates refresh tokens on it; check scopes_supported"
+      },
+      "client": {
+        "public_client_supported": true,
+        "client_secret_required_at_exchange": "depends on token_endpoint_auth_methods_supported; use none for public clients when listed",
+        "pkce": "S256 always, if the server lists S256"
+      },
+      "redirect": {
+        "ios": {
+          "rule": "RFC 8252 custom scheme in reverse-domain form (period recommended), declared to the host so the OS routes it back; some providers require an exact registered scheme+path.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "android": {
+          "rule": "Same as iOS via the Android intent filter.",
+          "example": "com.nshauth.sandbox:/oauth2redirect"
+        },
+        "desktop": {
+          "rule": "RFC 8252 loopback http://127.0.0.1:{random free port}; port matching is provider-specific (some ignore it).",
+          "example": "http://127.0.0.1:0/callback"
+        },
+        "web": {
+          "rule": "Registered https redirect URI.",
+          "example": "https://demo.example.com/callback/oidc"
+        }
+      },
+      "quirks": [
+        "Follow the metadata: only send code_challenge_method values the server lists; pick client auth from token_endpoint_auth_methods_supported; verify iss when authorization_response_iss_parameter_supported is true.",
+        "Validate the id_token against jwks_uri with the advertised signing algs; check iss == discovery issuer, aud == client_id, exp/iat, nonce.",
+        "A provider with no userinfo_endpoint and no openid scope is plain OAuth 2.0: identity comes from an /me-style REST call configured by the owner."
+      ],
+      "registration": [
+        "Create an OAuth client in the provider's console.",
+        "Register one redirect URI per surface (fake https://demo.example.com/callback/oidc, com.nshauth.sandbox:/oauth2redirect, loopback for desktop).",
+        "Obtain client_id (+ client_secret only for confidential deployments) and enter the issuer URL in nsh-auth config; discovery is fetched at runtime."
+      ],
+      "brand": {
+        "label": "Sign in with {provider name}",
+        "alternates": [],
+        "themes": { "note": "no brand rules for a generic provider; render a neutral secondary button in the host app palette" },
+        "logo": null,
+        "source": null
+      },
+      "sources": [
+        "https://openid.net/specs/openid-connect-discovery-1_0.html",
+        "https://datatracker.ietf.org/doc/html/rfc8414",
+        "https://datatracker.ietf.org/doc/html/rfc8252"
+      ]
+    }
+  }
+}

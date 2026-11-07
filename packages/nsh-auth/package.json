@@ -1,0 +1,12 @@
+{
+  "name": "nsh-auth",
+  "version": "0.1.0",
+  "description": "Social and OAuth sign-in for Native Shell TSX apps: PKCE authorize, callback validation, token exchange and refresh, JWKS id-token checks, session signals",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "files": ["src", "App.tsx", "nsh.json"],
+  "repository": "https://github.com/freeoxide/nsh-auth"
+}

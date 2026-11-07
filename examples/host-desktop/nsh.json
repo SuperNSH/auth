@@ -1,0 +1,10 @@
+{
+  "name": "nsh-auth desktop",
+  "id": "dev.nshauth.desktop",
+  "version": "0.1.0",
+  "build": 1,
+  "appearance": "system",
+  "theme": "theme.json",
+  "rust": ".",
+  "root": "App"
+}

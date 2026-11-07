@@ -1,0 +1,5 @@
+{
+  "extends": "./.nsh/tsconfig.json",
+  "include": ["App.tsx", "src/**/*.ts", "tests/**/*.ts", "tests/**/*.tsx"],
+  "exclude": ["tests/protocol.spec.ts"]
+}

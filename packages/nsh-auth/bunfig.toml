@@ -1,0 +1,4 @@
+# Plain `bun test` runs the protocol specs only; tests/auth.test.tsx is the
+# nsh harness and runs under `nsh test` (the module "nsh/test" does not exist for bun).
+[test]
+pathIgnorePatterns = ["tests/auth.test.tsx"]
