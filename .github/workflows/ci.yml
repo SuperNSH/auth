@@ -1,11 +1,12 @@
 name: CI
 
 # Every compile and test runs here, on GitHub's runners, never on a developer's machine.
-# kache caches compiler outputs in GitHub's Actions cache; only master (the default branch) saves to it.
+# kache caches compiler outputs in GitHub's Actions cache; only main (the default branch) saves to it.
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 concurrency:
@@ -53,7 +54,7 @@ jobs:
           cache-dir: ${{ runner.temp }}/kache
           manifest-key: rust-${{ matrix.os }}
           cache-key-prefix: kache-rust-${{ matrix.os }}
-          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           pr-comment: false
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace --no-fail-fast
@@ -85,7 +86,7 @@ jobs:
           cache-dir: ${{ runner.temp }}/kache
           manifest-key: check-${{ matrix.target }}
           cache-key-prefix: kache-check-${{ matrix.target }}
-          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           pr-comment: false
       - name: Point cc at the NDK
         if: matrix.target == 'aarch64-linux-android'
@@ -192,7 +193,7 @@ jobs:
           cache-dir: ${{ runner.temp }}/kache
           manifest-key: smoke
           cache-key-prefix: kache-smoke
-          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           pr-comment: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -226,7 +227,7 @@ jobs:
           cache-dir: ${{ runner.temp }}/kache
           manifest-key: host-desktop
           cache-key-prefix: kache-host-desktop
-          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           pr-comment: false
       - name: Place the nsh-http sibling the desktop transport wraps
         # examples/host-desktop path-depends on nsh-http one level above the checkout;
@@ -241,8 +242,8 @@ jobs:
           cargo test
 
   demo:
-    name: demo (${{ matrix.target }})
-    if: github.event_name == 'push'
+    name: demo (${{ matrix.name }})
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [format, rust, cross-check, typescript, demo-check, smoke]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -250,13 +251,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest, target: macos, entry: App.tsx }
-          - { os: macos-latest, target: ios-simulator, entry: App.tsx }
-          - { os: ubuntu-latest, target: linux, entry: App.tsx }
-          - { os: ubuntu-latest, target: android, entry: App.tsx }
+          # Desktop builds come out for the runner's own processor, so each architecture gets its own runner.
+          # NSH installs from SuperNSH/nsh-builds' installer: NSH's own release where it has one
+          # (macOS arm64, Linux x86_64, Windows x86_64), SuperNSH/nsh-builds' build of it otherwise.
+          - { os: macos-latest, target: macos, name: macos-arm64, entry: App.tsx }
+          - { os: macos-15-intel, target: macos, name: macos-x86_64, entry: App.tsx }
+          - { os: ubuntu-latest, target: linux, name: linux-x86_64, entry: App.tsx }
+          - { os: ubuntu-24.04-arm, target: linux, name: linux-arm64, entry: App.tsx }
+          - { os: windows-latest, target: windows, name: windows-x86_64, entry: App.tsx }
+          - { os: windows-11-arm, target: windows, name: windows-arm64, entry: App.tsx }
+          - { os: macos-latest, target: ios-simulator, name: ios-simulator, entry: App.tsx }
+          - { os: ubuntu-latest, target: android, name: android, entry: App.tsx }
           # nsh-query cannot load in the web runtime, so the web surface uses the query-free entry.
-          - { os: ubuntu-latest, target: web, entry: App.web.tsx }
-          - { os: windows-latest, target: windows, entry: App.tsx }
+          - { os: ubuntu-latest, target: web, name: web, entry: App.web.tsx }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
@@ -267,9 +274,9 @@ jobs:
         with:
           version: v2.0.0
           cache-dir: ${{ runner.temp }}/kache
-          manifest-key: demo-${{ matrix.target }}
-          cache-key-prefix: kache-demo-${{ matrix.target }}
-          save-cache: ${{ github.ref == 'refs/heads/master' }}
+          manifest-key: demo-${{ matrix.name }}
+          cache-key-prefix: kache-demo-${{ matrix.name }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           pr-comment: false
       - name: Install the wasm-bindgen CLI that NSH's web runtime needs
         if: matrix.target == 'web'
@@ -282,14 +289,14 @@ jobs:
       - name: Install NSH
         if: runner.os != 'Windows'
         run: |
-          curl -fsSL https://nsh.dev/install.sh | sh
+          curl -fsSL https://raw.githubusercontent.com/SuperNSH/nsh-builds/master/install.sh | sh
           echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Install NSH
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          irm https://nsh.dev/install.ps1 | iex
+          irm https://raw.githubusercontent.com/SuperNSH/nsh-builds/master/install.ps1 | iex
           "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -322,7 +329,7 @@ jobs:
         run: |
           mkdir -p dist
           cd "$RUNNER_TEMP/out"
-          name="nsh-auth-demo-${{ matrix.target }}"
+          name="nsh-auth-demo-${{ matrix.name }}"
           case "${{ matrix.target }}" in
             android) cp ./*.apk "$GITHUB_WORKSPACE/dist/$name.apk" ;;
             linux) cp ./*.tar.gz "$GITHUB_WORKSPACE/dist/$name.tar.gz" ;;
@@ -333,14 +340,14 @@ jobs:
           ls -la "$GITHUB_WORKSPACE/dist"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: demo-${{ matrix.target }}
+          name: demo-${{ matrix.name }}
           path: dist/*
           if-no-files-found: error
 
   publish:
     name: publish the latest build
     needs: demo
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -361,4 +368,38 @@ jobs:
           gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
           gh release create latest dist/* --repo "$REPO" --target "$GITHUB_SHA" --latest \
             --title "Latest build" \
-            --notes "Demo builds from master at $GITHUB_SHA, replaced on every push to master. Unsigned: macOS and Windows will warn before opening them, and the iOS build runs only in the simulator."
+            --notes "Demo builds from main at $GITHUB_SHA, replaced on every push to main. Unsigned: macOS and Windows will warn before opening them, and the iOS build runs only in the simulator."
+
+  pages:
+    name: deploy the web demo to Pages
+    needs: demo
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Job-level permissions replace the workflow's, and deploy-pages authenticates with OIDC.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # The pages group, not ci-<ref>, so a deployment from an older run is cancelled by a newer one.
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: demo-web
+          path: dist
+      - name: Unpack the web build
+        run: |
+          # NSH packages the web build inside a directory named after the app; the site root is its contents.
+          mkdir -p "$RUNNER_TEMP/site"
+          tar -xzf dist/nsh-auth-demo-web.tar.gz -C "$RUNNER_TEMP/site" --strip-components=1
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/site
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
