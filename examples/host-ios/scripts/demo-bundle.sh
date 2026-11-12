@@ -2,14 +2,19 @@
 # Builds the demo app (examples/demo) and places its bundle output into ./nsh,
 # the folder reference the app embeds. The command documented in
 # examples/demo/README.md wins when its README exists; otherwise the standard
-# `nsh build --release --out <dir>` from nsh 0.4.0 examples/embed-ios runs.
+# `nsh build --release --out <dir>` from nsh's examples/embed-ios runs.
 # Stamp-based: a rebuild is skipped while the bundle is newer than the demo
 # sources. `--force` rebuilds (build-gate.sh always passes it).
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-# xcodebuild runs phases with a minimal PATH; Homebrew is not on it.
-export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+# xcodebuild runs phases with a minimal PATH; Homebrew is not on it. The
+# upstream installer's ~/.nsh/bin comes first: Homebrew's nsh is still 0.4.0.
+export PATH="$HOME/.nsh/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+case "$(nsh --version 2>/dev/null)" in
+    "nsh 0.5.0"*) ;;
+    *) echo "demo-bundle: need nsh 0.5.0 (upstream installer, ~/.nsh/bin); found: $(command -v nsh || echo none) $(nsh --version 2>/dev/null || true)" >&2; exit 1 ;;
+esac
 HOST_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$HOST_DIR/../.." && pwd)
 DEMO_DIR="$REPO_ROOT/examples/demo"

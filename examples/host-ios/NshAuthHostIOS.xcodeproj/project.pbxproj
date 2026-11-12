@@ -196,7 +196,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_TESTABILITY = YES;
-				NSH_EMBED_DIR = "/opt/homebrew/opt/nsh/libexec/embed/ios";
+				NSH_EMBED_DIR = "$(SRCROOT)/../../.nsh-embed/0.5.0/ios";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -215,8 +215,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
-				/* Homebrew path of the nsh 0.4.0 embedding frameworks. */
-				NSH_EMBED_DIR = "/opt/homebrew/opt/nsh/libexec/embed/ios";
+				/* The nsh 0.5.0 embedding frameworks, unpacked by tools/fetch-nsh-embed.sh. */
+				NSH_EMBED_DIR = "$(SRCROOT)/../../.nsh-embed/0.5.0/ios";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

@@ -13,7 +13,7 @@ correctly and stops there.
 
 ## Prerequisites
 
-- The `nsh` CLI, 0.4.0 (never upgrade it).
+- The `nsh` CLI, 0.5.0.
 - This repository cloned locally (the demo lives in `examples/demo`).
 - The two sibling libraries the demo imports, cloned alongside it — `nsh-form`
   and `nsh-query` (the paths below assume `~/fo/nsh-form` and `~/fo/nsh-query`),

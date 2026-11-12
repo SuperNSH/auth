@@ -41,7 +41,14 @@ compiler's version is forced upward).
 
 ## Prerequisites
 
-- `nsh` 0.4.0 from Homebrew (`brew --prefix nsh`/libexec has the embed AARs).
+- `nsh` 0.5.0 from the upstream installer (`~/.nsh/bin`; the gate puts it
+  ahead of Homebrew, whose formula is still 0.4.0, and checks the version).
+- The 0.5.0 embed AARs: `tools/fetch-nsh-embed.sh android` (the gate runs it)
+  downloads `nsh-embed-android.zip` from the v0.5.0 release once, checks it
+  against a pinned sha256 and unpacks it into the git-ignored
+  `.nsh-embed/0.5.0/android` at the repository root. NSH 0.5.0 no longer
+  puts the AARs in its install. Set `NSH_EMBED_ANDROID=<dir>` to use other
+  copies.
 - Android SDK at `$HOME/Library/Android/sdk`.
 - Android Studio's JDK (this machine has no usable `/usr/bin/java`).
 - An emulator or device with API 28+. On this shared machine, only use the
@@ -63,8 +70,8 @@ The gate is idempotent and fails on any error. It runs, in order:
    `nsh build` line, else `nsh build --release` inside `examples/demo`.
 2. Copies that bundle output into `app/src/main/assets/nsh` (what
    `NshView.loadAssetBundle("nsh")` loads).
-3. Copies `nsh.aar` and `nsh-dev.aar` from
-   `$(brew --prefix nsh)/libexec/embed/android` into `app/libs/`, writes
+3. Copies `nsh.aar` and `nsh-dev.aar` from `.nsh-embed/0.5.0/android`
+   (fetched as above) into `app/libs/`, writes
    `local.properties`, and runs `./gradlew assembleDebug` with
    `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
    and `ANDROID_HOME=$HOME/Library/Android/sdk`.
@@ -99,11 +106,12 @@ Same steps, spelled out, from `examples/host-android`:
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 mkdir -p app/libs
-cp "$(brew --prefix nsh)/libexec/embed/android/nsh.aar" "$(brew --prefix nsh)/libexec/embed/android/nsh-dev.aar" app/libs/
+embed="$(../../tools/fetch-nsh-embed.sh android)"
+cp "$embed/nsh.aar" "$embed/nsh-dev.aar" app/libs/
 ./gradlew assembleDebug
 ```
 
-`./gradlew` needs `nsh` on `PATH` (its `preBuild` task rebuilds the demo bundle
+`./gradlew` needs `nsh` 0.5.0 first on `PATH` (its `preBuild` task rebuilds the demo bundle
 into `app/src/main/assets/nsh`).
 
 ## Install and launch

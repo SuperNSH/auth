@@ -1,4 +1,6 @@
 target/
+# NSH embedding SDKs unpacked by tools/fetch-nsh-embed.sh
+.nsh-embed/
 .nsh/
 node_modules/
 .DS_Store

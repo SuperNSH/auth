@@ -23,6 +23,16 @@ SIM_UDID="DEE48BA7-1919-47BC-A04A-887B6D2AB046" # simulator "nsh-auth" — the o
 APP="$SCRIPT_DIR/build/derived/Build/Products/Debug-iphonesimulator/NshAuthSandbox.app"
 RESOLVED="$SCRIPT_DIR/NshAuthHostIOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
 
+# 0. The nsh 0.5.0 embedding frameworks: tools/fetch-nsh-embed.sh downloads
+# nsh-embed-ios.zip from the v0.5.0 release once, sha256-checked, into the
+# git-ignored .nsh-embed/0.5.0/ios (the project's default NSH_EMBED_DIR). Set
+# NSH_EMBED_DIR to use frameworks from elsewhere.
+if [ -z "${NSH_EMBED_DIR:-}" ]; then
+    NSH_EMBED_DIR=$("$SCRIPT_DIR/../../tools/fetch-nsh-embed.sh" ios)
+fi
+[ -f "$NSH_EMBED_DIR/NativeShellDev.xcframework/Info.plist" ] && [ -f "$NSH_EMBED_DIR/NativeShell.xcframework/Info.plist" ] \
+    || { echo "gate failed: no NativeShell(Dev).xcframework in $NSH_EMBED_DIR" >&2; exit 1; }
+
 # 1. Demo build and bundle copy (fresh every gate run).
 "$SCRIPT_DIR/scripts/demo-bundle.sh" --force
 
@@ -50,7 +60,8 @@ xcodebuild \
     -destination "id=$SIM_UDID" \
     -derivedDataPath "$SCRIPT_DIR/build/derived" \
     -onlyUsePackageVersionsFromResolvedFile \
-    -resolvePackageDependencies
+    -resolvePackageDependencies \
+    NSH_EMBED_DIR="$NSH_EMBED_DIR"
 xcodebuild \
     -project "$SCRIPT_DIR/NshAuthHostIOS.xcodeproj" \
     -scheme NshAuthSandbox \
@@ -58,6 +69,7 @@ xcodebuild \
     -destination "id=$SIM_UDID" \
     -derivedDataPath "$SCRIPT_DIR/build/derived" \
     -onlyUsePackageVersionsFromResolvedFile \
+    NSH_EMBED_DIR="$NSH_EMBED_DIR" \
     build
 
 # 4. Built-app checks.

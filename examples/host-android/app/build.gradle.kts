@@ -36,8 +36,8 @@ android {
 }
 
 dependencies {
-    // The nsh AARs are not vendored: build-gate.sh copies them from
-    // $(brew --prefix nsh)/libexec/embed/android into app/libs. The dev variant
+    // The nsh AARs are not vendored: build-gate.sh copies the 0.5.0 pair from
+    // .nsh-embed/0.5.0/android (tools/fetch-nsh-embed.sh) into app/libs. The dev variant
     // talks to `nsh dev` and is linked in Debug builds only.
     debugImplementation(files("libs/nsh-dev.aar"))
     releaseImplementation(files("libs/nsh.aar"))

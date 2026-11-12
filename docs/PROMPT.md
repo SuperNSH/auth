@@ -78,7 +78,7 @@ All of these hold, each with evidence in `docs/STATUS.md`:
 
 ## Environment, as measured on this Mac
 
-- `nsh` 0.4.0 (e626a8d), from Homebrew. Do not upgrade it. Embedding frameworks: `$(brew --prefix nsh)/libexec/embed/ios/{NativeShell,NativeShellDev}.xcframework` and `$(brew --prefix nsh)/libexec/embed/android/{nsh,nsh-dev}.aar`.
+- `nsh` 0.5.0 (f4d68f7), from the upstream installer at `~/.nsh/bin/nsh`. Homebrew's tap still ships 0.4.0; do not use it here. Embedding frameworks: `tools/fetch-nsh-embed.sh` downloads and sha256-checks them into `.nsh-embed/0.5.0/ios/{NativeShell,NativeShellDev}.xcframework` and `.nsh-embed/0.5.0/android/{nsh,nsh-dev}.aar`.
 - Rust stable with `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `aarch64-linux-android`, `armv7-linux-androideabi`, `x86_64-linux-android` and `wasm32-unknown-unknown` installed.
 - Xcode with an iOS 27 simulator runtime. Android SDK at `$ANDROID_HOME`, NDK 29, one AVD named `indopak-audit`.
 - `/usr/bin/java` is a stub with no runtime behind it. Use Android Studio's JDK: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.

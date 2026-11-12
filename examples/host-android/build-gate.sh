@@ -9,22 +9,29 @@ cd "$(dirname "$0")"
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 BREW_PREFIX="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
-export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$BREW_PREFIX/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# The upstream installer's ~/.nsh/bin comes before Homebrew, whose nsh is still 0.4.0.
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$HOME/.nsh/bin:$BREW_PREFIX/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 [ -x "$JAVA_HOME/bin/java" ] || { echo "error: Android Studio JBR not found at $JAVA_HOME" >&2; exit 1; }
 [ -d "$ANDROID_HOME" ] || { echo "error: Android SDK not found at $ANDROID_HOME" >&2; exit 1; }
-command -v nsh >/dev/null || { echo "error: nsh is not on PATH (need 0.4.0)" >&2; exit 1; }
+command -v nsh >/dev/null || { echo "error: nsh is not on PATH (need 0.5.0)" >&2; exit 1; }
+case "$(nsh --version)" in
+    "nsh 0.5.0"*) ;;
+    *) echo "error: need nsh 0.5.0 (upstream installer, ~/.nsh/bin); $(command -v nsh) is $(nsh --version)" >&2; exit 1 ;;
+esac
 [ -f gradle/wrapper/gradle-wrapper.jar ] || { echo "error: gradle/wrapper/gradle-wrapper.jar is missing" >&2; exit 1; }
 [ -x ./gradlew ] || chmod +x ./gradlew
 
 # AGP reads the SDK path from here; machine-local, gitignored.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-# The nsh AARs are not vendored in the repository; copy the pinned 0.4.0 pair.
-# The formula-scoped prefix (brew --prefix nsh), not the bare brew prefix.
-NSH_PREFIX="$(brew --prefix nsh 2>/dev/null || echo /opt/homebrew/opt/nsh)"
-NSH_EMBED="$NSH_PREFIX/libexec/embed/android"
+# The nsh AARs are not vendored in the repository; copy the pinned 0.5.0 pair.
+# tools/fetch-nsh-embed.sh downloads nsh-embed-android.zip from the v0.5.0
+# release once, sha256-checked, into the git-ignored .nsh-embed/0.5.0/android.
+# Set NSH_EMBED_ANDROID to use AARs from elsewhere.
+NSH_EMBED="${NSH_EMBED_ANDROID:-$(../../tools/fetch-nsh-embed.sh android)}"
 [ -f "$NSH_EMBED/nsh.aar" ] || { echo "error: $NSH_EMBED/nsh.aar not found" >&2; exit 1; }
+[ -f "$NSH_EMBED/nsh-dev.aar" ] || { echo "error: $NSH_EMBED/nsh-dev.aar not found" >&2; exit 1; }
 mkdir -p app/libs
 cp -f "$NSH_EMBED/nsh.aar" app/libs/nsh.aar
 cp -f "$NSH_EMBED/nsh-dev.aar" app/libs/nsh-dev.aar

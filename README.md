@@ -7,7 +7,7 @@ single-flight refresh, sign-out with token revocation, and secure token storage 
 NSH targets — iOS, Android, macOS, Windows, Linux and the web.
 
 There are two versions with the same behavior, like its sibling libraries
-`nsh-query` and `nsh-form` (separate repositories; both require NSH 0.4.0):
+`nsh-query` and `nsh-form` (separate repositories; both require NSH 0.5.0):
 
 | Version | Path | For |
 |---|---|---|
@@ -61,7 +61,7 @@ On the Android emulator the mock's host is `10.0.2.2`, not `127.0.0.1`.
 Everything below is sandbox-only: fake client ids (`nsh-auth-sandbox…`), a local mock, no real
 account, no credential typed anywhere.
 
-Prerequisites: `nsh` 0.4.0 (Homebrew); Node or bun for the mock; a Rust toolchain for the desktop
+Prerequisites: `nsh` 0.5.0 (the upstream installer; Homebrew still ships 0.4.0); Node or bun for the mock; a Rust toolchain for the desktop
 host. Two loopback ports are involved: the mock's default **8755** — the demo's default expects it
 free — and the web dev server (the demo README uses **8790**). If one is busy: the mock takes
 `--port 0` / `--port <p>` plus an override (`--mock-url` on host-desktop; the demo's host params /
