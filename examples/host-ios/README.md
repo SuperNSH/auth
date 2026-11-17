@@ -47,14 +47,14 @@ form used by nsh's `examples/embed-ios`) and copies the bundle into
 `./nsh`, a folder reference — bytecode loads only from the app bundle. Debug
 links `NativeShellDev.xcframework`, Release links `NativeShell.xcframework`
 (both static). `NSH_EMBED_DIR` in the project points at
-`.nsh-embed/0.5.0/ios` at the repository root, which
-`tools/fetch-nsh-embed.sh ios` fills from the v0.5.0 release's
+`.nsh-embed/0.5.1/ios` at the repository root, which
+`tools/fetch-nsh-embed.sh ios` fills from the v0.5.1 release's
 `nsh-embed-ios.zip`, checked against a pinned sha256 (git-ignored; the gate
 runs it, and a plain `xcodebuild` needs it run once). NSH 0.5.0 no longer
 puts these frameworks in its install, and Homebrew's formula is still 0.4.0.
 Pass `NSH_EMBED_DIR=<dir>` to the gate or to `xcodebuild` to use other copies.
 
-Requirements: `nsh` 0.5.0 from the upstream installer (`~/.nsh/bin`, which
+Requirements: `nsh` 0.5.1 from the upstream installer (`~/.nsh/bin`, which
 the build phase puts ahead of Homebrew's 0.4.0 and checks), network access to
 github.com for the first fetch of the embedding frameworks, Xcode with the iOS 27 simulator
 runtime, and the simulator named `nsh-auth`:

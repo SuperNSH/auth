@@ -19,7 +19,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
-  NSH_VERSION: v0.5.0
+  NSH_VERSION: v0.5.1
   LINUX_PACKAGES: dbus dbus-user-session gnome-keyring libgtk-4-dev libwebkitgtk-6.0-dev clang llvm
 
 jobs:
@@ -173,8 +173,8 @@ jobs:
           sudo ln -sfn "$JAVA_HOME" "/Applications/Android Studio.app/Contents/jbr/Contents/Home"
           mkdir -p "$HOME/Library/Android"
           ln -sfn "$ANDROID_HOME" "$HOME/Library/Android/sdk"
-      - name: Fetch the NSH 0.5.0 embedding frameworks
-        # nsh-embed-ios.zip and nsh-embed-android.zip from the v0.5.0 release, sha256-checked, into .nsh-embed/0.5.0,
+      - name: Fetch the NSH 0.5.1 embedding frameworks
+        # nsh-embed-ios.zip and nsh-embed-android.zip from the v0.5.1 release, sha256-checked, into .nsh-embed/0.5.1,
         # where the Xcode project and examples/host-android/build-gate.sh read them.
         run: bash tools/fetch-nsh-embed.sh all
       - name: Install NSH
@@ -303,12 +303,12 @@ jobs:
       - name: Place the sibling libraries the demo imports
         shell: bash
         run: ./tools/ci/place-demo-deps.sh
-      - name: Build NSH's crates from the v0.5.0 source for the iOS package
+      - name: Build NSH's crates from the v0.5.1 source for the iOS package
         if: matrix.target == 'ios-simulator'
         # Added because 0.4.0's crates.io nsh-platform-ios did not package; a local 0.5.0 ios-simulator package built without it.
         shell: bash
         run: |
-          git clone --quiet --depth 1 --branch v0.5.0 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
+          git clone --quiet --depth 1 --branch v0.5.1 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
           mkdir -p examples/demo/.cargo
           {
             echo "[patch.crates-io]"

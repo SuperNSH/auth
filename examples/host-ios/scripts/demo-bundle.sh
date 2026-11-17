@@ -12,8 +12,8 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # upstream installer's ~/.nsh/bin comes first: Homebrew's nsh is still 0.4.0.
 export PATH="$HOME/.nsh/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 case "$(nsh --version 2>/dev/null)" in
-    "nsh 0.5.0"*) ;;
-    *) echo "demo-bundle: need nsh 0.5.0 (upstream installer, ~/.nsh/bin); found: $(command -v nsh || echo none) $(nsh --version 2>/dev/null || true)" >&2; exit 1 ;;
+    "nsh 0.5.1"*) ;;
+    *) echo "demo-bundle: need nsh 0.5.1 (upstream installer, ~/.nsh/bin); found: $(command -v nsh || echo none) $(nsh --version 2>/dev/null || true)" >&2; exit 1 ;;
 esac
 HOST_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$HOST_DIR/../.." && pwd)
