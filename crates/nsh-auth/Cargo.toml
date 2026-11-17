@@ -22,3 +22,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
+
+# rand 0.8 pulls getrandom 0.2, which refuses to build for wasm32-unknown-unknown without its js backend.
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }

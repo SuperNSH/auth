@@ -27,7 +27,9 @@ mod token;
 
 pub use clock::{Clock, SystemClock};
 pub use error::AuthError;
-pub use http::{BoxFuture, Http, HttpReply, ReqwestHttp};
+#[cfg(not(target_arch = "wasm32"))]
+pub use http::ReqwestHttp;
+pub use http::{BoxFuture, Http, HttpReply};
 pub use jwt::{IdTokenChecks, claims};
 pub use provider::{AuthConfig, AuthorizeRequest, ProviderId, RedirectKind};
 pub use session::{AuthStatus, EXPIRY_TOLERANCE_MS, Session, UserInfo};

@@ -59,11 +59,13 @@ pub trait Http: Send + Sync + 'static {
 
 /// The default transport. Its futures must be polled inside a tokio runtime;
 /// an embedding host runs one.
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug, Clone)]
 pub struct ReqwestHttp {
     client: reqwest::Client,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl ReqwestHttp {
     pub fn new() -> Result<Self, AuthError> {
         let client = reqwest::Client::builder()
@@ -74,10 +76,12 @@ impl ReqwestHttp {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn network(error: reqwest::Error) -> AuthError {
     AuthError::Network(error.to_string())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl ReqwestHttp {
     async fn reply(&self, request: reqwest::RequestBuilder) -> Result<HttpReply, AuthError> {
         let response = request.send().await.map_err(network)?;
@@ -88,6 +92,7 @@ impl ReqwestHttp {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Http for ReqwestHttp {
     fn post_form<'a>(
         &'a self,
