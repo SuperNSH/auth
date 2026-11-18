@@ -18,8 +18,8 @@ export function CallbackPasteBack() {
     <View class="gap-2 rounded-(--radius) border border-border bg-card p-4" testID="paste-callback">
       <Text class="text-sm font-medium text-card-foreground">Finish a sign-in by hand</Text>
       <Text class="text-sm text-muted-foreground">
-        No host is embedded, so no redirect returns by itself. Paste the callback URL the provider
-        redirected to:
+        No host is embedded, so the redirect may not return by itself. Paste the callback URL the
+        provider redirected to:
       </Text>
       <Input
         value={draft()}

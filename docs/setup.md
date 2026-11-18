@@ -24,7 +24,7 @@ These are the values the demo and hosts are configured with in sandbox mode.
 |---|---|---|
 | Demo on iOS / Android / macOS via embedding hosts | `nsh.auth.sandbox://callback` | `ASWebAuthenticationSession` (`native/ios`) and the Android intent filter (`native/android`) — both hosts register scheme `nsh.auth.sandbox`, path `callback` |
 | Desktop (`examples/host-desktop`) | `http://127.0.0.1:<port>/callback` | Loopback listener, port OS-assigned per flow (`127.0.0.1:0`, RFC 8252). Enter the bare `http://127.0.0.1/callback` form where the console allows a variable port (Google, GitHub and Microsoft do); providers demanding an exact registered string cannot complete a real loop from this launcher — the button still proves the flow is triggered on the provider's own page, and a full loop needs a relay through the broker or a build of your own with a pinned port |
-| Hostless demo (any surface, web included) | `nsh.auth.sandbox://callback` | The demo sends this scheme everywhere; with no embedding host nothing catches the redirect — the sign-in screen's paste-back box ("Finish a sign-in by hand") takes the callback URL by hand (see `examples/demo/README.md`) |
+| Hostless demo (any surface, web included) | `nsh.auth.sandbox://callback` | The demo sends this scheme everywhere; with no embedding host the app can receive the link itself only where it claims the scheme (`nsh.json` `schemes`, headless-tested only); otherwise the sign-in screen's paste-back box ("Finish a sign-in by hand") takes the callback URL by hand (see `examples/demo/README.md`) |
 
 Mock endpoints, for the sandbox loop only: `node tools/mock-oauth/main.mjs` — default port 8755,
 `--port 0` for an ephemeral one; the server prints `MOCK_URL` on boot (see

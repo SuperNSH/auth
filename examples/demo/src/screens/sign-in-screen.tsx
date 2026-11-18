@@ -48,9 +48,9 @@ function ScreenHeader() {
       </Text>
       <If when={!host.available()}>
         <Text class="text-sm text-muted-foreground">
-          No embedding host: sign-in opens the system browser, then waits — a standalone build has no
-          way to catch the redirect. Finish with the paste-in box below, or run inside examples/host-ios,
-          host-android or the web host for the full loop.
+          No embedding host: sign-in opens the system browser, then waits for the app's redirect link
+          (where the system hands it over). If none arrives, finish with the paste-in box below, or run
+          inside examples/host-ios, host-android or the web host for the full loop.
         </Text>
       </If>
     </View>

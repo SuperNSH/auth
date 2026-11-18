@@ -1,4 +1,4 @@
-import { openUrl, signal, untracked } from "nsh";
+import { openUrl, signal, untracked, UrlScheme } from "nsh";
 import { buildAuthorizeUrl } from "./authorize";
 import { parseCallback } from "./callback";
 import { AuthError } from "./errors";
@@ -58,6 +58,8 @@ export function createAuth(config: AuthConfig): Auth {
 
   let pending: Pending | null = null;
   let refreshing: Promise<void> | null = null;
+  // Stops the hostless launcher's listener for the redirect link, if one runs.
+  let stopLinkListener: (() => void) | null = null;
   // Bumped by signIn and signOut: work from an older epoch is abandoned.
   let generation = 0;
 
@@ -90,6 +92,7 @@ export function createAuth(config: AuthConfig): Auth {
     status.set("authorizing");
     const previous = pending;
     pending = null;
+    stopLinkListener?.();
     generation += 1;
     previous?.reject(new AuthError("unknown", "superseded by a new sign-in"));
     return { restoreStatus, restoreError };
@@ -336,14 +339,27 @@ export function createAuth(config: AuthConfig): Auth {
         await deliverRedirect(callbackUrl);
         return;
       }
+      // Listen before opening: the link can come back as soon as the browser has it.
+      // An app that claims the redirect scheme (nsh.json `schemes`) gets it from
+      // the system; otherwise the flow waits for `handleRedirect` (paste-back).
+      stopLinkListener?.();
+      let live = true;
+      const unsubscribe = UrlScheme.on("open", ({ url: link }) => {
+        if (pending !== waiting || !isRedirectLink(link, config.redirectUri)) return;
+        stopLinkListener?.();
+        void deliverRedirect(link).catch(() => {});
+      });
+      stopLinkListener = () => {
+        if (!live) return;
+        live = false;
+        unsubscribe();
+      };
       const result = await openUrl(url);
       if (!result.opened) {
         throw new AuthError("no_launcher", `nothing opens ${redirectScheme()} URLs, so no browser can launch`);
       }
-      // Without a host there is no listener and no scheme: the redirect cannot
-      // arrive by itself. The flow stays `authorizing` until the app calls
-      // `handleRedirect` with the callback URL the user or a page bridge pastes back.
     } catch (cause) {
+      stopLinkListener?.();
       const authError = toAuthError(cause);
       if (pending === waiting) {
         pending = null;
@@ -618,6 +634,12 @@ export function createAuth(config: AuthConfig): Auth {
       }),
     signOut: (): Promise<void> => untracked(() => signOut()),
   };
+}
+
+/** True when `link` is the app's redirect URI with a query or fragment; other links the app claims are not an answer to a sign-in. */
+function isRedirectLink(link: string, redirectUri: string): boolean {
+  const bare = (value: string) => value.split(/[?#]/)[0]!.replace(/\/+$/, "").toLowerCase();
+  return bare(link) === bare(redirectUri);
 }
 
 function callbackError(error: string, description: string | null): AuthError {

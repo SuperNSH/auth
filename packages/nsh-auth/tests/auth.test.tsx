@@ -366,6 +366,34 @@ test("mock sign-in completes the loop and lands on the session screen", async ()
   await shot(app, "03-authenticated");
 });
 
+test("a redirect link the system hands the hostless app completes the sign-in without a paste", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const app = await open("../App.tsx", { clock: { time: 0 }, network: mockRoutes(keys) });
+  await app.waitFor("id:sign-in-mock");
+  await app.press("id:sign-in-mock");
+  const parts = authorizeParts(app.openedUrls()[0] ?? "");
+  scenario.nonce = parts.nonce ?? "";
+  await app.openWithUrl(`nsh.auth.sandbox://callback?code=${scenario.code}&state=${parts.state}`);
+  await app.waitFor("text:status authenticated");
+  expect(app.shows("id:sign-out")).toBe(true);
+});
+
+test("a link of another path, or a forged state, does not complete a hostless sign-in", async () => {
+  const keys = await rsaKeys();
+  scenario.reset();
+  const app = await open("../App.tsx", { clock: { time: 0 }, network: mockRoutes(keys) });
+  await app.waitFor("id:sign-in-mock");
+  await app.press("id:sign-in-mock");
+  const parts = authorizeParts(app.openedUrls()[0] ?? "");
+  await app.openWithUrl(`nsh.auth.sandbox://elsewhere?code=${scenario.code}&state=${parts.state}`);
+  expect(app.shows("text:status authorizing")).toBe(true);
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+  await app.openWithUrl(`nsh.auth.sandbox://callback?code=${scenario.code}&state=forged`);
+  await app.waitFor("text:error state_mismatch");
+  expect(app.requests().some((request) => request.url === `${MOCK}/mock/token`)).toBe(false);
+});
+
 test("a denial at the provider lands in error, not a session", async () => {
   const keys = await rsaKeys();
   scenario.reset();

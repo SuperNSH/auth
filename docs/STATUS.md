@@ -1,5 +1,32 @@
 # STATUS
 
+## Phase 4 — NSH 0.6.0 plan audit (2026-11-19)
+
+Audited every requirement in `docs/PROMPT.md` against the tree after the move to NSH 0.6.0.
+Everything the earlier phases claimed still passes its gate; one finding came from 0.6.0 itself.
+
+- **0.6.0 adds inbound links to TSX** (`UrlScheme.on("open")`, `nsh.json` `"schemes"`, test
+  `app.openWithUrl`), and a Rust-only `openAuthSession` in `nsh-core` (not in `.nsh/types`, not
+  adopted: the hosts and the desktop loopback already cover those surfaces). The TS core's
+  hostless launcher now listens for the redirect link while a flow waits, accepts only a link equal
+  to the redirect URI (query and fragment aside), and hands it to the same `deliverRedirect` checks
+  (state, nonce, PKCE). `packages/nsh-auth/src/auth.ts`; `nsh.json` of the package and the demo claim
+  `nsh.auth.sandbox`. Verified: 2 new tests (link completes a sign-in; other-path link ignored, forged
+  state refused), each red-proven (`isRedirectLink` forced to `false` failed 3 tests, forced to
+  `true` failed the forged/other-path test). **Not verified**: delivery of a real scheme link by an
+  installed app on macOS, Windows, Linux or Android without the host; headless only. The web
+  boots with the import (`nsh test --target web`, demo screen rendered), but the web still cannot
+  receive a custom-scheme redirect, so its loop stays paste-back.
+- Both `nsh.json` files now grant `"statusBar": true`: 0.6.0's engine logged a refusal on every test run.
+- Hostless copy in the demo and READMEs (`README.md`, `packages/nsh-auth/README.md`,
+  `examples/demo/README.md`, `docs/setup.md`) no longer says the redirect cannot arrive.
+- Gates, run 2026-11-19: `cargo fmt --all -- --check` 0; `cargo clippy --all-targets -- -D warnings` 0;
+  `cargo test` 0 (all suites ok); `examples/host-desktop` fmt/clippy/test 0 (22 tests);
+  `nsh check`/`nsh build` (0 warnings)/`nsh test` in `packages/nsh-auth` (47 tests) and `examples/demo`
+  (22 tests) 0; `bun test` 27 pass; `bash tools/smoke.sh` all 11 steps passed (incl. xcodebuild and Gradle
+  on the 0.6.0 embedding SDKs), run before the edits above; the TSX gates were re-run after them.
+  `cargo check -p nsh-auth --target wasm32-unknown-unknown` and `aarch64-apple-ios` 0.
+
 ## Phase 3 — native SDK adapters (complete, verified)
 
 Implemented the brief's optional native-SDK design line: Google, Facebook and

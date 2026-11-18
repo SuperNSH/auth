@@ -96,8 +96,11 @@ the host's loopback listener catches the redirect, and the window shows the sign
 Custom Tabs — they need Xcode and the Android SDK respectively; see their READMEs. On iOS and
 Android, restarting the app restores the session from secure storage.
 
-**Path B — the hostless demo, and what it cannot do.** A bare TSX app on NSH 0.4.0 has no way to
-receive a redirect.
+**Path B — the hostless demo, and what it cannot do.** A bare TSX app on NSH 0.6.0 can receive the
+redirect as a link of a scheme it claims: the demo's `nsh.json` lists `"schemes":
+["nsh.auth.sandbox"]`, and the core listens with `UrlScheme.on("open")` while a hostless sign-in
+waits. Headless tests prove that path (`app.openWithUrl(..)`); no device run of it exists yet, so
+where a platform does not hand the app the link, the paste-back box below still finishes the loop.
 
 ```sh
 # 3b. Run the demo standalone (its node_modules setup steps come first —
@@ -107,7 +110,8 @@ nsh run --target macos
 ```
 
 Press **Sign in with Mock**: the browser opens the mock's authorize page and the scripted user
-approves — and there it stops, because nothing catches the redirect. Copy the
+approves. If the system hands the app the `nsh.auth.sandbox://` link, the session appears by
+itself; otherwise the flow stops here. Copy the
 `nsh.auth.sandbox://callback?...` URL from the browser's address bar into the demo's "Finish a
 sign-in by hand" box and press **Finish sign-in**: the loop completes and the session screen
 appears. On the web target (`nsh run --target web --port 8790 App.web.tsx`, per the demo README)
@@ -138,12 +142,13 @@ handing the session's ID token to the Firebase credential API. Nothing to config
 
 ## Honest limits
 
-- A TSX app packaged with no embedding host can start a flow with `openUrl`, but on iOS and Android
-  NSH 0.4.0 gives it no way to receive the redirect back — there is no inbound-URL module in that
-  configuration. On the web it cannot even launch the browser (the demo's mock button reports
-  `no_launcher` there), and a loop completes only through a page-bridge host feeding the redirect
-  to `handleRedirect` — which the demo does not ship. A full automatic loop therefore needs an
-  embedding host: `examples/host-ios`, `examples/host-android`, `examples/host-desktop`.
+- A TSX app packaged with no embedding host starts a flow with `openUrl` and, on NSH 0.6.0, can
+  receive the redirect through `UrlScheme` when `nsh.json` claims the redirect scheme; that path
+  is covered by headless tests only, not by a device run. Where it does not apply (the web, where
+  the demo's mock button reports `no_launcher`, or an app that does not claim the scheme) a loop
+  completes through `handleRedirect` fed by a page bridge or the paste-back box. The device-proven
+  automatic loops are the embedding hosts: `examples/host-ios`, `examples/host-android`,
+  `examples/host-desktop`.
 - Desktop token storage is a `0600` file under the user's profile. It is not Keychain-grade:
   anyone with the user's file access can read it. The mobile paths use the Keychain and Android
   Keystore. See [docs/threats.md](docs/threats.md) for the full picture, including what the

@@ -52,14 +52,17 @@ no secret ever travels in a request from the app.
    hosting the app must bridge the redirect — a small script on the
    `redirect_uri` page reads `location.search` and hands the URL to the app,
    which then calls `auth.handleRedirect(url)`.
-3. **No host, not the web (bare TSX, desktops)** — the honest fallback.
+3. **No host, not the web (bare TSX, desktops)** — the fallback.
    `openUrl()` opens the authorize URL (headless tests record it in
-   `app.openedUrls()`), and then it waits. **This fallback cannot receive the
-   redirect automatically**: there is no listener, no URL scheme, no loopback
-   socket in TSX on 0.4.0. `signIn` stays `authorizing` until the app calls
-   `auth.handleRedirect(url)` with a callback URL pasted back by hand (or
-   bridged by the code around the app). If `openUrl` itself fails or nothing
-   handles the URL, `signIn` rejects with `no_launcher`.
+   `app.openedUrls()`). The core also listens with `UrlScheme.on("open")`: when
+   `nsh.json` claims the redirect URI's scheme (`"schemes": [..]`) and the
+   system hands the app a link equal to the redirect URI, the flow completes
+   by itself. That path is proven by headless tests (`app.openWithUrl(..)`);
+   it has no device run. Without a claimed scheme there is no listener, and
+   `signIn` stays `authorizing` until the app calls `auth.handleRedirect(url)`
+   with a callback URL pasted back by hand (or bridged by the code around the
+   app). If `openUrl` itself fails or nothing handles the URL, `signIn`
+   rejects with `no_launcher`.
 
 `handleRedirect` and the host path are the same machinery: parse the callback,
 check `state`, exchange the code, verify the id token's signature and `nonce`,

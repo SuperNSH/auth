@@ -3,7 +3,9 @@
   "id": "dev.nshauth.nshauth",
   "version": "0.1.0",
   "build": 1,
+  "schemes": ["nsh.auth.sandbox"],
   "capabilities": {
+    "statusBar": true,
     "network": {
       "hosts": [
         "127.0.0.1",

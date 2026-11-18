@@ -114,8 +114,9 @@ demo wires the surfaces.
   and nonce checks, code exchange, JWKS RS256 verification, userinfo, and the
   session into the host's secure store through `auth.store.save` /
   `auth.store.load` / `auth.store.clear`.
-- **No host** — `openUrl` opens the authorize URL, and the flow waits: a bare
-  TSX build has no way to catch the redirect on 0.4.0. The sign-in screen
+- **No host** — `openUrl` opens the authorize URL, and the flow waits for a
+  `nsh.auth.sandbox://` link (`nsh.json` claims the scheme; headless-tested
+  only) or for the paste-back. The sign-in screen
   shows a paste-in box (`CallbackPasteBack`) that hands a callback URL to
   `auth.handleRedirect`; a web host can feed the same path through the
   `auth.redirect` event (the page bridge calls it; the demo's listener does
