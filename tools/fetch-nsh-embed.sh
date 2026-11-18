@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Downloads the NSH 0.5.1 embedding SDKs that the iOS and Android host examples
+# Downloads the NSH 0.6.0 embedding SDKs that the iOS and Android host examples
 # link, checks each archive against the sha256 pinned below (and against the
 # release's own .sha256 file), and unpacks them into the git-ignored
-# .nsh-embed/0.5.1/ at the repository root:
+# .nsh-embed/0.6.0/ at the repository root:
 #
-#   .nsh-embed/0.5.1/ios/{NativeShell,NativeShellDev}.xcframework
-#   .nsh-embed/0.5.1/android/{nsh,nsh-dev}.aar
+#   .nsh-embed/0.6.0/ios/{NativeShell,NativeShellDev}.xcframework
+#   .nsh-embed/0.6.0/android/{nsh,nsh-dev}.aar
 #
 # From 0.5.0 on, NSH's release archives no longer carry these SDKs and
 # `nsh component` has no embed component; the release publishes them alone as
@@ -18,10 +18,10 @@
 # NSH_EMBED_ROOT overrides where the SDKs are unpacked (default: <repo>/.nsh-embed).
 set -euo pipefail
 
-NSH_VERSION=0.5.1
+NSH_VERSION=0.6.0
 BASE_URL="https://github.com/longbridge/nsh/releases/download/v$NSH_VERSION"
-SHA256_IOS=0a11159c9d368f7558f9b48b62ffcb956a2643ab7ddc21925404ab52dfa563a3
-SHA256_ANDROID=38af836d7892b8ed449e72bd023529594d90229aa2f019c900e472dc668fb0ce
+SHA256_IOS=5d34b2feaee92c813eb12afe3d928f346a020988531efaf94b5d4d124f0b0afd
+SHA256_ANDROID=fc59ffa013fc43265924a0e55cca58bb66e17e1c011b2d640e7cd43fb7c4a492
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="${NSH_EMBED_ROOT:-$ROOT/.nsh-embed}/$NSH_VERSION"

@@ -14,10 +14,10 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$HOME/.nsh/bin:$BREW_PR
 
 [ -x "$JAVA_HOME/bin/java" ] || { echo "error: Android Studio JBR not found at $JAVA_HOME" >&2; exit 1; }
 [ -d "$ANDROID_HOME" ] || { echo "error: Android SDK not found at $ANDROID_HOME" >&2; exit 1; }
-command -v nsh >/dev/null || { echo "error: nsh is not on PATH (need 0.5.1)" >&2; exit 1; }
+command -v nsh >/dev/null || { echo "error: nsh is not on PATH (need 0.6.0)" >&2; exit 1; }
 case "$(nsh --version)" in
-    "nsh 0.5.1"*) ;;
-    *) echo "error: need nsh 0.5.1 (upstream installer, ~/.nsh/bin); $(command -v nsh) is $(nsh --version)" >&2; exit 1 ;;
+    "nsh 0.6.0"*) ;;
+    *) echo "error: need nsh 0.6.0 (upstream installer, ~/.nsh/bin); $(command -v nsh) is $(nsh --version)" >&2; exit 1 ;;
 esac
 [ -f gradle/wrapper/gradle-wrapper.jar ] || { echo "error: gradle/wrapper/gradle-wrapper.jar is missing" >&2; exit 1; }
 [ -x ./gradlew ] || chmod +x ./gradlew
@@ -25,9 +25,9 @@ esac
 # AGP reads the SDK path from here; machine-local, gitignored.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-# The nsh AARs are not vendored in the repository; copy the pinned 0.5.1 pair.
-# tools/fetch-nsh-embed.sh downloads nsh-embed-android.zip from the v0.5.1
-# release once, sha256-checked, into the git-ignored .nsh-embed/0.5.1/android.
+# The nsh AARs are not vendored in the repository; copy the pinned 0.6.0 pair.
+# tools/fetch-nsh-embed.sh downloads nsh-embed-android.zip from the v0.6.0
+# release once, sha256-checked, into the git-ignored .nsh-embed/0.6.0/android.
 # Set NSH_EMBED_ANDROID to use AARs from elsewhere.
 NSH_EMBED="${NSH_EMBED_ANDROID:-$(../../tools/fetch-nsh-embed.sh android)}"
 [ -f "$NSH_EMBED/nsh.aar" ] || { echo "error: $NSH_EMBED/nsh.aar not found" >&2; exit 1; }
