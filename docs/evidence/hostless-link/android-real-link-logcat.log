@@ -1,0 +1,2 @@
+11-19 06:34:54.846   628  2032 I ActivityTaskManager: START u0 {act=android.intent.action.VIEW dat=nsh.auth.sandbox://callback/... flg=0x10000000 xflg=0x4 pkg=dev.nshauth.demo cmp=dev.nshauth.demo/com.longbridge.nsh.AppActivity} with LAUNCH_SINGLE_TASK from ui
+11-19 06:34:54.847  8269  8287 W nsh     : nsh_core::core::components: link dropped: `nsh.auth.sandbox:` is not a scheme the app claims (nsh.json `schemes`)

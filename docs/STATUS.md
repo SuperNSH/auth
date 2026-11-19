@@ -27,6 +27,34 @@ Everything the earlier phases claimed still passes its gate; one finding came fr
   on the 0.6.0 embedding SDKs), run before the edits above; the TSX gates were re-run after them.
   `cargo check -p nsh-auth --target wasm32-unknown-unknown` and `aarch64-apple-ios` 0.
 
+### Phase 4 follow-up: installed-app redirect link (2026-11-19, mock provider only)
+
+Evidence in `docs/evidence/hostless-link/`.
+
+- **Android `cargo check -p nsh-auth --target aarch64-linux-android`: exit 0** (4m30s cold,
+  `android-cargo-check.log`). Needs NDK 28's `llvm-ar` and `aarch64-linux-android24-clang` in
+  `AR_/CC_aarch64_linux_android` on this Mac: NDK 27/29's llvm-ar loops inside a build script.
+- **Android hostless link: NOT verified, blocked by an nsh 0.6.0 defect.** `nsh package --target android`
+  of `examples/demo` (APK, arm64-v8a, `android-package.log`) installed on an emulator. The manifest
+  has the `nsh.auth.sandbox` VIEW/BROWSABLE intent filter (`android-intent-filter.log`) and the APK's
+  `app.json` lists `"schemes":["nsh.auth.sandbox"]` (`android-apk-app.json`). "Sign in with Mock"
+  reached the mock's `/mock/authorize` with state, nonce and PKCE challenge
+  (`android-authorize-request.log`; Chrome's first-run screen was dismissed with "Stay signed out"; no account).
+  `adb shell am start -a android.intent.action.VIEW -d <redirect>` (a real mock redirect, and one with a
+  forged state) reached the app, which logged `link dropped: nsh.auth.sandbox: is not a scheme the app
+  claims` and stayed on "Waiting for the provider's redirect..." (`android-real-link-logcat.log`,
+  `android-after-real-link.png`, `android-after-forged-link.png`). Cause, read in the 0.6.0 source:
+  `crates/nsh-platform-android/src/host.rs` (~line 1196) reads only `"id"` from `app.json` and never
+  passes `schemes` to the engine, so the packaged Android runner claims no scheme (the engine's
+  `Bundle::from_dir` path does read it). So neither the completed sign-in nor the forged-link refusal
+  was seen on a device; the forged link was dropped before our state check, which proves nothing about it.
+  The state/nonce/PKCE checks stay proven only by the headless tests above. Filed in `docs/upstream-issues.md`.
+  Paste-back is still the packaged Android app's loop.
+- **macOS packaged app: NOT verified.** `nsh package --target macos` built the app and its `Info.plist`
+  carries `CFBundleURLSchemes` `nsh.auth.sandbox`, but access to drive the app was denied, so no
+  button was pressed and no `open nsh.auth.sandbox://...` was sent. The app was quit.
+- Not run: Windows, Linux.
+
 ## Phase 3 — native SDK adapters (complete, verified)
 
 Implemented the brief's optional native-SDK design line: Google, Facebook and

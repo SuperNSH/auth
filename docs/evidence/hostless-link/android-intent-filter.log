@@ -1,0 +1,6 @@
+Activity Resolver Table:
+  Schemes:
+      nsh.auth.sandbox:
+        58bab03 dev.nshauth.demo/com.longbridge.nsh.AppActivity filter ceb08b9
+          Action: "android.intent.action.VIEW"
+          Category: "android.intent.category.DEFAULT"

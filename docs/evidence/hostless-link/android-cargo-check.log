@@ -1,0 +1,6 @@
+2026-11-19 cargo check -p nsh-auth --target aarch64-linux-android
+CC_aarch64_linux_android=NDK 28.2.13676358 aarch64-linux-android24-clang; AR_aarch64_linux_android=NDK 28 llvm-ar (NDK 29/27 llvm-ar loops on this Mac)
+    Checking nsh-core v0.6.0
+    Checking nsh-auth v0.1.0 (/Users/hmziq/fo/nsh-auth/crates/nsh-auth)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4m 30s
+exit 0 (4m30s, cold target dir)

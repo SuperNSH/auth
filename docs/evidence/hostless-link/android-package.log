@@ -1,0 +1,19 @@
+✓ built App.tsx (131.6 KB js, 149.2 KB bytecode, 64ms)
+→ keep `js`: the app has a JS bundle
+→ keep `net`: `fetch` and remote images depend on data, not imports
+→ keep `svg`: an image's format depends on data, not imports
+→ leave out `shader`: nothing reachable uses it
+→ leave out `editor`: nothing reachable uses it
+→ leave out `rich-editor`: nothing reachable uses it
+→ leave out `plot`: nothing reachable uses it
+→ leave out `term`: nothing reachable uses it
+→ leave out `emoji-picker`: nothing reachable uses it
+→ leave out `highlight`: nothing reachable uses it
+→ leave out `math`: nothing reachable uses it
+→ leave out `zlib`: nothing reachable uses it
+→ keep `crypto`: the app links `nsh_std_crypto`
+→ leave out `websocket`: nothing imports `websocket`
+→ leave out `updater`: nothing imports `nsh/updater`
+✓ built libnsh.so for arm64-v8a (1m 47s, 1 warning: -v shows it)
+warn signing with the debug key: pass --keystore for store releases
+✓ packaged /private/tmp/claude-501/-Users-hmziq--claude-spares-spare-3pIemI/2d59332a-81dc-4c13-95cc-c27b87d93335/scratchpad/pkg-android/nsh-auth Demo.apk (arm64-v8a) (618ms)
