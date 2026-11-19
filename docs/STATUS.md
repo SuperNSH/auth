@@ -41,8 +41,11 @@ fixed too (`preview.tsx`, `account-screen.tsx`, `app.tsx`, `App.tsx`, CI).
 - Gates, 2026-11-19: `examples/demo` `nsh check` 0, `nsh build App.tsx` 0 warnings, `nsh test` 22 passed;
   `cargo fmt --all -- --check` 0. No Rust, package or native code changed, so clippy, `cargo test`, the
   package suite and `tools/smoke.sh` were not re-run.
-- `examples/demo/preview.test.tsx` has one failing test under `--target web` (line 77); headless it
-  passes. Not investigated.
+- `preview.test.tsx` "userinfo renders" failed under `--target web`: our test, not NSH. It waited for
+  "Preview User", which the static claims table already shows, so on web (real timers) it returned
+  before the cards loaded. It now waits until "Loading profile…" is gone and counts the address
+  (claims table plus cards). Red-proven (card address replaced by `-` failed it); `nsh test` 22/22
+  headless, `nsh test --target web preview.test.tsx` 8/8.
 
 ## Phase 4 — NSH 0.6.0 plan audit (2026-11-19)
 

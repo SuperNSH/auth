@@ -72,9 +72,9 @@ test("userinfo renders through the query, with the bearer token sent", async () 
       },
     },
   });
-  await app.waitFor("text:Preview User");
-  expect(app.shows("text:preview@example.com")).toBe(true);
-  expect(app.shows("text:Loading profile…")).toBe(false);
+  // "Preview User" is also a claim in the static table, so it proves nothing about the cards.
+  await app.waitUntil(() => !app.shows("text:Loading profile…"));
+  expect(app.count("text:preview@example.com")).toBeGreaterThan(1);
   const request = app.requests().find((entry) => entry.url === PREVIEW_USERINFO_URL);
   expect(request?.headers["authorization"]).toBe("Bearer preview-token");
 });

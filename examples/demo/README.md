@@ -202,9 +202,7 @@ running the demo in a real browser (`nsh run --target web` and
 3. nsh-query's `createQuery` (it reads `lifecycle`) runs: the account screen's
    profile card loads on web, so one `App.tsx` serves every surface.
 
-`preview.tsx` and `preview.test.tsx` are headless fixtures. On `--target web`
-one of their eight tests fails (`preview.test.tsx:77`); the cause was not
-investigated.
+`preview.test.tsx` passes headless and on `--target web`.
 
 ## Tests
 
