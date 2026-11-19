@@ -1,5 +1,5 @@
 // UIKit host app embedding the nsh-auth demo (examples/demo) through
-// NshAppView, with the same NshAppView setup as nsh 0.4.0
+// NshAppView, with the same NshAppView setup as nsh 0.6.0
 // examples/embed-ios/main.swift. Unlike that example this uses the UIScene
 // lifecycle: apps built with the iOS 26+ SDK require it (this machine's SDK
 // is 27.0).

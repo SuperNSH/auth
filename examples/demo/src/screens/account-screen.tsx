@@ -1,7 +1,5 @@
-// The session screen (native entry): status line, package user, userinfo
-// profile through nsh-query, the tokens readout, and refresh/sign-out.
-// The web entry mounts account-screen.web instead: nsh-query's lifecycle
-// import is missing on the 0.4.0 web runtime and crashes it.
+// The session screen: status line, package user, userinfo profile through
+// nsh-query, the tokens readout, and refresh/sign-out.
 import { Text, View } from "nsh";
 import { authConfig, claimInfo, refreshSession, session, status, user } from "../auth";
 import { contact } from "../store";

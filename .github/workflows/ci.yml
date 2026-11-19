@@ -262,8 +262,7 @@ jobs:
           - { os: windows-11-arm, target: windows, name: windows-arm64, entry: App.tsx }
           - { os: macos-latest, target: ios-simulator, name: ios-simulator, entry: App.tsx }
           - { os: ubuntu-latest, target: android, name: android, entry: App.tsx }
-          # nsh-query cannot load in the web runtime, so the web surface uses the query-free entry.
-          - { os: ubuntu-latest, target: web, name: web, entry: App.web.tsx }
+          - { os: ubuntu-latest, target: web, name: web, entry: App.tsx }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master

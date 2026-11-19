@@ -155,8 +155,8 @@ docs walkthrough audit is listed below with its actual status.
 - **Audit outcomes**: complex trademarks are deliberately not drawn (documented in the button
   marks note) rather than approximated; mock/real provider paths are realm-aligned so sandbox and
   real flows cannot cross; the profile query cache is scoped per provider; web-runtime fatals
-  (`env()`, `platform`, `lifecycle` imports) removed, with a query-free `App.web.tsx` for the web
-  target; brand-token colors verified correct (ICC-sRGB checked).
+  (`env()`, `platform`, `lifecycle` imports) were worked around then, with a query-free `App.web.tsx`
+  that NSH 0.6.0 made unnecessary (removed; see STATUS Phase 5); brand-token colors verified correct (ICC-sRGB checked).
 
 ### Docs walkthrough audit
 

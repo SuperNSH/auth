@@ -47,11 +47,17 @@ no secret ever travels in a request from the app.
    Service behind it); the session crosses as a JSON string, which `load`
    parses. Names must be listed under `capabilities.host`.
 2. **The web** (`platform.os === "web"`). `openUrl` opens the authorize page in
-   a new tab. **The redirect cannot come back by itself in nsh 0.4.0**: the web
-   runtime has no `window`, no `location`, no inbound-URL channel. The page
-   hosting the app must bridge the redirect — a small script on the
-   `redirect_uri` page reads `location.search` and hands the URL to the app,
-   which then calls `auth.handleRedirect(url)`.
+   a new tab. **The redirect cannot come back to the app that started the
+   flow, in nsh 0.6.0 too**: the web runtime's `openUrl` is
+   `window.open(url, "_blank")` (`crates/nsh-platform-web/web/nsh.js`), and the
+   only inbound URL it has is the address of the page the app itself runs on
+   (`UrlScheme.url()`, `crates/nsh-core/src/url_scheme.rs`), so a redirect to
+   the page would start a second app with no PKCE verifier, and the browser
+   does not hand a custom scheme to a page. The page hosting the app must
+   bridge the redirect — a small script on the `redirect_uri` page reads
+   `location.search` and hands the URL to the app, which then calls
+   `auth.handleRedirect(url)`. Keeping the verifier in `Storage` to let a
+   second tab finish the flow is deliberately not done: `Storage` is plain.
 3. **No host, not the web (bare TSX, desktops)** — the fallback.
    `openUrl()` opens the authorize URL (headless tests record it in
    `app.openedUrls()`). The core also listens with `UrlScheme.on("open")`: when

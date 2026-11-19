@@ -35,8 +35,7 @@ function RealmSwitchProbe() {
   );
 }
 
-// The query-backed profile card, mounted only off-web: nsh-query crashes the
-// 0.4.0 web runtime (its lifecycle import is missing there).
+// The query-backed profile card, beside the realm-switch probe.
 function PreviewProfile() {
   const profile = createProfileQuery({
     baseUrl: MOCK_BASE_URL,

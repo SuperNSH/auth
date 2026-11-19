@@ -246,6 +246,8 @@ test("no host: the authorize URL opens, and the paste-back finishes the loop", a
   await app.press("role:button[Finish sign-in]");
   await app.waitFor("text:Status: authenticated");
   expect(app.shows("role:button[Sign out]")).toBe(true);
+  // The ID-token claims table shows the address once; the profile card (nsh-query) shows it again.
+  await app.waitUntil(() => app.count("text:sandbox@example.com") === 2);
 });
 
 test("a denied authorization shows the access_denied banner", async () => {

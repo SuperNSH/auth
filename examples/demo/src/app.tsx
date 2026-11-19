@@ -1,7 +1,5 @@
-// The app root factory. The native entry (App.tsx) mounts the nsh-query-backed
-// account screen; the web entry (App.web.tsx) mounts its web variant —
-// nsh-query's lifecycle import crashes the 0.4.0 web runtime, so the two
-// entries are the per-surface switch and there is no runtime platform check.
+// The app root factory: App.tsx mounts it around the nsh-query-backed account
+// screen on every surface.
 import { cleanup, effect, host, Text, View } from "nsh";
 import type { JSX } from "nsh";
 import {
@@ -19,7 +17,7 @@ import { SignInScreen } from "./screens/sign-in-screen";
 
 type AccountScreenComponent = (props: { onSignOut: () => void }) => JSX.Element;
 
-/** Builds the root around an account screen variant; App.tsx and App.web.tsx call this. */
+/** Builds the root around an account screen; App.tsx calls this. */
 export function createAppRoot(AccountScreen: AccountScreenComponent) {
   return function AppRoot() {
     // Runs once: reads the host's config (async), then builds the auth instance.

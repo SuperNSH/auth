@@ -72,13 +72,13 @@ Web, on this machine (the demo's default mock address
 
 ```sh
 cd examples/demo
-nsh run --target web --port 8790 App.web.tsx
+nsh run --target web --port 8790
 ```
 
-`App.web.tsx` is required as the entry: the web runtime cannot load nsh-query
-(the `lifecycle` import is web-fatal on nsh 0.4.0), so the web surface mounts
-the query-free account screen variant. Running the bare command builds
-`App.tsx`, whose account screen crashes after a completed sign-in.
+The web surface runs `App.tsx` like every other: nsh-query loads on the 0.6.0
+web runtime, and `nsh test --target web App.test.tsx --filter "no host"` signs
+in through the paste-back box in a headless Chrome and reaches the profile
+card. A popup the browser blocks reports `no_launcher`.
 
 `--port 0` asks the OS for a free port. A browser on another device cannot
 reach `127.0.0.1`; embedded surfaces pass the override instead (below).
@@ -189,34 +189,22 @@ not reach the OAuth flow: `signIn(provider)` takes no options, so a
 
 ## Web runtime notes
 
-Three nsh 0.4.0 web-runtime gaps shape the web build, each reproduced by probe
-in this directory:
+Three web-runtime gaps of nsh 0.4.0 are gone on 0.6.0, each re-checked by
+running the demo in a real browser (`nsh run --target web` and
+`nsh test --target web`):
 
-1. `env()` inside arbitrary class math (`pt-[calc(env(safe-area-inset-top)+16px)]`)
-   crashes the web runtime. The demo therefore uses fixed padding on every
-   surface (`p-4` headers, `pb-6` content); native surfaces have no notch
-   compensation in this demo.
-2. `platform` crashes a web app on import — even unread, and try/catch around
-   the read does not contain it. No runtime platform detection exists in this
-   demo.
-3. `lifecycle` is typed in `.nsh/types` but missing from the web runtime, and
-   nsh-query's `createQuery` calls `untracked(lifecycle)` — so nsh-query can
-   never load on web (upstream: nsh 0.4.0 + nsh-query). A dynamic `import()`
-   of the module dies with the app too.
+1. `env()` inside arbitrary class math
+   (`pt-[calc(env(safe-area-inset-top)+16px)]`) renders. The demo still uses
+   fixed padding on every surface (`p-4` headers, `pb-6` content), so native
+   surfaces have no notch compensation here.
+2. `import { platform } from "nsh"` loads and reads (`platform.os` is `web`).
+   The demo has no runtime platform detection, as it needs none.
+3. nsh-query's `createQuery` (it reads `lifecycle`) runs: the account screen's
+   profile card loads on web, so one `App.tsx` serves every surface.
 
-Because imports (not just uses) are fatal, the per-surface switch is the
-entry file: `App.tsx` (native, nsh-query-backed account screen) and
-`App.web.tsx` (web, account screen with a note in the profile card's place —
-identity comes from the ID-token claims; refresh and sign-out work). The web
-phase builds and bundles the web entry:
-
-```sh
-cd examples/demo
-nsh build App.web.tsx --release --out .nsh/out-web
-```
-
-`preview.tsx` and `preview.test.tsx` statically import nsh-query, so they are
-native/headless fixtures — run them without `--target web`.
+`preview.tsx` and `preview.test.tsx` are headless fixtures. On `--target web`
+one of their eight tests fails (`preview.test.tsx:77`); the cause was not
+investigated.
 
 ## Tests
 

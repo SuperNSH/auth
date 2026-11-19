@@ -78,7 +78,7 @@ All of these hold, each with evidence in `docs/STATUS.md`:
 
 ## Environment, as measured on this Mac
 
-- `nsh` 0.5.1 (224d9a7), from the upstream installer at `~/.nsh/bin/nsh`. Homebrew's tap still ships 0.4.0; do not use it here. Embedding frameworks: `tools/fetch-nsh-embed.sh` downloads and sha256-checks them into `.nsh-embed/0.5.1/ios/{NativeShell,NativeShellDev}.xcframework` and `.nsh-embed/0.5.1/android/{nsh,nsh-dev}.aar`.
+- `nsh` 0.6.0 (5541637), from the upstream installer at `~/.nsh/bin/nsh`. Homebrew's tap still ships 0.4.0; do not use it here. Embedding frameworks: `tools/fetch-nsh-embed.sh` downloads and sha256-checks them into `.nsh-embed/0.6.0/ios/{NativeShell,NativeShellDev}.xcframework` and `.nsh-embed/0.6.0/android/{nsh,nsh-dev}.aar`.
 - Rust stable with `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `aarch64-linux-android`, `armv7-linux-androideabi`, `x86_64-linux-android` and `wasm32-unknown-unknown` installed.
 - Xcode with an iOS 27 simulator runtime. Android SDK at `$ANDROID_HOME`, NDK 29, one AVD named `indopak-audit`.
 - `/usr/bin/java` is a stub with no runtime behind it. Use Android Studio's JDK: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
@@ -110,7 +110,7 @@ Other agents are building `nsh-starter`, `nsh-firebase`, `nsh-http` and `nsh-aut
 
 Each of these was hit by a real run. Trust them over the docs.
 
-- The upstream `nsh` skill follows NSH's `main` and is ahead of 0.4.0. Not in 0.4.0: `nsh update-manifest`, `nsh/updater`, the `Notifications` module, and the `notifications` capability. Check `.nsh/types` for TSX and the crate source in `~/.cargo/registry/src/*/nsh-core-0.4.0` for Rust.
+- The upstream `nsh` skill follows NSH's `main` and is ahead of 0.4.0. Not in 0.4.0 (all four exist in 0.6.0): `nsh update-manifest`, `nsh/updater`, the `Notifications` module, and the `notifications` capability. Check `.nsh/types` for TSX and the crate source in `~/.cargo/registry/src/*/nsh-core-0.4.0` for Rust.
 - Real capability keys, from the build's own error: `network`, `webview`, `statusBar`, `clipboard`, `picker`, `speech`, `openUrl`, `process`, `fs`, `host`. A typo fails `nsh build` and passes `nsh check`. Run both.
 - `If` and `Each` are globals in TSX. Importing them from `nsh` is a type error.
 - `nsh check` needs an `App.tsx` at the package root, or an entry passed to it. Generated files in `.nsh/` are git-ignored, and `nsh` writes them.

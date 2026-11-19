@@ -41,8 +41,9 @@ that hit the issue named at the end.
   `examples/embed-ios` one-for-one.
 - Suggested upstream fix: ship `examples/embed-ios` with a scene manifest + `SceneDelegate` (or
   gate both variants in the example). Reported by native-ios.
+- Still true on 0.6.0: `examples/embed-ios/main.swift` has only a `UIApplicationDelegate`.
 
-### Bundled nsh skill documents capabilities that do not exist in nsh-core 0.4.0
+### Bundled nsh skill documents capabilities that do not exist in nsh-core 0.4.0 (resolved in 0.6.0)
 - Found in: nsh 0.4.0, bundled skill docs vs `nsh-core` `access.rs`
 - What happens: the skill (which follows main) lists the `notifications` capability and the
   `nsh/updater` module; neither exists in nsh-core 0.4.0 (`access.rs` enumerates the real set:
@@ -54,9 +55,15 @@ that hit the issue named at the end.
   bundled skill whenever they disagree on 0.4.0.
 - Suggested upstream fix: version-scope the skill to the release it ships with. Reported by
   research.
+- 0.6.0: `notifications`, `application` and `homeDir` are in the capability set
+  (`crates/nsh-core/src/access.rs`, `KNOWN`), `nsh update-manifest` is a command and
+  `crates/nsh-updater` exists, so the 0.4.0 mismatch is gone. The rule (trust `.nsh/types` over the
+  skill) still applies to a skill that follows `main`.
 
 ### Web runtime drops fetch `RequestInit.cache` at the transport boundary
-- Found in: nsh 0.4.0, web runtime, `web/fetch.rs:1571-1578`
+- Found in: nsh 0.4.0, web runtime, `web/fetch.rs:1571-1578`; still true on 0.6.0:
+  `crates/nsh-js/src/web/fetch.rs` parses `cache` and `HttpRequest`
+  (`crates/nsh-core/src/platform.rs`) has no such field
 - What happens: `RequestInit.cache` is typed and parsed, then dropped — `HttpRequest` has no
   `cache` field — so a fetch with `cache: "no-store"` still went through the browser's HTTP cache.
   Concretely: token responses were landed in `URLCache` (plaintext, `Cache.db-wal`) despite the
@@ -68,7 +75,7 @@ that hit the issue named at the end.
 - Suggested upstream fix: add `cache` to `HttpRequest` and honor `no-store` (or reject the option
   loudly instead of silently dropping it). Reported by ts core.
 
-### `import { platform } from "nsh"` and `import { lifecycle } from "nsh"` fatally crash the web runtime
+### `import { platform } from "nsh"` and `import { lifecycle } from "nsh"` fatally crash the web runtime (resolved in 0.6.0)
 - Found in: nsh 0.4.0, web runtime, module exports (`platform`, `lifecycle`)
 - What happens: importing either binding crashes a web app even when the value is never read —
   the import itself trips `Function.prototype.apply` on undefined at the wasm→JS boundary.
@@ -78,11 +85,14 @@ that hit the issue named at the end.
 - Hit while: demo removed web-runtime fatals; the web target needed a query-free `App.web.tsx`.
 - Workaround here: `examples/demo` ships `App.web.tsx` without nsh-query (and without `platform` /
   `lifecycle` imports) for the web target.
+- Resolved in 0.6.0: `App.tsx` (nsh-query) loads under `nsh run --target web`, a probe printing
+  `platform.os` rendered `os=web`, and the demo's paste-back test reaches the nsh-query profile
+  card under `nsh test --target web`. `App.web.tsx` is removed (STATUS Phase 5).
 - Suggested upstream fix: define both bindings for the web target (or export them lazily).
   **This is the big one for `~/fo/nsh-query`'s owner** — nsh-query is unusable on web on 0.4.0
   through no fault of its own. Reported by demo.
 
-### Web runtime crashes on `env()` inside arbitrary class-value math
+### Web runtime crashes on `env()` inside arbitrary class-value math (resolved in 0.6.0)
 - Found in: nsh 0.4.0, web runtime, CSS class-value handling
 - What happens: a class like `pt-[calc(env(safe-area-inset-top)+16px)]` crashes rendering on the
   web target, while the same class renders fine on native targets.
@@ -92,6 +102,8 @@ that hit the issue named at the end.
 - Workaround here: the demo uses static padding on web; no `env()` in class values.
 - Suggested upstream fix: pass arbitrary values through to CSS on web, or document the supported
   subset. Reported by demo.
+- Resolved in 0.6.0: `pt-[calc(env(safe-area-inset-top)+16px)]` rendered under
+  `nsh test --target web`. The demo keeps its fixed padding.
 
 ### Web `openUrl` has no inbound-redirect path: automatic web OAuth redirects are impossible
 - Found in: nsh 0.4.0, web runtime, `openUrl` / inbound URL handling
@@ -106,11 +118,16 @@ that hit the issue named at the end.
   `auth.handleRedirect(url)`; documented honestly in `packages/nsh-auth/README.md`.
 - Suggested upstream fix: expose an inbound-URL bridge (e.g. a `postMessage`/poll channel or a
   `location`-reading API) on the web target. Reported by desktop+web verification.
+- Still true on 0.6.0, with a narrower gap: the app can read its own page address
+  (`UrlScheme.url()`, `crates/nsh-core/src/url_scheme.rs`), but `openUrl` is still
+  `window.open(url, "_blank")` (`crates/nsh-platform-web/web/nsh.js`), so a redirect to the page
+  starts a second app without the PKCE verifier. A same-tab navigation or a cross-tab channel would
+  close it.
 
-- **nsh-core 0.4.0: a control that unmounts itself after spawning multi-poll work from its own listener loses that work.** `ambient::spawn` tasks are detached (dropping the `Task` handle does NOT cancel — `element/task.rs` `detached: true`), so the oft-assumed "dropped handle cancels the task" is false. The real hazard: a listener living inside a `when(...)` region ends when the flip unmounts the control, and the run's owner disposal cancels tasks spawned from that listener before later polls. Reproduced in `examples/host-desktop` sign-out: poll 1 ran (local effects), poll 2 (the provider revoke) never arrived — with the handle retained; fixed by rooting the task in the `create_root` owner (`Owner::run`). Suggested sweep: any fire-and-forget spawn from a self-unmounting control. — reported by desktop+web.
-- **nsh 0.4.0 headless engine: `ReqwestHttp` futures inside engine-spawned tasks never progress** — local effects run, `reqwest` logs "starting new connection", then silence; no TCP connect reaches the server; no panic. Reproduced twice under `nsh test`-style headless runs; the live desktop app's auto-start path (spawn from the `App` component body, long-lived owner) works. Root cause is in the core/engine/tokio interplay and needs a core-area investigation. Workaround: inject an in-process transport in tests; run flows from long-lived owners. — reported by desktop+web.
+- **nsh-core 0.4.0 (0.6.0 not re-run; `spawn` still documents that the task "ends with the current owner", `crates/nsh-core/src/element/ambient.rs`): a control that unmounts itself after spawning multi-poll work from its own listener loses that work.** `ambient::spawn` tasks are detached (dropping the `Task` handle does NOT cancel — `element/task.rs` `detached: true`), so the oft-assumed "dropped handle cancels the task" is false. The real hazard: a listener living inside a `when(...)` region ends when the flip unmounts the control, and the run's owner disposal cancels tasks spawned from that listener before later polls. Reproduced in `examples/host-desktop` sign-out: poll 1 ran (local effects), poll 2 (the provider revoke) never arrived — with the handle retained; fixed by rooting the task in the `create_root` owner (`Owner::run`). Suggested sweep: any fire-and-forget spawn from a self-unmounting control. — reported by desktop+web.
+- **nsh 0.4.0 headless engine (not re-run on 0.6.0): `ReqwestHttp` futures inside engine-spawned tasks never progress** — local effects run, `reqwest` logs "starting new connection", then silence; no TCP connect reaches the server; no panic. Reproduced twice under `nsh test`-style headless runs; the live desktop app's auto-start path (spawn from the `App` component body, long-lived owner) works. Root cause is in the core/engine/tokio interplay and needs a core-area investigation. Workaround: inject an in-process transport in tests; run flows from long-lived owners. — reported by desktop+web.
 
-- **nsh-auth's `Http` trait (phase 2) carries a `Send` future bound that no platform-transport impl can satisfy without a bridge.** `nsh_http`'s pipeline futures are deliberately `!Send` (`middleware.rs:10-12`), and nsh 0.4.0's engine executor is single-threaded (`nsh_core` Fetch/Answer/Task/Spawned hold `Rc`; `spawn` accepts `!Send` futures, `ambient.rs:833`). `examples/host-desktop` bridges via engine `spawn` + a `Send` tokio-oneshot receipt (the `!Send` value never crosses a thread). A `Send`-free variant of the trait (or an `nsh-http`-shaped trait in the crate) would let consumers use the platform transport without the bridge. — reported by desktop+web (phase 2.5).
+- **nsh-auth's `Http` trait (phase 2) carries a `Send` future bound that no platform-transport impl can satisfy without a bridge.** `nsh_http`'s pipeline futures are deliberately `!Send` (`middleware.rs:10-12`), and nsh 0.4.0's engine executor is single-threaded (0.6.0: `Rc<Executor>` in `crates/nsh-core/src/element/task.rs`, unchanged) (`nsh_core` Fetch/Answer/Task/Spawned hold `Rc`; `spawn` accepts `!Send` futures, `ambient.rs:833`). `examples/host-desktop` bridges via engine `spawn` + a `Send` tokio-oneshot receipt (the `!Send` value never crosses a thread). A `Send`-free variant of the trait (or an `nsh-http`-shaped trait in the crate) would let consumers use the platform transport without the bridge. — reported by desktop+web (phase 2.5).
 - **Scope correction on the earlier reqwest-stall entry:** under the phase-2.5 harness (per-test network stack, fresh engine, flow spawned from the provider-button listener), reqwest COMPLETED the full loop in 0.14s — the stall did not reproduce; the original reproduction stands cited from phase 2. The stall is environment-dependent (engine/network-stack configuration); `examples/host-desktop` now ships a standing deadline probe (`the_reqwest_escape_hatch_also_completes_the_mock_flow`) and defaults to the platform transport via nsh-http, so the app no longer depends on reqwest behavior at all. — reported by desktop+web (phase 2.5).
 
 - **nsh 0.6.0 Android runner ignores `app.json` `"schemes"`: a packaged app drops its own redirect link.** `nsh package --target android` writes `"schemes":["nsh.auth.sandbox"]` into `assets/nsh/app.json` and the manifest intent filter delivers the VIEW intent, but `nsh-platform-android` (`host.rs`, the `app.json` read next to the bundle) takes only `"id"`, so the engine's claimed-scheme list is empty and logs "link dropped: `nsh.auth.sandbox:` is not a scheme the app claims". `UrlScheme.on("open")` never fires, so the hostless sign-in cannot finish by link on Android. Expected: `bundle.with_url_schemes(...)` from `app.json`, as `Bundle::from_dir` does. Workaround: paste-back, or the `examples/host-android` host. Evidence: `docs/evidence/hostless-link/`.

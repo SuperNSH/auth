@@ -114,9 +114,10 @@ approves. If the system hands the app the `nsh.auth.sandbox://` link, the sessio
 itself; otherwise the flow stops here. Copy the
 `nsh.auth.sandbox://callback?...` URL from the browser's address bar into the demo's "Finish a
 sign-in by hand" box and press **Finish sign-in**: the loop completes and the session screen
-appears. On the web target (`nsh run --target web --port 8790 App.web.tsx`, per the demo README)
-pressing the button cannot even open a browser — it reports `no_launcher`. A web loop completes
-only through a page-bridge host, which the demo does not ship.
+appears. On the web target (`nsh run --target web --port 8790`, per the demo README) the button opens the
+authorize page in a new tab (a blocked popup reports `no_launcher`). The browser cannot hand a
+`nsh.auth.sandbox://` link to a page, so the loop completes by pasting the callback URL back, or
+through a page-bridge host, which the demo does not ship.
 
 To watch the same flow fail safely, the mock can deny approval, send a wrong `state`, a wrong
 `nonce`, an expired code, or a revoked refresh token. The suites: `bun test` in
