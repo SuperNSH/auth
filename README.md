@@ -24,6 +24,13 @@ confidential client, GitHub today, go through a small token broker you run yours
 prove it. `tools/mock-oauth` imitates every provider locally, so the complete loop — authorize,
 approve, redirect back, exchange, session — runs with no real account.
 
+## Install
+
+```sh
+cargo add nsh-auth
+cargo add nsh-auth-keyring   # session storage in the OS keyring, for desktop apps
+```
+
 ## Architecture
 
 ```

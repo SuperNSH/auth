@@ -6,9 +6,11 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
+readme = "../../README.md"
+keywords = ["nsh", "keyring", "oauth", "keychain", "secret-service"]
 
 [dependencies]
-nsh-auth = { path = "../nsh-auth" }
+nsh-auth = { path = "../nsh-auth", version = "0.1.0" }
 keyring-core = "1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
