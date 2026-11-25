@@ -28,28 +28,29 @@ fn native(registry: &mut Registry) {
     registry.register::<App>();
 }
 
-/// The root: its one window. The window's content connects once (loopback
-/// bind + the crate's `Auth`), then shows the one screen. A `--provider <id>`
-/// argument starts that flow as the window opens.
+/// The root: connect once (loopback bind + the crate's `Auth`), then its one
+/// window with the one screen. A `--provider <id>` argument starts that flow.
 #[component]
 pub fn App() -> impl IntoElement {
+    // Outside `content`, which runs again each time the window opens.
+    let launcher = Launcher::connect();
+    if let Ok(launcher) = &launcher
+        && let Some(provider) = launcher.startup_provider
+    {
+        sign_in(launcher, provider);
+    }
     app_window()
         .id("main")
         .title("nsh-auth desktop")
         .default_size(Size::new(px(480.0), px(640.0)))
-        .content(|| match Launcher::connect() {
-            Ok(launcher) => {
-                if let Some(provider) = launcher.startup_provider {
-                    sign_in(&launcher, provider);
-                }
-                view()
-                    .flex_1()
-                    .bg(move || theme().background)
-                    .text_color(move || theme().foreground)
-                    .child(ui::launcher_screen(launcher))
-                    .into_element()
-            }
-            Err(message) => start_error(message).into_element(),
+        .content(move || match &launcher {
+            Ok(launcher) => view()
+                .flex_1()
+                .bg(move || theme().background)
+                .text_color(move || theme().foreground)
+                .child(ui::launcher_screen(launcher.clone()))
+                .into_element(),
+            Err(message) => start_error(message.clone()).into_element(),
         })
 }
 
