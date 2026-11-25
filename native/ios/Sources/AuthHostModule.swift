@@ -1,7 +1,7 @@
 // The "auth.*" host channel the nsh-auth TSX package calls.
 //
-// API names are verified against nsh 0.6.0: the two `handle` overloads in the
-// swiftinterface of .nsh-embed/0.6.0/ios/NativeShell.xcframework
+// API names are verified against nsh 0.7.1: the two `handle` overloads in the
+// swiftinterface of .nsh-embed/0.7.1/ios/NativeShell.xcframework
 // and examples/embed-ios/main.swift. The payload contract with packages/nsh-auth
 // is documented in native/ios/README.md; keep the two in sync.
 

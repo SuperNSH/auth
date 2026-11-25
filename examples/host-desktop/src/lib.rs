@@ -16,6 +16,7 @@ pub use flow::print_authorize_url;
 pub use options::{Options, USAGE};
 
 use nsh_base::theme;
+use nsh_core::element::desktop::window as app_window;
 use nsh_core::prelude::*;
 
 use crate::flow::{Launcher, sign_in};
@@ -27,24 +28,29 @@ fn native(registry: &mut Registry) {
     registry.register::<App>();
 }
 
-/// The root: connect once (loopback bind + the crate's `Auth`), then the one
-/// screen. A `--provider <id>` argument starts that flow as the window opens.
+/// The root: its one window. The window's content connects once (loopback
+/// bind + the crate's `Auth`), then shows the one screen. A `--provider <id>`
+/// argument starts that flow as the window opens.
 #[component]
 pub fn App() -> impl IntoElement {
-    match Launcher::connect() {
-        Ok(launcher) => {
-            if let Some(provider) = launcher.startup_provider {
-                sign_in(&launcher, provider);
+    app_window()
+        .id("main")
+        .title("nsh-auth desktop")
+        .default_size(Size::new(px(480.0), px(640.0)))
+        .content(|| match Launcher::connect() {
+            Ok(launcher) => {
+                if let Some(provider) = launcher.startup_provider {
+                    sign_in(&launcher, provider);
+                }
+                view()
+                    .flex_1()
+                    .bg(move || theme().background)
+                    .text_color(move || theme().foreground)
+                    .child(ui::launcher_screen(launcher))
+                    .into_element()
             }
-            view()
-                .flex_1()
-                .bg(move || theme().background)
-                .text_color(move || theme().foreground)
-                .child(ui::launcher_screen(launcher))
-                .into_element()
-        }
-        Err(message) => start_error(message).into_element(),
-    }
+            Err(message) => start_error(message).into_element(),
+        })
 }
 
 /// Startup failed before any flow could run: say what and stop here.

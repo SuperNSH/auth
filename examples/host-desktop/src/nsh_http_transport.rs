@@ -19,7 +19,7 @@ use std::future::Future;
 use std::sync::Arc;
 
 use nsh_auth::{AuthError, BoxFuture, Http, HttpReply, ReqwestHttp};
-use nsh_core::platform::HttpBody;
+use nsh_core::platform::{HttpBody, HttpCache};
 use nsh_core::prelude::{HttpRequest, HttpResponse, spawn};
 use nsh_http::Error as NshHttpError;
 
@@ -119,6 +119,7 @@ fn request(method: &str, url: &str, headers: Vec<(String, String)>, body: Vec<u8
             HttpBody::Bytes(body)
         },
         follow_redirects: true,
+        cache: HttpCache::Default,
     }
 }
 
