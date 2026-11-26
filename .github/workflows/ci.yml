@@ -263,8 +263,7 @@ jobs:
       matrix:
         include:
           # Desktop builds come out for the runner's own processor, so each architecture gets its own runner.
-          # NSH installs from SuperNSH/nsh-builds' installer: NSH's own release where it has one
-          # (macOS arm64, Linux x86_64, Windows x86_64), SuperNSH/nsh-builds' build of it otherwise.
+          # NSH's own installer: its release ships a prebuilt CLI for every desktop platform.
           - { os: macos-latest, target: macos, name: macos-arm64, entry: App.tsx }
           - { os: macos-15-intel, target: macos, name: macos-x86_64, entry: App.tsx }
           - { os: ubuntu-latest, target: linux, name: linux-x86_64, entry: App.tsx }
@@ -299,14 +298,14 @@ jobs:
       - name: Install NSH
         if: runner.os != 'Windows'
         run: |
-          curl -fsSL https://raw.githubusercontent.com/SuperNSH/nsh-builds/master/install.sh | sh
+          curl -fsSL https://nsh.dev/install.sh | sh
           echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Install NSH
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          irm https://raw.githubusercontent.com/SuperNSH/nsh-builds/master/install.ps1 | iex
+          irm https://nsh.dev/install.ps1 | iex
           "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
